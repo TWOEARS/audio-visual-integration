@@ -1,0 +1,9 @@
+
+<categoryStructure>    
+        <pair A="person" B="speech"> </pair>
+        <pair A="person" B="clearthroat"> </pair>
+        
+        <pair A="door" B="knock"> </pair>
+        
+        <pair A="siren" B="alert"> </pair>        
+</categoryStructure>
