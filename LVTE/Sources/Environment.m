@@ -50,24 +50,21 @@ classdef Environment < handle
             h.pathToAudioFiles=path;
         end
         
-        function planAuditoryScheduleForAllSources(h,duration)
+        function planAuditoryScheduleForAllSources(h, duration)
             % random nr of active source
-            t=1.0;
-            while (t<duration)
-                
-                
-
+            t = 1.0 ;
+            while (t < duration)
 
                 sourceID=floor(rand()*(size(h.sources,1)-1))+2;
 
                 % find source visual category
-                visCat=h.sources{sourceID,1}.getVisualCategoryAtTime(t);
+                visCat = h.sources{sourceID,1}.getVisualCategoryAtTime(t);
 
                 % employ rand nr gen in order to decide if an acceptable
                 % pair (80% probability) or a wrong pair (20% probability)
                 % will be used to instantiate
                 useAcceptable=rand();
-                if useAcceptable>0.75
+                if useAcceptable > 0.75
                     % use wrong AV pair
                     for j=1:size(h.wrongAVPairs,1)
                         if (strcmp(h.wrongAVPairs{j}{1},visCat))
@@ -99,17 +96,15 @@ classdef Environment < handle
                             s = resample(sig, h.SampleRate, fs);
                             length=size(s,1)/h.SampleRate;                            
                             
-                           h.sources{sourceID}.auditorySchedule{size(h.sources{sourceID,1}.auditorySchedule,2)+1}={t,'on',h.acceptableAVPairs{j}{2},1,'acceptable'};
+                            h.sources{sourceID}.auditorySchedule{size(h.sources{sourceID,1}.auditorySchedule,2)+1}={t,'on',h.acceptableAVPairs{j}{2},1,'acceptable'};
                             h.sources{sourceID}.auditorySchedule{size(h.sources{sourceID,1}.auditorySchedule,2)+1}={t+length,'off'};
-
-
-                            
-                            t=t+length;
-                            break;
+      
+                            t = t+length ;
+                            break ;
                         end
                     end
                 end
-            t=t+1.0;    
+                t = t + 1.0 ;
             end
         end
         
