@@ -212,9 +212,11 @@ end
 % inputs:
 %       dT:             the interval for which a signal chunk has
 %                       to be acquired from the SSR
+% outputs:
 %       signal:         the acquired signal
-%       trueIncrement:  returned by the SSR (s. SSR documentation)
+%       trueIncrement:  ?
 function [signal, trueIncrement] = getSignal(obj, dT)
+
     getBlocks = obj.basc2.GetBlocks(0);
 
     if (~strcmp(getBlocks.status,'done'))

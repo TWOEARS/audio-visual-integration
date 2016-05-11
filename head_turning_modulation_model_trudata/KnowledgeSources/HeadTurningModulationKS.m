@@ -253,22 +253,40 @@ end
 function [create_new, do_nothing] = createNewObject (obj)
     % crit = 0 ;
     audio_data = obj.retrieveLastAudioData() ;
-    % === Silence
-    if all(audio_data(:, end) == 0)
-        create_new = false ;
-        do_nothing = true ;
-        % crit = 0 ;
-    % === Produce object
-    elseif any(audio_data(:, end-1) ~= 0) && any(audio_data(:, end) ~= 0)
-        create_new = false ;
-        do_nothing = false ;
-        % crit = 1 ;
-    % === Create new object
-    elseif all(audio_data(:, end-1) == 0) && any(audio_data(:, end) ~= 0)
-        create_new = true ;
-        do_nothing = false ;
-        % crit = 2 ;
+    if max(audio_data(:, end)) == obj.nb_audio_labels+1
+        if max(audio_data(:, end-1)) == obj.nb_audio_labels+1
+            create_new = false ;
+            do_nothing = true ;
+        else
+            create_new = false ;
+            do_nothing = false ;
+        end
+    else
+        if max(audio_data(:, end-1)) == obj.nb_audio_labels+1
+            create_new = true ;
+            do_nothing = false ;
+        else
+            create_new = false ;
+            do_nothing = true ;
+        end
     end
+                
+    % % === Silence
+    % if all(audio_data(:, end) == 0)
+    %     create_new = false ;
+    %     do_nothing = true ;
+    %     % crit = 0 ;
+    % % === Produce object
+    % elseif any(audio_data(:, end-1) ~= 0) && any(audio_data(:, end) ~= 0)
+    %     create_new = false ;
+    %     do_nothing = false ;
+    %     % crit = 1 ;
+    % % === Create new object
+    % elseif all(audio_data(:, end-1) == 0) && any(audio_data(:, end) ~= 0)
+    %     create_new = true ;
+    %     do_nothing = false ;
+    %     % crit = 2 ;
+    % end
     % obj.simulation_status(3, obj.cpt) = crit ;
 end
 % === TO BE MODIFIED === %
@@ -279,6 +297,7 @@ end
 % Need to find a way to know when to create a new object.
 function audio_data = retrieveLastAudioData (obj)
     audio_data_all = obj.blackboard.getData('auditoryIdentityHypotheses') ;
+
     if numel(audio_data_all) > 1
         audio_data_1 = cell2mat(...
                                 arrayfun(@(x) audio_data_all(end-1).data(x).p,...
@@ -329,7 +348,7 @@ function htmINIT (obj)
 
     obj.AVPairs = {'door_knock', 'person_speech', 'siren_alert'} ;
     obj.nb_AVPairs = numel(obj.AVPairs) ;
-    
+
     obj.HTM_robot = Robot() ;
 
     obj.nb_audio_labels = numel(obj.audio_labels) ;
