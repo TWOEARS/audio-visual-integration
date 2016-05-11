@@ -1,0 +1,109 @@
+===============================
+   P1 partition information: JT_weight = 1.000000
+=== Clique Information ===
+Number of cliques = 1
+== Clique number: 0, root/right-interface clique, root/right-interface clique, leaf
+Clique information: 9 packed bits, 1 unsigned words (0 splits), weight = 2.556303, jt_weight = 1.000000
+2 Nodes: obs(0),azimuth(0)[360]
+2 Assigned: obs(0),azimuth(0)
+2 Assigned Sorted: azimuth(0)[360],obs(0)
+2 Dispositions: 0 0
+2 Assigned Prob: obs(0),azimuth(0)
+0 Cum Assigned Prob: 
+0 Union Incomming Seps: 
+0 Unassigned Iterated: 
+0 Cumulative Unassigned: 
+1 Hidden/Hashable: azimuth(0)[360]
+0 Clique Neighbors: 
+0 Clique Children: 
+0 Receive Seps: 
+0 incomming VE Separators
+Send Sep: -1
+
+=== Separator Information ===
+Number of separators = 0
+
+
+===============================
+   Co partition information: JT_weight = 1.000000
+=== Clique Information ===
+Number of cliques = 1
+== Clique number: 0, root/right-interface clique, root/right-interface clique, leaf/left-interface clique
+Clique information: 9 packed bits, 1 unsigned words (0 splits), weight = 2.556303, jt_weight = 1.000000
+2 Nodes: azimuth(1)[360],obs(1)
+2 Assigned: azimuth(1),obs(1)
+2 Assigned Sorted: azimuth(1)[360],obs(1)
+2 Dispositions: 0 0
+2 Assigned Prob: azimuth(1),obs(1)
+2 Cum Assigned Prob: obs(0),azimuth(0)
+0 Union Incomming Seps: 
+0 Unassigned Iterated: 
+0 Cumulative Unassigned: 
+1 Hidden/Hashable: azimuth(1)[360]
+0 Clique Neighbors: 
+0 Clique Children: 
+1 Receive Seps: 0,
+0 incomming VE Separators
+Send Sep: -1
+
+=== Separator Information ===
+Number of separators = 1
+== Separator number: 0
+Separator information: 0 acc packed bits (0 words, 0 splits), 0 rem packed bits (0 words, 0 splits)
+0 Nodes: 
+0 Acc Inter: 
+0 Hid Acc Inter: 
+0 remainder: 
+0 hRemainder: 
+
+
+===============================
+   E1 partition information: JT_weight = 1.000000
+=== Clique Information ===
+Number of cliques = 1
+== Clique number: 0, root/right-interface clique, root clique, leaf/left-interface clique
+Clique information: 9 packed bits, 1 unsigned words (0 splits), weight = 2.556303, jt_weight = 1.000000
+2 Nodes: azimuth(2)[360],obs(2)
+2 Assigned: azimuth(2),obs(2)
+2 Assigned Sorted: azimuth(2)[360],obs(2)
+2 Dispositions: 0 0
+2 Assigned Prob: azimuth(2),obs(2)
+4 Cum Assigned Prob: obs(0),azimuth(1),azimuth(0),obs(1)
+0 Union Incomming Seps: 
+0 Unassigned Iterated: 
+0 Cumulative Unassigned: 
+1 Hidden/Hashable: azimuth(2)[360]
+0 Clique Neighbors: 
+0 Clique Children: 
+1 Receive Seps: 0,
+0 incomming VE Separators
+Send Sep: -1
+
+=== Separator Information ===
+Number of separators = 1
+== Separator number: 0
+Separator information: 0 acc packed bits (0 words, 0 splits), 0 rem packed bits (0 words, 0 splits)
+0 Nodes: 
+0 Acc Inter: 
+0 Hid Acc Inter: 
+0 remainder: 
+0 hRemainder: 
+
+
+===============================
+
+===============================
+   P1 message order
+Number of messages: 0
+
+
+===============================
+   Co message order
+Number of messages: 0
+
+
+===============================
+   E1 message order
+Number of messages: 0
+
+
