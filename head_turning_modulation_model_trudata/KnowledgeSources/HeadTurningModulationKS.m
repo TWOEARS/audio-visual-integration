@@ -6,7 +6,7 @@
 % (reference: Benjamin Cohen-Lhyver, Modulating the Auditory Turn-to Reflex on the Basis of Multimodal Feedback Loops:
 % the Dynamic Weighting Model, in IEEE-ROBIO 2015)
 % Author: Benjamin Cohen-Lhyver
-% Date: 21.10.15
+% Date: 21.04.16
 % Rev. 1.0
 
 classdef HeadTurningModulationKS < AbstractKS

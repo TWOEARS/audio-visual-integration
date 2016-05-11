@@ -21,6 +21,12 @@ properties (SetAccess = public, GetAccess = public)
     focus_origin = [] ;
     robotController ;
 
+end
+properties (SetAccess = private, GetAccess = private)
+    field_of_view = 30 ;
+    bass ;
+    basc2 ;
+    bufferSize ;
     AzimuthMin ;
     AzimuthMax ;
 
@@ -29,12 +35,8 @@ properties (SetAccess = public, GetAccess = public)
     % the sample rate used in the SSR
     SampleRate ;
     finished ;
-end
-properties (SetAccess = private, GetAccess = private)
-    field_of_view = 30 ;
-    bass ;
-    basc2 ;
-    bufferSize ;
+
+    lastFrame ;
 
 end
 
@@ -53,6 +55,7 @@ function obj = Robot ()
     obj.AzimuthMin = -180;
     obj.AzimuthMax = 180;
     obj.finished = false;
+    obj.lastFrame = 0 ;
 
     % --- At initialization: create a new environment
     obj.addEnvironment() ;
@@ -217,13 +220,14 @@ end
 %       trueIncrement:  ?
 function [signal, trueIncrement] = getSignal(obj, dT)
 
-    getBlocks = obj.basc2.GetBlocks(0);
+    getBlocks = obj.basc2.GetBlocks(0, obj.lastFrame);
 
     if (~strcmp(getBlocks.status,'done'))
         error(getBlocks.exception.ex);
     end
 
     newAudio = obj.basc2.newAudio();
+    obj.lastFrame = newAudio.newAudio.lastFrameIndex;
 
     if ( newAudio.newAudio.lostFrames > 0 )
         disp(strcat('Lost data : ',int2str(newAudio.newAudio.lostFrames)));
