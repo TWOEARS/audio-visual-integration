@@ -1,8 +1,8 @@
 function request = getLocalisationOutput (obj)
     if isa(obj, 'Blackboard')
-        hyp_loc = obj.getLastData('locationHypotheses') ;
+        hyp_loc = obj.getLastData('perceivedAzimuths') ;
     else
-        hyp_loc = obj.blackboard.getLastData('locationHypotheses') ;
+        hyp_loc = obj.blackboard.getLastData('perceivedAzimuths') ;
     end
     if ~isempty(hyp_loc)
         hyp_loc = hyp_loc.data ;

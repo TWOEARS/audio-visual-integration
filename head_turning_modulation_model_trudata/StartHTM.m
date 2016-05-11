@@ -56,7 +56,7 @@ visualIdentityKS = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
 
 headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs.robotConnect});
 
-localizerKS = bbs.createKS('LocalizerKS', {'default'});
+localizerKS = bbs.createKS('DnnLocationKS');
 
 bbs.blackboardMonitor.bind({bbs.scheduler},...
                {bbs.dataConnect},...
