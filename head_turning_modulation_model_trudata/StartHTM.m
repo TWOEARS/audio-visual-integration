@@ -47,7 +47,7 @@ model_name = cell(1, numel(d)) ;
 for iFile = 1:nb_files
 	model = dir(fullfile(folder, d(iFile).name, '*.mat')) ;
 	model = model.name(1:strfind(model.name, '.')-1) ;
-	auditoryClassifiersKS{iFile} = bbs.createKS('AuditoryIdentityKS', {model, d(iFile).name}) ;
+	auditoryClassifiersKS{iFile} = bbs.createKS('AuditoryIdentityModKS', {model, d(iFile).name}) ;
 	model_name{iFile} = model ;
 end
 
