@@ -5,7 +5,7 @@ disp( 'Initializing Two!Ears, setting up binaural simulator...' );
 % === HTM MODIF === %
 % ================= %
 
-addpath(genpath('~/AuditoryModel/TwoEars_1.0'));
+addpath(genpath('~/AuditoryModel/TwoEars_1.2'));
 addpath(genpath('~/openrobots/lib/matlab'));
 
 client = genomix.client('jido-base:8080') ;
