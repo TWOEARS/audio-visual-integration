@@ -51,7 +51,8 @@ classdef AuditoryIdentityKS < AuditoryFrontEndDepKS
             afeData = obj.featureCreator.cutDataBlock( afeData, obj.timeSinceTrigger );
   
   
-            x = obj.featureCreator.makeDataPoint( afeData );
+            x = obj.featureCreator.constructVector( afeData );
+               % old makeDataPoint
             [d, score] = obj.model.applyModel( x );
             
             if obj.blackboard.verbosity > 0

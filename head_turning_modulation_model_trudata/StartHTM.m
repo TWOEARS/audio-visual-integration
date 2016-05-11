@@ -5,7 +5,7 @@ disp( 'Initializing Two!Ears, setting up binaural simulator...' );
 % === HTM MODIF === %
 % ================= %
 
-addpath(genpath('~/AuditoryModel/TwoEars_1.2'));
+addpath(genpath('~/AuditoryModel/TwoEars-1.2'));
 addpath(genpath('~/openrobots/lib/matlab'));
 
 client = genomix.client('jido-base:8080') ;
@@ -38,7 +38,7 @@ bbs = BlackboardSystem(0);
 bbs.setRobotConnect(robot) ;
 bbs.setDataConnect('AuditoryFrontEndKS');
 
-folder = '../ClassifierData' ;
+folder = 'ClassifierData' ;
 d = dir(fullfile(folder, 'T*')) ;
 nb_files = numel(d) ;
 auditoryClassifiersKS = cell(0) ;

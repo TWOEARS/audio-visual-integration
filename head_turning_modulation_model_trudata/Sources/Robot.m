@@ -22,7 +22,7 @@ properties (SetAccess = public, GetAccess = public)
     robotController ;
 
 end
-properties (SetAccess = private, GetAccess = private)
+properties (SetAccess = private, GetAccess = public)
     field_of_view = 30 ;
     bass ;
     basc2 ;
@@ -49,7 +49,7 @@ methods
 function obj = Robot ()
     obj.robotController = RobotController(obj) ;
     obj.BlockSize = 2048;
-    obj.SampleRate = 44100;
+    obj.SampleRate = 16000;
 
     % prepare values for blackboard connection
     obj.AzimuthMin = -180;
