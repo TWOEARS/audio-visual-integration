@@ -326,13 +326,10 @@ function htmINIT (obj)
     fprintf('\nInitialization of HeadTurningModulationKS\n');
     obj.audio_labels = getappdata(0, 'audio_labels') ;
     obj.visual_labels = getappdata(0, 'visual_labels') ;
-    % obj.audio_labels = obj.robot.auditoryCategoryList ;
-    % setappdata(0, 'audio_labels', obj.audio_labels) ;
-    % obj.visual_labels = obj.robot.visualCategoryList ;
-    % setappdata(0, 'visual_labels', obj.visual_labels) ;
-%     obj.AVPairs = obj.robot.acceptableAVPairs ;
+
     obj.AVPairs = {'door_knock', 'person_speech', 'siren_alert'} ;
     obj.nb_AVPairs = numel(obj.AVPairs) ;
+    
     obj.HTM_robot = Robot() ;
 
     obj.nb_audio_labels = numel(obj.audio_labels) ;
