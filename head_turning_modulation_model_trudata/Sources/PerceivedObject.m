@@ -30,12 +30,12 @@ properties (SetAccess = public, GetAccess = public)
 end
 properties (SetAccess = public, GetAccess = public)
 	smoothing_tsteps = 8 ;
-	wp = @(x) 1/(1+100*exp(-2*x)) ;
-    wn = @(x) 1/(1+0.01*exp(2*x)) - 1 ;
+	% wp = @(x) 1/(1+100*exp(-2*x)) ;
+ %    wn = @(x) 1/(1+0.01*exp(2*x)) - 1 ;
     focus = 0 ;
     occ_thr = 5 ;
     inference = [] ;
-    inference_tsteps = [] ;
+    % inference_tsteps = [] ;
     data = [] ;
     data_tmp = [] ;
     mean_data = [] ;
@@ -74,21 +74,7 @@ function addData (obj, data)
 end
 
 function missingModality (obj)
-	a = obj.data_tmp(1:obj.nb_alabels, end) ;
-	v = obj.data_tmp(obj.nb_alabels+1:end, end) ;
-	eq_prob_a = 1/obj.nb_alabels ;
-	eq_prob_v = 1/obj.nb_vlabels ;
-	eq_prob_thr_a = eq_prob_a + 0.1*eq_prob_a ;
-	eq_prob_thr_v = eq_prob_v + 0.1*eq_prob_v ;
-	if sum(a) < 0.1 || sum(v) < 0.1
-		obj.requests.missing = true ;
-	elseif all(a <= eq_prob_thr_a) && all(a >= eq_prob_thr_a)
-		obj.requests.missing = true ;
-	elseif all(v <= eq_prob_thr_v) && all(v >= eq_prob_thr_v)
-		obj.requests.missing = true ;
-	else
-		obj.requests.missing = false ;
-	end
+	obj.requests.missing = isDataMissing(obj) ;
 end
 
 function requestInference (obj)
@@ -137,11 +123,7 @@ function setLabel (obj, label)
 end
 
 function setWeight (obj, posneg)
-	if strcmp(posneg, 'pos')
-		obj.weight = obj.wp(obj.tsteps) ;
-	elseif strcmp(posneg, 'neg')
-		obj.weight = obj.wn(obj.tsteps) ;
-	end
+	obj.weight = congruenceWeighting(posneg, obj.tsteps)
 end
 
 function updateCatHist (obj, value)
@@ -195,6 +177,9 @@ end
 
 function request = getBestData (obj)
 	s = size(obj.data, 2) ;
+	a = getInfo('nb_audio_labels');
+	v = getInfo('nb_visual_labels');
+
 	if s <= obj.smoothing_tsteps
 		if ~isempty(obj.data)
 			request = obj.data(:, end) ;
@@ -204,27 +189,29 @@ function request = getBestData (obj)
 	elseif s >= obj.smoothing_tsteps && s < 2*obj.smoothing_tsteps
 		% good_visual_data = obj.getGoodVisualData(obj.smoothing_tsteps:s) ;
 		good_visual_data = obj.getGoodVisualData(1:s) ;
-		request = mean(obj.data(1:obj.nb_alabels, obj.smoothing_tsteps:end), 2) ;
+		request = mean(obj.data(1:a, obj.smoothing_tsteps:end), 2) ;
 		request = [request ; mean(good_visual_data, 2)] ;
 	else
 		% good_visual_data = obj.getGoodVisualData(obj.smoothing_tsteps:s-obj.smoothing_tsteps) ;
 		good_visual_data = obj.getGoodVisualData(1:s) ;
-		request = mean(obj.data(1:obj.nb_alabels, obj.smoothing_tsteps:end-obj.smoothing_tsteps+1), 2) ;
+		request = mean(obj.data(1:a, obj.smoothing_tsteps:end-obj.smoothing_tsteps+1), 2) ;
 		request = [request ; mean(good_visual_data, 2)] ;
 	end
 end
 
 function request = getGoodVisualData (obj, idx)
+	a = getInfo('nb_audio_labels');
+	v = getInfo('nb_visual_labels');
 	cpt = [] ;
 	for iStep = idx
-		if sum(obj.data(obj.nb_alabels+1:end, iStep)) > 0.1
+		if sum(obj.data(a+1:end, iStep)) > 0.1
 			cpt = [cpt, iStep] ;
 		end
 	end
 	if isempty(cpt)
-		request = zeros(obj.nb_vlabels, 1) ;
+		request = zeros(v, 1) ;
 	else
-		request = obj.data(obj.nb_alabels+1:end, cpt) ;
+		request = obj.data(a+1:end, cpt) ;
 	end
 end
 
@@ -238,25 +225,25 @@ function requestedData = getData (obj, nb_samples)
 	end
 end
 
-function requestedData = getVisualData (obj, nb_samples)
-	if nargin == 1
-		requestedData = obj.data(obj.nb_audio+1:end, :) ;
-	elseif ischar(nb_samples) && strcmp(nb_samples, 'end')
-		requestedData = obj.data(obj.nb_audio+1:end, end) ;	
-	else
-		requestedData = obj.data(obj.nb_audio+1:end, nb_samples) ;
-	end
-end
+% function requestedData = getVisualData (obj, nb_samples)
+% 	if nargin == 1
+% 		requestedData = obj.data(obj.nb_audio+1:end, :) ;
+% 	elseif ischar(nb_samples) && strcmp(nb_samples, 'end')
+% 		requestedData = obj.data(obj.nb_audio+1:end, end) ;	
+% 	else
+% 		requestedData = obj.data(obj.nb_audio+1:end, nb_samples) ;
+% 	end
+% end
 
-function requestedData = getAudioData (obj, nb_samples)
-	if nargin == 1
-		requestedData = obj.data(1:obj.nb_audio, :) ;
-	elseif ischar(nb_samples) && strcmp(nb_samples, 'end')
-		requestedData = obj.data(1:obj.nb_audio, end) ;
-	else
-		requestedData = obj.data(1:obj.nb_audio, nb_samples) ;
-	end
-end
+% function requestedData = getAudioData (obj, nb_samples)
+% 	if nargin == 1
+% 		requestedData = obj.data(1:obj.nb_audio, :) ;
+% 	elseif ischar(nb_samples) && strcmp(nb_samples, 'end')
+% 		requestedData = obj.data(1:obj.nb_audio, end) ;
+% 	else
+% 		requestedData = obj.data(1:obj.nb_audio, nb_samples) ;
+% 	end
+% end
 
 function requestedData = getInference (obj)
 	requestedData = obj.inference(end-1:end) ;
