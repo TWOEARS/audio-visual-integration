@@ -47,15 +47,21 @@ function obj = MSOM (varargin)
 
 	obj.nb_steps = p.Steps ;
 
-	obj.nb_modalities = numel(p.Modalities) ;
-	
-	tmp = p.Modalities(1)*p.Modalities(2) ;
+	if p.Modalities == 0
+		a = getInfo('nb_audio_labels');
+		v = getInfo('nb_visual_labels');
+		obj.modalities = [a, v];
+		obj.nb_modalities = 2;
+		tmp = a * v;
+	else
+		obj.modalities = p.Modalities;
+		obj.nb_modalities = numel(p.Modalities);
+		tmp = p.Modalities(1)*p.Modalities(2);
+	end
 	
 	obj.som_dimension = [ceil(sqrt(tmp)), ceil(sqrt(tmp))] ;
 
 	obj.leading = p.Leading ;
-
-	obj.modalities = p.Modalities ;
 
 	obj.idx_mod = cumsum([1, obj.modalities]) ;
 
@@ -64,8 +70,14 @@ function obj = MSOM (varargin)
 	obj.nb_nodes = obj.som_dimension(1)*obj.som_dimension(2) ;
 
 	obj.som_grid = zeros(obj.nb_nodes, 2) ;
-	[obj.som_grid(:, 1), obj.som_grid(:, 2)] = ind2sub(obj.som_dimension, 1:obj.nb_nodes) ;
+
+	obj.networkInitialization();	
+
+end
+
+function networkInitialization (obj)
 	
+	[obj.som_grid(:, 1), obj.som_grid(:, 2)] = ind2sub(obj.som_dimension, 1:obj.nb_nodes) ;
 	for iMod = 1:obj.nb_modalities
 		obj.som_weights{iMod} = rand(obj.nb_nodes, obj.modalities(iMod)) ;
 	end
@@ -86,7 +98,6 @@ function obj = MSOM (varargin)
 			obj.aleph{iNode, iStep} = exp(-sum((bsxfun(@minus, obj.som_grid(iNode, :), obj.som_grid).^2), 2) / (2*obj.sig(iStep).^2)) ;
 		end
 	end
-
 end
 
 function feed (obj, data)
