@@ -16,11 +16,11 @@ properties (SetAccess = public)
 
     HTM_robot ;
 
-    audio_labels = cell(0) ;
+    % audio_labels = cell(0) ;
 
-    visual_labels = cell(0) ;
+    % visual_labels = cell(0) ;
 
-    AVPairs = cell(0) ;
+    % AVPairs = cell(0) ;
 
     data = [] ;
     
@@ -40,17 +40,17 @@ end
 
 
 properties (SetAccess = public, GetAccess = public)
-    nb_labels = 0 ;
+    % nb_labels = 0 ;
     energy_thr = 0.01 ;
     INIT = true ;
-    fov = 30 ;
+    % fov = 30 ;
     smoothing_theta = 5 ;
     cpt = 0 ;
     last_movement = 0 ;
     theta_hist = [] ;
-    nb_audio_labels = 0 ;
-    nb_visual_labels = 0 ;
-    nb_AVPairs = 0 ;
+    % nb_audio_labels = 0 ;
+    % nb_visual_labels = 0 ;
+    % nb_AVPairs = 0 ;
 
     statistics = struct('max', 0,...
                         'max_mean', 0,...
@@ -145,7 +145,7 @@ function execute (obj)
     if ~isempty(classifiers_output)
         obj.data(:, obj.cpt) = classifiers_output ;
     else
-        obj.data(:, obj.cpt) = obj.emptyVector() ;
+        obj.data(:, obj.cpt) = generateEmptyVector() ;
     end
 
     % --- Add the motor order to the Blackboard
@@ -210,10 +210,6 @@ end
 % end
 % === TO BE MODIFIED === %
 
-function request = emptyVector (obj)
-    request = zeros(obj.nb_audio_labels+obj.nb_visual_labels, 1) ;
-end
-
 function moveHead (obj)
     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data ;
     % --- If no sound -> make the head turn to 0° (resting state)
@@ -251,10 +247,12 @@ end
 
 % === TO BE MODIFIED === %
 function [create_new, do_nothing] = createNewObject (obj)
+
+    a = getInfo('nb_audio_labels');
     % crit = 0 ;
     audio_data = obj.retrieveLastAudioData() ;
-    if max(audio_data(:, end)) == obj.nb_audio_labels+1
-        if max(audio_data(:, end-1)) == obj.nb_audio_labels+1
+    if max(audio_data(:, end)) == a+1
+        if max(audio_data(:, end-1)) == a+1
             create_new = false ;
             do_nothing = true ;
         else
@@ -262,7 +260,7 @@ function [create_new, do_nothing] = createNewObject (obj)
             do_nothing = false ;
         end
     else
-        if max(audio_data(:, end-1)) == obj.nb_audio_labels+1
+        if max(audio_data(:, end-1)) == a+1
             create_new = true ;
             do_nothing = false ;
         else
@@ -343,17 +341,33 @@ end
 
 function htmINIT (obj)
     fprintf('\nInitialization of HeadTurningModulationKS\n');
-    obj.audio_labels = getappdata(0, 'audio_labels') ;
-    obj.visual_labels = getappdata(0, 'visual_labels') ;
 
-    obj.AVPairs = {'door_knock', 'person_speech', 'siren_alert'} ;
-    obj.nb_AVPairs = numel(obj.AVPairs) ;
+    information.audio_labels = getappdata(0, 'audio_labels');
+    information.nb_audio_labels = numel(information.audio_labels);
+
+    information.nb_visual_labels = numel(information.visual_labels);
+    information.visual_labels = getappdata(0, 'visual_labels');
+
+    information.nb_labels = information.nb_audio_labels + information.nb_visual_labels
+
+    information.AVPairs = {'door_knock', 'person_speech', 'siren_alert'};
+    information.nb_AVPairs = numel(information.AVPairs) ;
+
+    information.fov = 30;
+
+    setappdata(0, 'information', information);
+
+    % obj.audio_labels = getappdata(0, 'audio_labels') ;
+    % obj.visual_labels = getappdata(0, 'visual_labels') ;
+
+    % obj.AVPairs = {'door_knock', 'person_speech', 'siren_alert'} ;
+    % obj.nb_AVPairs = numel(obj.AVPairs) ;
 
     obj.HTM_robot = Robot() ;
 
-    obj.nb_audio_labels = numel(obj.audio_labels) ;
-    obj.nb_visual_labels = numel(obj.visual_labels) ;
-    obj.nb_labels = obj.nb_audio_labels + obj.nb_visual_labels ;
+    % obj.nb_audio_labels = numel(obj.audio_labels) ;
+    % obj.nb_visual_labels = numel(obj.visual_labels) ;
+    % obj.nb_labels = obj.nb_audio_labels + obj.nb_visual_labels ;
     obj.INIT = false ;
 
     
