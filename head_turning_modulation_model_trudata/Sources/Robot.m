@@ -37,8 +37,6 @@ properties (SetAccess = private, GetAccess = public)
     finished ;
 
     lastFrame ;
-    Jido;
-
 end
 
 
@@ -48,8 +46,10 @@ end
 methods
 % === Constructor === %
 function obj = Robot ()
-    obj.robotController = RobotController(obj) ;
-    obj.Jido = JidoInterface('~/openrobots/lib/matlab');
+    %obj.robotController = RobotController(obj) ;
+    %obj.Jido = JidoInterface('/home/twoears/openrobots/lib/matlab');
+    
+   
     % obj.Jido.configureAudioStreamServer()
     % obj.BlockSize = 2048;
     % obj.SampleRate = 16000;

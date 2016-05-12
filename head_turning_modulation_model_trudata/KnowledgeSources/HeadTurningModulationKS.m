@@ -76,6 +76,7 @@ function obj = HeadTurningModulationKS (robot)
     obj = obj@AbstractKS();
     obj.robot = robot ;
     obj.invocationMaxFrequency_Hz = inf ;
+    obj.htmINIT() ;
 end
 
 
@@ -344,11 +345,16 @@ end
 function htmINIT (obj)
     fprintf('\nInitialization of HeadTurningModulationKS\n');
 
+    % obj.audio_labels = getappdata(0, 'audio_labels') ;
+    % obj.visual_labels = getappdata(0, 'visual_labels') ;
+
+    % obj.AVPairs = {'door_knock', 'person_speech', 'siren_alert'} ;
+    % obj.nb_AVPairs = numel(obj.AVPairs) ;
     information.audio_labels = getappdata(0, 'audio_labels');
     information.nb_audio_labels = numel(information.audio_labels);
-
-    information.nb_visual_labels = numel(information.visual_labels);
+    
     information.visual_labels = getappdata(0, 'visual_labels');
+    information.nb_visual_labels = numel(information.visual_labels);
 
     information.nb_labels = information.nb_audio_labels + information.nb_visual_labels
 
@@ -365,20 +371,12 @@ function htmINIT (obj)
                                     'proba'     , 0) ;
 
     setappdata(0, 'information', information);
-
-    % obj.audio_labels = getappdata(0, 'audio_labels') ;
-    % obj.visual_labels = getappdata(0, 'visual_labels') ;
-
-    % obj.AVPairs = {'door_knock', 'person_speech', 'siren_alert'} ;
-    % obj.nb_AVPairs = numel(obj.AVPairs) ;
-
     obj.HTM_robot = Robot() ;
 
     % obj.nb_audio_labels = numel(obj.audio_labels) ;
     % obj.nb_visual_labels = numel(obj.visual_labels) ;
     % obj.nb_labels = obj.nb_audio_labels + obj.nb_visual_labels ;
     obj.INIT = false ;
-
     
 end
 

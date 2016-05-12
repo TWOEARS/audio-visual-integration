@@ -22,8 +22,9 @@ startTwoEars();
 
 % QR2matlab = client.load('QR2matlab') ;
 % QR2matlab.connect_port('dataIn', '/visp_auto_tracker/code_message') ;
+Jido = JidoInterface('/home/twoears/openrobots/lib/matlab');
 
-robot = Robot() ;
+%robot = Robot() ;
 % robot.initializeBass(bass, basc2) ;
 
 
@@ -35,7 +36,7 @@ robot = Robot() ;
 disp( 'Building blackboard system...' );
 
 bbs = BlackboardSystem(0);
-bbs.setRobotConnect(robot) ;
+bbs.setRobotConnect(Jido) ;
 bbs.setDataConnect('AuditoryFrontEndKS');
 
 folder = 'ClassifierData' ;
@@ -56,8 +57,8 @@ visualIdentityKS = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
 
 headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs.robotConnect});
 
-localizerKS = bbs.createKS('DnnLocationKS');
-
+%localizerKS = bbs.createKS('DnnLocationKS');
+localizerKS = bbs.createKS('GmmLocationKS');
 bbs.blackboardMonitor.bind({bbs.scheduler},...
                {bbs.dataConnect},...
                'replaceOld', 'AgendaEmpty');
