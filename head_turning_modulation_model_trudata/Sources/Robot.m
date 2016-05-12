@@ -37,6 +37,7 @@ properties (SetAccess = private, GetAccess = public)
     finished ;
 
     lastFrame ;
+    Jido;
 
 end
 
@@ -48,14 +49,16 @@ methods
 % === Constructor === %
 function obj = Robot ()
     obj.robotController = RobotController(obj) ;
-    obj.BlockSize = 2048;
-    obj.SampleRate = 16000;
+    obj.Jido = JidoInterface('~/openrobots/lib/matlab');
+    % obj.Jido.configureAudioStreamServer()
+    % obj.BlockSize = 2048;
+    % obj.SampleRate = 16000;
 
-    % prepare values for blackboard connection
-    obj.AzimuthMin = -180;
-    obj.AzimuthMax = 180;
-    obj.finished = false;
-    obj.lastFrame = 0 ;
+    % % prepare values for blackboard connection
+    % obj.AzimuthMin = -180;
+    % obj.AzimuthMax = 180;
+    % obj.finished = false;
+    % obj.lastFrame = 0 ;
 
     % --- At initialization: create a new environment
     obj.addEnvironment() ;
@@ -187,20 +190,20 @@ function theta = motorOrder (obj)
 end
 
 
-function initializeBass (obj, bass, basc2)
-    obj.bass = bass ;
-    obj.basc2 = basc2 ;
+% function initializeBass (obj, bass, basc2)
+%     obj.bass = bass ;
+%     obj.basc2 = basc2 ;
     
-    hardware = 'hw:1,0' ;
-    sampleRate = 44100 ;
-    nFramesPerChunk = 2205 ;
-    nChunksOnPort = 20 * 0.2;
+%     hardware = 'hw:1,0' ;
+%     sampleRate = 44100 ;
+%     nFramesPerChunk = 2205 ;
+%     nChunksOnPort = 20 * 0.2;
 
-    obj.bufferSize = nFramesPerChunk * nChunksOnPort ;
+%     obj.bufferSize = nFramesPerChunk * nChunksOnPort ;
     
-    % obj.bass.Acquire('-a', hardware, sampleRate, nFramesPerChunk, nChunksOnPort) ;
+%     % obj.bass.Acquire('-a', hardware, sampleRate, nFramesPerChunk, nChunksOnPort) ;
     
-end
+% end
 
 
 function orientation = getCurrentHeadOrientation (obj)
@@ -218,26 +221,29 @@ end
 % outputs:
 %       signal:         the acquired signal
 %       trueIncrement:  ?
+% function [signal, trueIncrement] = getSignal(obj, dT)
 function [signal, trueIncrement] = getSignal(obj, dT)
 
-    getBlocks = obj.basc2.GetBlocks(0, obj.lastFrame);
+    [earSignals, signalLengthSec] = obj.JidoInterface.getSignal(dT);
 
-    if (~strcmp(getBlocks.status,'done'))
-        error(getBlocks.exception.ex);
-    end
+    % getBlocks = obj.basc2.GetBlocks(0, obj.lastFrame);
 
-    newAudio = obj.basc2.newAudio();
-    obj.lastFrame = newAudio.newAudio.lastFrameIndex;
+    % if (~strcmp(getBlocks.status,'done'))
+    %     error(getBlocks.exception.ex);
+    % end
 
-    if ( newAudio.newAudio.lostFrames > 0 )
-        disp(strcat('Lost data : ',int2str(newAudio.newAudio.lostFrames)));
-    end
+    % newAudio = obj.basc2.newAudio();
+    % obj.lastFrame = newAudio.newAudio.lastFrameIndex;
+
+    % if ( newAudio.newAudio.lostFrames > 0 )
+    %     disp(strcat('Lost data : ',int2str(newAudio.newAudio.lostFrames)));
+    % end
     
-    % Append Audio
-    left = cell2mat( newAudio.newAudio.left ) ;
-    right = cell2mat(newAudio.newAudio.right) ;
-    signal = [left, right] ;
-    trueIncrement = numel(left) / obj.SampleRate ;
+    % % Append Audio
+    % left = cell2mat( newAudio.newAudio.left ) ;
+    % right = cell2mat(newAudio.newAudio.right) ;
+    % signal = [left, right] ;
+    % trueIncrement = numel(left) / obj.SampleRate ;
 end
 
 % =================================== %

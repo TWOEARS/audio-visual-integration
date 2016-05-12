@@ -6,16 +6,16 @@ disp( 'Initializing Two!Ears, setting up binaural simulator...' );
 % ================= %
 
 addpath(genpath('~/AuditoryModel/TwoEars-1.2'));
-addpath(genpath('~/openrobots/lib/matlab'));
+% addpath(genpath('~/openrobots/lib/matlab'));
 
-client = genomix.client('jido-base:8080') ;
-bass = client.load('bass') ;
-basc2 = client.load('basc2') ;
-connection = basc2.connect_port('Audio', 'bass/Audio');
+% client = genomix.client('jido-base:8080') ;
+% bass = client.load('bass') ;
+% basc2 = client.load('basc2') ;
+% connection = basc2.connect_port('Audio', 'bass/Audio');
 
-if (~strcmp(connection.status,'done'))
-    error(connection.exception.ex);
-end
+% if (~strcmp(connection.status,'done'))
+%     error(connection.exception.ex);
+% end
 
 % === Initialize Two!Ears model and check dependencies
 startTwoEars();
@@ -24,7 +24,7 @@ startTwoEars();
 % QR2matlab.connect_port('dataIn', '/visp_auto_tracker/code_message') ;
 
 robot = Robot() ;
-robot.initializeBass(bass, basc2) ;
+% robot.initializeBass(bass, basc2) ;
 
 
 % ================= %
