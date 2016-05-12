@@ -13,7 +13,7 @@ properties (SetAccess = public, GetAccess = public)
     objects 		= cell(0) ; % all detected objects 
     % AVClasses = [] ;
     MFI = [] ;
-    labels = {} ;
+    labels = {};
 end
 properties (SetAccess = private, GetAccess = public)
     counter = 0 ;
