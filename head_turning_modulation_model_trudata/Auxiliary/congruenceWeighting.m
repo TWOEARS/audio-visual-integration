@@ -1,4 +1,4 @@
-function weight = objectWeightingFunction (posneg, val)
+function weight = congruenceWeighting (posneg, val)
 
 if strcmp(posneg, 'pos')
 	weight = 1/(1+100*exp(-2*val)) ;
