@@ -83,16 +83,22 @@ function createNewCategory (obj, label)
 	obj.labels = [obj.labels, label] ;
 end
 
+function bool = getRequests (obj, iObj, request)
+	bool = obj.objects{iObj}.requests.(request);
+end
 
 function checkInference (obj)
 	labels = obj.labels ;
 	for iObj = obj.present_objects
 		% --- If an inference has been requested
-		if obj.objects{iObj}.requests.inference
+		if obj.getRequests(iObj, 'inference')
+		% if obj.objects{iObj}.requests.inference
 			% --- If visual data is still not available
-			if obj.objects{iObj}.requests.missing
+			if obj.getRequests(iObj, 'missing')
+			% if obj.objects{iObj}.requests.missing
 				% --- If a CHECK has been requested (-> motor order)
-				if obj.objects{iObj}.requests.check
+				if obj.getRequests(iObj, 'check')
+				% if obj.objects{iObj}.requests.check
 					% --- Continue to turn the head to the object
 				% --- If a CHECK has not been yet requested -> trigger the motor order
 				else
@@ -102,6 +108,9 @@ function checkInference (obj)
 					% --- If the category has been correctly inferred in the past
 					% --- CHECK is not needed -> we trust the inference
 					if obj.isPerformant(search)
+						% obj.setObject(iObj, 'check', false);
+						% obj.setObject(iObj, 'verification', false);
+
 						obj.objects{iObj}.requests.check = false ;
 						obj.objects{iObj}.requests.verification = false ;
 						obj.objects{iObj}.setLabel(AVClass) ;
@@ -119,12 +128,13 @@ function checkInference (obj)
 		% --- If no inference requested (AV data available)
 		% --- But a verification is requested
 		% --- ADD A VERIFICATION WITH NO CHECK in order to verify the inference in the case we have AV thanks to DWmod
-		elseif obj.objects{iObj}.requests.verification
+	elseif obj.getRequests(iObj, 'verification')
+		% elseif obj.objects{iObj}.requests.verification
 			% --- We now have the full AV data
 			AVClass = obj.MFI.inferCategory(obj.objects{iObj}.getBestData()) ;
 			search = find(strcmp(AVClass, labels)) ;
 			% --- If infered AV is the same as observed AV
-			if strcmp(AVClass, obj.objects{iObj}.requests.label)
+			if strcmp(AVClass, obj.getRequests(iObj, 'label'))
 				obj.objects{iObj}.requests.verification = false ;
 				obj.objects{iObj}.requests.check = false ;
 
@@ -136,7 +146,7 @@ function checkInference (obj)
 				% --- 
 			end
 		% Else if all data available
-		elseif ~obj.objects{iObj}.requests.missing
+		elseif ~obj.getRequests(iObj, 'missing')
 			% --- Infer AV class
 			AVClass = obj.MFI.inferCategory(obj.objects{iObj}.getBestData()) ;
 			search = find(strcmp(AVClass, labels)) ;
