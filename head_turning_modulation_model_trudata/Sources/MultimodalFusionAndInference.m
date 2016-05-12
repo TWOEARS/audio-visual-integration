@@ -30,9 +30,7 @@ end
 % --- Constructor (END) --- %
 
 function createMSOM (obj)
-	a = getInfo('nb_audio_labels');
-	v = getInfo('nb_visual_labels');
-	obj.MSOM = MSOM('Modalities', [a, v]) ;
+	obj.MSOM = MSOM() ;
 end
 
 % --- 
