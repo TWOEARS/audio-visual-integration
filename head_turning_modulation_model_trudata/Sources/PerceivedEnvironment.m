@@ -19,12 +19,6 @@ properties (SetAccess = private, GetAccess = public)
     counter = 0 ;
     nb_classes = 0 ;
     observed_categories = cell(0) ;
-    obs_struct = struct('label'		, 'none_none',...
-    					'perf'		, 0,...
-    					'nb_goodInf', 0,...
-    					'nb_inf'    , 0,...
-    					'cpt'		, 0,...
-    					'proba'	    , 0) ;
 end
 % ===Properties (END) === %
 
@@ -36,7 +30,8 @@ function obj = PerceivedEnvironment ()
 	obj.MFI = MultimodalFusionAndInference() ;
 
 	% --- Initialize categories
-	obj.observed_categories{1} = obj.obs_struct ;
+	% obj.observed_categories{1} = obj.obs_struct ;
+	obj.observed_categories{1} = getInfo('obs_struct') ;
 end
 % --- Constructor (END) --- %
 
@@ -48,7 +43,8 @@ function addObject (obj, data, theta, d)
 end
 
 function addInput (obj)
-	if ~obj.objects{end}.requests.missing
+	% if ~obj.objects{end}.requests.missing
+	if ~obj.getRequests(numel(obj.objects), 'missing')
 		% --- Train nets
 		obj.MFI.newInput(obj.objects{end}.getBestData()) ;
 	end
@@ -78,7 +74,8 @@ function setClasses (obj)
 end
 
 function createNewCategory (obj, label)
-	obj.observed_categories{end+1} = obj.obs_struct ;
+	% obj.observed_categories{end+1} = obj.obs_struct ;
+	obj.observed_categories{end+1} = getInfo('obs_struct') ;
 	obj.observed_categories{end}.label = label ;
 	obj.labels = [obj.labels, label] ;
 end
