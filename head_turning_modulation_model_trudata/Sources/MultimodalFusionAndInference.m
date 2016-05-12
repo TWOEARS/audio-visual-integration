@@ -10,11 +10,6 @@ classdef MultimodalFusionAndInference < handle
 properties (SetAccess = public, GetAccess = public)
     categories = {} ;
     inputs = [] ;
-    audio_labels = {} ;
-    visual_labels = {} ;
-    nb_alabels = 0 ;
-    nb_vlabels = 0 ;
-    nb_labels = 0 ;
     nb_modalities = 2 ;
     MSOM = [] ;
     nb_categories = 0 ;
@@ -28,21 +23,16 @@ methods
 function obj = MultimodalFusionAndInference ()
 
 	% --- Retrieve audio and visual data
-	obj.audio_labels = getappdata(0, 'audio_labels') ;
-	obj.visual_labels = getappdata(0, 'visual_labels') ;
 	obj.nb_modalities = 2 ;
-
-	obj.nb_alabels = numel(obj.audio_labels) ;
-	obj.nb_vlabels = numel(obj.visual_labels) ;
-	obj.nb_labels = obj.nb_alabels + obj.nb_vlabels ;
-
 	% --- Initialize MSOM
 	obj.createMSOM() ;
 end
 % --- Constructor (END) --- %
 
 function createMSOM (obj)
-	obj.MSOM = MSOM('Modalities', [obj.nb_alabels, obj.nb_vlabels]) ;
+	a = getInfo('nb_audio_labels');
+	v = getInfo('nb_visual_labels');
+	obj.MSOM = MSOM('Modalities', [a, v]) ;
 end
 
 % --- 
@@ -54,10 +44,16 @@ function newInput (obj, input_vector)
 end
 
 function setCategories (obj)
+	
+	v = getInfo('visual_labels');
+	a = getInfo('audio_labels');
+	
 	MSOM_categories = obj.MSOM.categories ;
 	obj.categories = cell(size(MSOM_categories, 1), 1) ;
+
+	
 	for iCat = 1:size(MSOM_categories, 1)
-		obj.categories{iCat} = [obj.visual_labels{MSOM_categories(iCat, 1)}, '_', obj.audio_labels{MSOM_categories(iCat, 2)}] ;
+		obj.categories{iCat} = [v{MSOM_categories(iCat, 1)}, '_', a{MSOM_categories(iCat, 2)}] ;
 	end
 	obj.nb_categories = numel(obj.categories) ;
 	% obj.assignNodesToCategories() ;
@@ -75,25 +71,30 @@ function AVCategory = inferCategory (obj, input_vector)
 		return ;
 	end
 
-	if sum(input_vector(1:obj.nb_alabels)) < 0.2 &&...
-	   sum(input_vector(obj.nb_alabels+1:end)) < 0.2
+	a = getInfo('nb_audio_labels');
+
+	if sum(input_vector(1:a)) < 0.2 &&...
+	   sum(input_vector(a+1:end)) < 0.2
 	   AVCategory = 'none_none' ;
 	   return ;
 	% --- Audio missing
-	elseif sum(input_vector(1:obj.nb_alabels)) < 0.2
-		bmu = obj.MSOM.findBMU(input_vector(obj.nb_alabels+1:end), 2) ;
+	elseif sum(input_vector(1:a)) < 0.2
+		bmu = obj.MSOM.findBMU(input_vector(a+1:end), 2) ;
 	% --- Vision missing
-	elseif sum(input_vector(obj.nb_alabels+1:end)) < 0.2
-		bmu = obj.MSOM.findBMU(input_vector(1:obj.nb_alabels), 1) ;
+	elseif sum(input_vector(a+1:end)) < 0.2
+		bmu = obj.MSOM.findBMU(input_vector(1:a), 1) ;
 	% --- If vector is complete
 	else
 		bmu = obj.MSOM.findBestBMU(input_vector) ;
 	end
 
+	visual_labels = getInfo('visual_labels');
+	audio_labels = getInfo('audio_labels');
+
 	[~, alabel] = max(obj.MSOM.som_weights{1}(bmu, :)) ;
 	[~, vlabel] = max(obj.MSOM.som_weights{2}(bmu, :)) ;
-	vlabel = obj.visual_labels{vlabel} ;
-	alabel = obj.audio_labels{alabel} ;
+	vlabel = visual_labels{vlabel} ;
+	alabel = audio_labels{alabel} ;
 	AVCategory = [vlabel, '_', alabel] ;
 end
 
