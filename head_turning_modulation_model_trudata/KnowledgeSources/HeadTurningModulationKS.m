@@ -103,7 +103,8 @@ function execute (obj)
     
     fprintf('\nHead Turning Modulation KS evaluation\n');
 
-    obj.cpt = obj.cpt + 1 ;
+    % obj.cpt = obj.cpt + 1 ;
+    incrementVariable(obj, 'cpt') ;
 
     [create_new, do_nothing] = obj.createNewObject() ;
 
@@ -334,6 +335,7 @@ end
 
 % end
 % === TO BE MODIFIED === %
+
 
 % ==================================== %
 % ========== INITIALIZATION ========== %

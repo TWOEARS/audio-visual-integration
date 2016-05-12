@@ -118,7 +118,8 @@ function checkInference (obj)
 						% --- Request a CHECK of infered AV vs observed AV
 						obj.objects{iObj}.requests.check = true ;
 						obj.objects{iObj}.requests.label = AVClass ;
-						obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1 ;
+						obj.incrementVariable(obj, 'observed_categories{search}.nb_inf');
+						% obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1 ;
 					end
 				end
 			end
@@ -201,13 +202,16 @@ function reinitializeClasses (obj)
 end
 
 function categorizeObjects (obj)
-
 	obj.reinitializeClasses() ;
 	for iObj = 1:numel(obj.objects)
 		if obj.objects{iObj}.cat > 0
-			obj.observed_categories{obj.objects{iObj}.cat}.cpt = obj.observed_categories{obj.objects{iObj}.cat}.cpt + 1 ;
+			incrementVariable(obj, 'observed_categories{obj.objects{iObj}.cat}.cpt');
+
+			% obj.observed_categories{obj.objects{iObj}.cat}.cpt = obj.observed_categories{obj.objects{iObj}.cat}.cpt + 1 ;
 		else
-			obj.observed_categories{1}.cpt = obj.observed_categories{1}.cpt + 1 ;
+			% obj.incrementVariable(obj.observed_categories{1}.cpt);
+			incrementVariable(obj, 'obj.observed_categories{1}.cpt');
+			% obj.observed_categories{1}.cpt = obj.observed_categories{1}.cpt + 1 ;
 		end
 	end
 
@@ -285,7 +289,8 @@ end
 
 
 function updateObjects (obj, tmIdx)
-	obj.counter = obj.counter + 1 ;
+	% obj.counter = obj.counter + 1 ;
+	obj.incrementVariable(obj, 'counter');
 	
 	obj.objects{end}.updateTime(tmIdx) ;
 

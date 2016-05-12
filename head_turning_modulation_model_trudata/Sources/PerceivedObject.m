@@ -60,7 +60,8 @@ function obj = PerceivedObject (data, theta, d)
 	obj.d = d ;
 	obj.tsteps = 1 ;
 	obj.presence = true ;
-	obj.cpt = obj.cpt + 1 ;
+	incrementVariable(obj, 'cpt');
+	% obj.cpt = obj.cpt + 1 ;
 	obj.addData(data) ;
 end
 % --- Constructor (END) --- %
@@ -141,7 +142,8 @@ function updateTime (obj, t)
 end
 
 function updateObj (obj)
-	obj.cpt = obj.cpt + 1 ;
+	incrementVariable(obj, 'cpt');
+	% obj.cpt = obj.cpt + 1 ;
 	if isempty(obj.cat_hist)
 		obj.cat_hist = obj.cat ;
 		obj.tsteps = 1 ;
@@ -149,7 +151,8 @@ function updateObj (obj)
 	end
 
 	if obj.cat == obj.cat_hist(end)
-		obj.tsteps = obj.tsteps + 1 ;
+		incrementVariable(obj, 'tsteps');
+		% obj.tsteps = obj.tsteps + 1 ;
 	else
 		obj.tsteps = 1 ;
 	end
