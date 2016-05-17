@@ -157,7 +157,7 @@ function execute (obj)
 end
 
 function finished = isFinished(obj)
-    finished = obj.finisehd ;
+    finished = obj.finished ;
 end
 
 function updateTime (obj)
@@ -240,11 +240,13 @@ function moveHead (obj)
         theta = 0 ;
     end
 
-    maxAzimuth = theta + currentHeadOrientation ;
-    maxAzimuth = mod(maxAzimuth, 360) ;
-    obj.robot.robotController.omegaMax = 1000000.0 ;
-    obj.robot.robotController.goalAzimuth = maxAzimuth ;
-    obj.robot.robotController.finishedPlatformRotation = false ;
+    obj.robot.moveRobot(0.2, 0.2, 0) ;
+    
+%     maxAzimuth = theta + currentHeadOrientation ;
+%     maxAzimuth = mod(maxAzimuth, 360) ;
+%     obj.robot.robotController.omegaMax = 1000000.0 ;
+%     obj.robot.robotController.goalAzimuth = maxAzimuth ;
+%     obj.robot.robotController.finishedPlatformRotation = false ;
 end
 
 % === TO BE MODIFIED === %
@@ -253,8 +255,10 @@ function [create_new, do_nothing] = createNewObject (obj)
     a = getInfo('nb_audio_labels');
     % crit = 0 ;
     audio_data = obj.retrieveLastAudioData() ;
-    if max(audio_data(:, end)) == a+1
-        if max(audio_data(:, end-1)) == a+1
+    %if max(audio_data(:, end)) == a+1
+    if max(audio_data(:, end)) <= 0.2
+        %if max(audio_data(:, end-1)) == a+1
+        if max(audio_data(:, end-1)) <= 0.2
             create_new = false ;
             do_nothing = true ;
         else
@@ -262,7 +266,8 @@ function [create_new, do_nothing] = createNewObject (obj)
             do_nothing = false ;
         end
     else
-        if max(audio_data(:, end-1)) == a+1
+        %if max(audio_data(:, end-1)) == a+1
+         if max(audio_data(:, end-1)) <= 0.2
             create_new = true ;
             do_nothing = false ;
         else
@@ -270,7 +275,6 @@ function [create_new, do_nothing] = createNewObject (obj)
             do_nothing = true ;
         end
     end
-                
     % % === Silence
     % if all(audio_data(:, end) == 0)
     %     create_new = false ;
@@ -296,22 +300,27 @@ end
 % that does not work with the setup of the current experiment.
 % Need to find a way to know when to create a new object.
 function audio_data = retrieveLastAudioData (obj)
-    audio_data_all = obj.blackboard.getData('auditoryIdentityHypotheses') ;
+    audio_data_all = obj.blackboard.getData('identityHypotheses');
 
     if numel(audio_data_all) > 1
         audio_data_1 = cell2mat(...
                                 arrayfun(@(x) audio_data_all(end-1).data(x).p,...
-                                         1:numel(obj.audio_labels),...
+                                         1:getInfo('nb_audio_labels'),...
                                          'UniformOutput', false)...
                                 )' ;
         audio_data_2 = cell2mat(...
                                 arrayfun(@(x) audio_data_all(end).data(x).p,...
-                                         1:numel(obj.audio_labels),...
+                                         1:getInfo('nb_audio_labels'),...
                                          'UniformOutput', false)...
                                 )' ;
         audio_data = [audio_data_1, audio_data_2] ;
     else
-        audio_data = 0 ;
+        audio_data = cell2mat(...
+                                arrayfun(@(x) audio_data_all(end).data(x).p,...
+                                         1:getInfo('nb_audio_labels'),...
+                                         'UniformOutput', false)...
+                                )' ;
+        audio_data = [zeros(getInfo('nb_audio_labels'), 1), audio_data];
     end
 end
 % === TO BE MODIFIED === %
@@ -356,9 +365,9 @@ function htmINIT (obj)
     information.visual_labels = getappdata(0, 'visual_labels');
     information.nb_visual_labels = numel(information.visual_labels);
 
-    information.nb_labels = information.nb_audio_labels + information.nb_visual_labels
+    information.nb_labels = information.nb_audio_labels + information.nb_visual_labels;
 
-    information.AVPairs = {'door_knock', 'person_speech', 'siren_alert'};
+    information.AVPairs = {'siren_alarm', 'baby_baby', 'female_femaleSpeech', 'fire_fire'};
     information.nb_AVPairs = numel(information.AVPairs) ;
 
     information.fov = 30;

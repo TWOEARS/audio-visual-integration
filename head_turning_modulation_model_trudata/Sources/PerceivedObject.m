@@ -124,7 +124,7 @@ function setLabel (obj, label)
 end
 
 function setWeight (obj, posneg)
-	obj.weight = congruenceWeighting(posneg, obj.tsteps);
+	obj.weight = congruenceWeighting(posneg, obj.tsteps)
 end
 
 function updateCatHist (obj, value)

@@ -40,28 +40,45 @@ bbs.setRobotConnect(Jido) ;
 bbs.setDataConnect('AuditoryFrontEndKS');
 
 folder = 'ClassifierData' ;
-d = dir(fullfile(folder, 'T*')) ;
+%d = dir(fullfile(folder, 'T*')) ;
+d = dir(folder);
 nb_files = numel(d) ;
 auditoryClassifiersKS = cell(0) ;
-model_name = cell(1, numel(d)) ;
+model_name = cell(0) ;
 
+%models = dir(fullfile(folder, d.name, '*.mat'));
+
+%nb_models = numel(models);
+
+%for iFile = 1:nb_files
 for iFile = 1:nb_files
-	model = dir(fullfile(folder, d(iFile).name, '*.mat')) ;
-	model = model.name(1:strfind(model.name, '.')-1) ;
-	auditoryClassifiersKS{iFile} = bbs.createKS('AuditoryIdentityModKS', {model, d(iFile).name}) ;
-	model_name{iFile} = model ;
+    if strfind(d(iFile).name, '.mat')
+        %model = dir(fullfile(folder, d(iFile).name, '*.mat'));
+        model = d(iFile).name(1:strfind(d(iFile).name, '.')-1);
+    	auditoryClassifiersKS{end+1} = bbs.createKS('IdentityKS', {d(iFile).name, folder}) ;
+        model_name{end+1} = model;
+    end
 end
 
 signalLevelKS = bbs.createKS('SignalLevelKS') ;
 visualIdentityKS = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
 
 headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs.robotConnect});
-
+%updateEnvironmentKS 			= bbs.createKS('UpdateEnvironmentKS', {bbs.robotConnect});
 %localizerKS = bbs.createKS('DnnLocationKS');
 localizerKS = bbs.createKS('GmmLocationKS');
+% 
+% bbs.blackboardMonitor.bind({bbs.scheduler},...
+% 						   {updateEnvironmentKS},...
+% 						   'replaceOld', 'AgendaEmpty');
+% 
+% bbs.blackboardMonitor.bind({updateEnvironmentKS},...
+% 						   {bbs.dataConnect},...
+% 						   'replaceOld');
+
 bbs.blackboardMonitor.bind({bbs.scheduler},...
-               {bbs.dataConnect},...
-               'replaceOld', 'AgendaEmpty');
+                           {bbs.dataConnect},...
+                           'replaceOld', 'AgendaEmpty');
 
 bbs.blackboardMonitor.bind({bbs.dataConnect},...
 						   {localizerKS},...
@@ -86,7 +103,7 @@ bbs.blackboardMonitor.bind({auditoryClassifiersKS{end}},...
 						   'replaceOld' );
 
 setappdata(0, 'audio_labels', model_name) ;
-setappdata(0, 'visual_labels', {'door', 'person', 'siren'}) ;
+setappdata(0, 'visual_labels', {'siren', 'baby', 'female', 'fire'}) ;
 
 disp( 'Starting blackboard system.' );
 
