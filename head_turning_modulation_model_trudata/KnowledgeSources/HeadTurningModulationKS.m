@@ -240,7 +240,7 @@ function moveHead (obj)
         theta = 0 ;
     end
 
-    obj.robot.moveRobot(0.2, 0.2, 0) ;
+    obj.robot.moveRobot(0.2, 0.2, 0);
     
 %     maxAzimuth = theta + currentHeadOrientation ;
 %     maxAzimuth = mod(maxAzimuth, 360) ;
