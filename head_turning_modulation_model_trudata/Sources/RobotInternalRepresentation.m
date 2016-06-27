@@ -1,4 +1,4 @@
-classdef Robot < handle
+classdef RobotInternalRepresentation < handle
 
 % --------------- %
 % --- SUMMARY --- %
@@ -45,21 +45,9 @@ end
 % -             - %
 methods
 % === Constructor === %
-function obj = Robot ()
-    %obj.robotController = RobotController(obj) ;
-    %obj.Jido = JidoInterface('/home/twoears/openrobots/lib/matlab');
-    
-   
-    % obj.Jido.configureAudioStreamServer()
-    % obj.BlockSize = 2048;
-    % obj.SampleRate = 16000;
-
-    % % prepare values for blackboard connection
-    % obj.AzimuthMin = -180;
-    % obj.AzimuthMax = 180;
-    % obj.finished = false;
-    % obj.lastFrame = 0 ;
-
+function obj = RobotInternalRepresentation (htm)
+    obj.MFI = htm.MFI;
+    obj.MotorOrderKS = htm.MotorOrderKS();
     % --- At initialization: create a new environment
     obj.addEnvironment() ;
 
@@ -72,7 +60,7 @@ end
 
 
 function addEnvironment (obj)
-    obj.environments{end+1} = PerceivedEnvironment() ;
+    obj.environments{end+1} = PerceivedEnvironment(obj) ;
 end
 
 % === Add a new object to the environment
