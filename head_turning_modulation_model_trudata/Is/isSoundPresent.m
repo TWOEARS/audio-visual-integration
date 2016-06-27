@@ -1,8 +1,9 @@
 function bool = isSoundPresent (obj)
-    tmp = getClassifiersOutput(obj) ;
+    
+    tmp = getClassifiersOutput(obj);
     if sum(tmp(1:getInfo('nb_audio_labels'))) < 0.9
-        bool = false ;
+        bool = false;
     else
-        bool = true ;
+        bool = true;
     end
 end
