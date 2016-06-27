@@ -43,32 +43,30 @@ classdef OdiInterface < handle
             % Load BASS module
             obj.bass = obj.client.load('bass');
             
-            %obj.qr_vision = obj.client.load('QR2matlab');
+            obj.qr_vision = obj.client.load('QR2matlab');
             
-                currentPositionPort = obj.jido.connect_port('currentPosition', 'currentPosition');
-                goalStatusArray = obj.jido.connect_port('GoalStatus', 'move_base/status');
-%                 obj.qr_vision.connect_port('messageIn', '/visp_auto_tracker/code_message' );
-%                 obj.qr_vision.connect_port('poseIn', '/visp_auto_tracker/object_position' );
+            currentPositionPort = obj.jido.connect_port('currentPosition', 'currentPosition');
+            goalStatusArray = obj.jido.connect_port('GoalStatus', 'move_base/status');
+            obj.qr_vision.connect_port('messageIn', '/visp_auto_tracker/code_message' );
+            obj.qr_vision.connect_port('poseIn', '/visp_auto_tracker/object_position' );
                
-            
-            hardware = 'hw:2,0' ;
-            obj.SampleRate = 44100 ;
-            nFramesPerChunk = 2205 ;
-            nChunksOnPort = 20*0.5 ;
-            obj.bass.Acquire('-a', hardware, obj.SampleRate, nFramesPerChunk, nChunksOnPort) ;
+            hardware        = 'hw:2,0';
+            obj.SampleRate  = 44100;
+            nFramesPerChunk = 2205;
+            nChunksOnPort   = 20*0.5;
+            obj.bass.Acquire('-a', hardware, obj.SampleRate, nFramesPerChunk, nChunksOnPort);
             
 %             QR2 = obj.qr_vision.Publish('-a');
             
             % Get BASS status info
             % audioObj = obj.bass.Audio(); % A voir
-            obj.BlockSize = nFramesPerChunk * ...
-                nChunksOnPort;
+            obj.BlockSize = nFramesPerChunk * nChunksOnPort;
             
             % Get KEMAR properties
             % kemarState = obj.kemar.currentState();
             % obj.AzimuthMax = kemarState.currentState.maxLeft;
             % obj.AzimuthMin = kemarState.currentState.maxRight;
-            obj.finished = false %% init a false
+            obj.finished = false; %% init a false
         end
         
 %         function configureAudioStreamServer(obj, sampleRate, frameSize, ...
@@ -134,6 +132,10 @@ classdef OdiInterface < handle
             % Get signal length
             signalLengthSec = length(earSignals) / ...
                 audioBuffer.Audio.sampleRate;
+
+            sig = getappdata(0, 'sig');
+            sig = [sig ; earSignals];
+            setappdata(0, 'sig', sig);
             
         end
         

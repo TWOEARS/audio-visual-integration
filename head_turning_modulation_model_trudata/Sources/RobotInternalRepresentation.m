@@ -12,31 +12,18 @@ classdef RobotInternalRepresentation < handle
 
 % --- Properties --- %
 properties (SetAccess = public, GetAccess = public)
-    environments   = cell(0) ; % list of environments
-    focus          = 0 ; % current focused object by the robot
-    previous_focus = 0 ;
-    focus_hist     = [] ;
-    shm            = 0 ;
-    nb_objects     = 0 ;
-    focus_origin = [] ;
-    robotController ;
+    environments   = cell(0); % list of environments
+    focus          = 0; % current focused object by the robot
+    previous_focus = 0;
+    focus_hist     = [];
+    shm            = 0;
+    nb_objects     = 0;
+    focus_origin = [];
+    MFI;
+    data;
+    theta_hist;
+    dist_hist;
 
-end
-properties (SetAccess = private, GetAccess = public)
-    field_of_view = 30 ;
-    bass ;
-    basc2 ;
-    bufferSize ;
-    AzimuthMin ;
-    AzimuthMax ;
-
-    % block size used in the SSR
-    BlockSize ;
-    % the sample rate used in the SSR
-    SampleRate ;
-    finished ;
-
-    lastFrame ;
 end
 
 
@@ -47,7 +34,6 @@ methods
 % === Constructor === %
 function obj = RobotInternalRepresentation (htm)
     obj.MFI = htm.MFI;
-    obj.MotorOrderKS = htm.MotorOrderKS();
     % --- At initialization: create a new environment
     obj.addEnvironment() ;
 
@@ -64,174 +50,121 @@ function addEnvironment (obj)
 end
 
 % === Add a new object to the environment
-function addObject (obj, input_vector, theta, d)
-    if obj.nb_objects > 0
-        obj.getLastObj().presence = false ;
-    end
-    obj.getEnv().addObject(input_vector, theta, d) ;
-    obj.nb_objects = obj.nb_objects + 1 ;
+function addObject (obj)
+    % if obj.nb_objects > 0
+    %     obj.getLastObj().presence = false ;
+    % end
+    obj.getEnv().addObject() ;
+    obj.nb_objects = obj.nb_objects + 1;
 end
 
-% === Update the label of the IDX object with a new INPUT_VECTOR
-function updateLabel (obj, input_vector)
-    obj.getEnv().updateLabel(input_vector) ;
+
+function updateObject (obj)
+    obj.getEnv().updateObjectData();
 end
 
-function updateAngle (obj, theta)
-    obj.getEnv().objects{end}.updateAngle(theta) ;
+function updateData (obj, data, theta, d)
+    obj.data(:, end+1) = data;
+    obj.theta_hist(end+1) = theta;
+    obj.dist_hist(end+1) = d;
 end
 
 % === Compute focus
 function computeFocus (obj)
+
     if isempty(obj.getEnv().objects)
-        obj.focus_hist = [obj.focus_hist, 0] ;
-        return ;
+        obj.focus_hist = [obj.focus_hist, 0];
+        return;
     end
     
     % --- DWmod-based focus computing
-    dwmod_focus = obj.computeDWmodFocus() ;
+    dwmod_focus = obj.computeDWmodFocus();
 
     % --- MFI-based focus computing
-    mfi_focus = obj.computeMFIFocus() ;
+    mfi_focus = obj.computeMFIFocus();
 
     % --- Comparison of the two results
     if mfi_focus == 0
     	focus = dwmod_focus ;
-    	obj.focus_origin(end+1) = 0 ;
+    	obj.focus_origin(end+1) = 0;
     else
     	focus = mfi_focus ;
-    	obj.focus_origin(end+1) = -1 ;
+    	obj.focus_origin(end+1) = -1;
     end
     % focus = mfi_focus ;
 
     if obj.isPresent(focus)
-        obj.focus = focus ;
+        obj.focus = focus;
     end
 
-    obj.computeSHM() ;
+    obj.computeSHM();
 
     % --- List the focus
-    obj.focus_hist = [obj.focus_hist, obj.focus] ;
+    obj.focus_hist = [obj.focus_hist, obj.focus];
 end
 
 function focus = computeDWmodFocus (obj)
-	focus = obj.getMaxWeightObject() ;
-    if obj.getObj(focus, 'weight') < 0.98
-    	focus = 0 ;
+	focus = obj.getMaxWeightObject();
+    if getObject(obj, focus, 'weight') < 0.98
+    	focus = 0;
     end
 end
 
 function focus = computeMFIFocus (obj)
 	focus = 0 ;
-	if obj.getLastObj('presence')
-		if obj.getLastObj().requests.check
-			focus = numel(obj.getEnv().objects) ;
+	if getObject(obj, 0, 'presence')
+        request = getObject(obj, 0, 'requests');
+		if request.check
+			focus = numel(obj.getEnv().objects);
 		end
 	end
 end
 
 function computeSHM (obj)
     if obj.focus ~= obj.previous_focus
-        obj.shm = obj.shm + 1 ;
-        obj.previous_focus = obj.focus ;
+        obj.shm = obj.shm + 1;
+        obj.previous_focus = obj.focus;
     end
 end
 
 % === Get Objects of Max Weight
 function request = getMaxWeightObject (obj)
-    obj_weights = cell2mat(obj.getAllObj('weight')) ;
-    [val, pos] = max(obj_weights) ;
-    max_weight_obj = find(obj_weights == val) ;
+    obj_weights = getObject(obj, 'all', 'weight');
+    [val, pos] = max(obj_weights);
+    max_weight_obj = find(obj_weights == val);
     if numel(max_weight_obj) > 1
-        tsteps = cell2mat(obj.getObj(max_weight_obj, 'tsteps')) ;
-        [~, pos] = min(tsteps) ;
-        request = max_weight_obj(pos) ;
+        tsteps = getObject(obj, max_weight_obj, 'tsteps');
+        [~, pos] = min(tsteps);
+        request = max_weight_obj(pos);
     else
-        request = pos ;
+        request = pos;
     end
-    request = int32(request) ;
+    request = int32(request);
 end
 
 % === Update every objects
 function updateObjects (obj, tmIdx)
     if obj.nb_objects > 0
-        obj.getEnv().updateObjects(tmIdx) ;
+        obj.getEnv().updateObjects(tmIdx);
     end
-    obj.nb_objects = numel(obj.getEnv().objects) ;
-    obj.computeFocus() ;
+    % obj.nb_objects = numel(obj.getEnv().objects) ;
+    obj.computeFocus();
 end
 
 function bool = isPresent (obj, idx)
     if find(idx == obj.getEnv().present_objects)
-        bool = true ;
+        bool = true;
     else
-        bool = false ;
+        bool = false;
     end 
 end
 
 function theta = motorOrder (obj)
     if ~isempty(obj.getEnv().objects) && obj.focus ~= 0
-        theta = obj.getObj(obj.focus, 'theta') ;
+        theta = obj.getObj(obj.focus, 'theta');
     else
-        theta = 0 ;
+        theta = 0;
     end
-end
-
-
-% function initializeBass (obj, bass, basc2)
-%     obj.bass = bass ;
-%     obj.basc2 = basc2 ;
-    
-%     hardware = 'hw:1,0' ;
-%     sampleRate = 44100 ;
-%     nFramesPerChunk = 2205 ;
-%     nChunksOnPort = 20 * 0.2;
-
-%     obj.bufferSize = nFramesPerChunk * nChunksOnPort ;
-    
-%     % obj.bass.Acquire('-a', hardware, sampleRate, nFramesPerChunk, nChunksOnPort) ;
-    
-% end
-
-
-function orientation = getCurrentHeadOrientation (obj)
-    orientation = obj.robotController.head.phi + obj.robotController.phi ;
-end
-
-
-% Get the auralized signal as perceived by the Kemar head. this
-% function is required for communication with the blackboard, to
-% feed the AFE.
-
-% inputs:
-%       dT:             the interval for which a signal chunk has
-%                       to be acquired from the SSR
-% outputs:
-%       signal:         the acquired signal
-%       trueIncrement:  ?
-% function [signal, trueIncrement] = getSignal(obj, dT)
-function [signal, trueIncrement] = getSignal(obj, dT)
-
-    [earSignals, signalLengthSec] = obj.JidoInterface.getSignal(dT);
-
-    % getBlocks = obj.basc2.GetBlocks(0, obj.lastFrame);
-
-    % if (~strcmp(getBlocks.status,'done'))
-    %     error(getBlocks.exception.ex);
-    % end
-
-    % newAudio = obj.basc2.newAudio();
-    % obj.lastFrame = newAudio.newAudio.lastFrameIndex;
-
-    % if ( newAudio.newAudio.lostFrames > 0 )
-    %     disp(strcat('Lost data : ',int2str(newAudio.newAudio.lostFrames)));
-    % end
-    
-    % % Append Audio
-    % left = cell2mat( newAudio.newAudio.left ) ;
-    % right = cell2mat(newAudio.newAudio.right) ;
-    % signal = [left, right] ;
-    % trueIncrement = numel(left) / obj.SampleRate ;
 end
 
 % =================================== %

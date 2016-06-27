@@ -27,6 +27,7 @@ methods
 function obj = MotorOrderKS (robot)
     obj = obj@AbstractKS();
     obj.invocationMaxFrequency_Hz = inf;
+    obj.robot = robot;
 	% obj.robot = htm.robot;
 	% obj.htm = htm;
 end
@@ -38,7 +39,7 @@ end
 
 function execute (obj)
     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data;
-    % --- If no sound -> make the head turn to 0° (resting state)
+    % --- If no sound -> make the head turn to 0deg (resting state)
     htm = obj.blackboard.KSs{end-2};
     RIR = htm.RIR;
     focus = RIR.focus;
@@ -47,7 +48,6 @@ function execute (obj)
     
     if ~isSoundPresent(obj)
         theta = -currentHeadOrientation;
-        % fprintf('\nMotor order: 0deg (resting state)\n') ;
     % --- Turn to the sound source
     elseif focus ~= 0 && isFocusedObjectPresent(obj)
         % --- Smoothing the head movements
@@ -59,7 +59,7 @@ function execute (obj)
         end
     elseif isempty(RIR.getMFI().categories)
         if obj.cpt - obj.last_movement >= 5
-            theta = obj.RIR.getLastObj('theta') ;
+            theta = getObject(RIR, 0, 'theta');
             obj.last_movement = obj.cpt ;
         else
             theta = 0 ;
@@ -68,33 +68,31 @@ function execute (obj)
         theta = 0 ;
     end
 
-    obj.robot.moveRobot(0.2, 0.2, 0);
+    obj.robot.moveRobot(0, 0, theta);
     
-%     maxAzimuth = theta + currentHeadOrientation ;
-%     maxAzimuth = mod(maxAzimuth, 360) ;
-%     obj.robot.robotController.omegaMax = 1000000.0 ;
-%     obj.robot.robotController.goalAzimuth = maxAzimuth ;
-%     obj.robot.robotController.finishedPlatformRotation = false ;
+    obj.blackboard.addData( 'motorOrder', [currentHeadOrientation, theta], true, obj.trigger.tmIdx);
+    notify(obj, 'KsFiredEvent', BlackboardEventData(obj.trigger.tmIdx));
+
 end
 
 
-function moveHead (obj)
-	robot = obj.htm.robot;
-    % --- If no sound -> make the head turn to 0° (resting state)
-    focus = robot.focus;
+% function moveHead (obj)
+% 	robot = obj.htm.robot;
+%     % --- If no sound -> make the head turn to 0ï¿½ (resting state)
+%     focus = robot.focus;
 
-    if obj.isFocusedObjectPresent() && focus ~= 0
-        % theta = obj.motorOrder();
-        theta = getObject(robot, robot.focus, 'theta');
-        % obj.robot.updateAngle(0);
-        setObject(robot, 0, 'theta', 0);
-        %robot.getLastObj().theta = 0;
-    else
-        theta = -obj.head_position;
-    end
-    obj.head_position = mod(theta+obj.head_position, 360) ;
-    obj.head_position_hist(end+1) = obj.head_position;
-end
+%     if obj.isFocusedObjectPresent() && focus ~= 0
+%         % theta = obj.motorOrder();
+%         theta = getObject(robot, robot.focus, 'theta');
+%         % obj.robot.updateAngle(0);
+%         setObject(robot, 0, 'theta', 0);
+%         %robot.getLastObj().theta = 0;
+%     else
+%         theta = -obj.head_position;
+%     end
+%     obj.head_position = mod(theta+obj.head_position, 360) ;
+%     obj.head_position_hist(end+1) = obj.head_position;
+% end
 
 function bool = isFocusedObjectPresent (obj)
 	robot = obj.htm.robot;
@@ -106,6 +104,13 @@ function bool = isFocusedObjectPresent (obj)
         bool = false ;
     end
 end
+
+
+
+function finished = isFinished(obj)
+    finished = obj.finished;
+end
+
 
 end
 

@@ -1,11 +1,11 @@
 function setObject (obj, idx, parameter, value)
 
-    if isa(obj, 'Robot')
+    if isa(obj, 'RobotInternalRepresentation')
         objects = obj.getEnv().objects;
     elseif isa(obj, 'PerceivedEnvironment')
         objects = obj.objects;
     elseif isa(obj, 'HeadTurningModulationKS')
-        objects = obj.robot.getEnv().objects;
+        objects = obj.RIR.getEnv().objects;
     end
 
     if idx == 0

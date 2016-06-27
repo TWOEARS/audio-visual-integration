@@ -16,7 +16,8 @@ function initializeParameters (htm)
 						 'nb_angles'	   , 0 ,...
 						 'sources_position', [],...
 						 'obs_struct'	   , [],...
-						 'statistics'	   , []...
+						 'statistics'	   , [],...
+                         'duration'        , 0 ...
                          );
 
 
@@ -33,6 +34,8 @@ function initializeParameters (htm)
 
     information.smoothing_head_movements = 5;
 
+    information.notification = 'notification.wav';
+
     % =========================================================================== %
     % =========================================================================== %
     % =========================================================================== %
@@ -46,9 +49,11 @@ function initializeParameters (htm)
 
     audio_labels = retrieveAudioIdentityModels(htm);
 
-    visual_labels = retrieveVisualIdentityModels(htm);
+    % visual_labels = retrieveVisualIdentityModels(htm);
+    visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};
 
-    information.nb_angles = numel(AVPairs);
+    % information.nb_angles = numel(AVPairs);
+    information.nb_angles = 3;
     % --- Positions of the sound sources.
     % --- They are here plaed regularly around the robot,
     % --- outside the field of view of the robot when at resting state
@@ -62,8 +67,8 @@ function initializeParameters (htm)
     information.visual_labels    = visual_labels;
     information.nb_visual_labels = numel(information.visual_labels);
 
-    information.AVPairs    = AVPairs;
-    information.nb_AVPairs = numel(information.AVPairs);
+    % information.AVPairs    = AVPairs;
+    % information.nb_AVPairs = numel(information.AVPairs);
 
     information.nb_labels = information.nb_audio_labels + information.nb_visual_labels;
 

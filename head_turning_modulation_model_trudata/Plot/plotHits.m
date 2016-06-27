@@ -1,12 +1,32 @@
 
-function plotHits (obj, vec)
+function plotHits (htm, vec)
 
-    msom = obj.HTM_robot.getMFI().MSOM ;
+    p = getInfo('AVPairs',...
+        'nb_audio_labels',...
+        'nb_labels');
+
+    msom = htm.MSOM;
     
-    if isstr(vec) || iscell(vec)
-        if isstr(vec)
-            if strcmp(vec, 'all')
-                vec = arrayfun(@(x) [obj.AVPairs{x}{1}, '_', obj.AVPairs{x}{2}], 1:numel(obj.AVPairs), 'UniformOutput', false) ;
+
+    if nargin == 1
+        labels = mergeLabels(p.AVPairs);
+        disp(labels);
+        BOOL = false;
+        str = input('Please select an audiovisual pair: ', 's');
+        while ~BOOL
+            varargin{1} = str;
+            if ~strcmp(str, labels)
+                str = input('Error: Wrong field. \nPlease select again a field to retrieve: ', 's');
+            else
+                BOOL = true;
+            end
+        end
+        vec = str;
+    end
+
+    if isstr(vec)
+        if strcmp(vec, 'all')
+            vec = arrayfun(@(x) [htm.AVPairs{x}{1}, '_', htm.AVPairs{x}{2}], 1:numel(htm.AVPairs), 'UniformOutput', false) ;
             else
                 nb_labels = size(vec, 1) ;
                 labels = {vec} ;
@@ -19,22 +39,22 @@ function plotHits (obj, vec)
         data = cell(nb_labels, 1) ;
         for iLabel = 1:nb_labels
             tmIdx = [] ;
-            for iObj = 1:obj.HTM_robot.nb_objects
-                t = obj.HTM_robot.getObj(iObj).tmIdx(1) ;
-                if strcmp(obj.gtruth{t}, labels{iLabel})
-                    idx = find(sum(obj.HTM_robot.getObj(iObj).data(obj.nb_audio_labels+1:end, :)) > 0) ;
+            for iObj = 1:htm.RIR.nb_objects
+                t = htm.RIR.getObj(iObj).tmIdx(1) ;
+                if strcmp(htm.gtruth{t}, labels{iLabel})
+                    idx = find(sum(htm.RIR.getObj(iObj).data(htm.nb_audio_labels+1:end, :)) > 0) ;
                     if ~isempty(idx)
-                        s = size(obj.HTM_robot.getObj(iObj).data, 2) ;
+                        s = size(htm.RIR.getObj(iObj).data, 2) ;
                         if s <= 30
                             tidx = s ;
                         else
                             tidx = 30 ;
                         end
-                        tmIdx = [tmIdx, obj.HTM_robot.getObj(iObj).tmIdx(1:tidx)] ;
+                        tmIdx = [tmIdx, htm.RIR.getObj(iObj).tmIdx(1:tidx)] ;
                     end
                 end
             end
-            data{iLabel} = obj.data(:, tmIdx) ;
+            data{iLabel} = htm.data(:, tmIdx) ;
         end
     end
 

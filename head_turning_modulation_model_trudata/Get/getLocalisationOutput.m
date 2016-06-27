@@ -1,14 +1,14 @@
 function request = getLocalisationOutput (obj)
     if isa(obj, 'Blackboard')
-        hyp_loc = obj.getLastData('perceivedAzimuths') ;
+        loc_KS = obj.getLastData('sourcesAzimuthsDistributionHypotheses').data;
     else
-        hyp_loc = obj.blackboard.getLastData('perceivedAzimuths') ;
+        loc_KS = obj.blackboard.getLastData('sourcesAzimuthsDistributionHypotheses').data;
     end
-    if ~isempty(hyp_loc)
-        hyp_loc = hyp_loc.data ;
-        [~, idx] = max(hyp_loc.posteriors) ;
-        request = hyp_loc.locations(idx) ;
+    if ~isempty(loc_KS)
+        hyp_loc = loc_KS.sourcesDistribution;
+        [~, idx] = max(hyp_loc);
+        request = loc_KS.azimuths(idx);
     else
-        request = 0 ;
+        request = 0;
     end
 end

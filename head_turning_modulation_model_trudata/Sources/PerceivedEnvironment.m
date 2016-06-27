@@ -9,51 +9,64 @@ classdef PerceivedEnvironment < handle
 % ===Properties (BEG) === %
 properties (SetAccess = public, GetAccess = public)
     present_objects = [] 	  ; % objects present in the environment
-    % classes 		= cell(0) ; % cell containing a structure with category, probabilities, counter, weight
     objects 		= cell(0) ; % all detected objects 
-    % AVClasses = [] ;
-    MFI = [] ;
+    MFI = [];
     labels = {};
-end
-properties (SetAccess = private, GetAccess = public)
-    counter = 0 ;
-    nb_classes = 0 ;
+    nb_classes = 0;
     observed_categories = cell(0) ;
+    RIR;
 end
 % ===Properties (END) === %
 
 % === Methods (BEG) === %
 methods
 % --- Constructor (BEG) --- %
-function obj = PerceivedEnvironment (robot)
+function obj = PerceivedEnvironment (RIR)
 	
-	obj.robot = robot;
-	obj.MFI = robot.MFI;
+	obj.RIR = RIR;
+	obj.MFI = RIR.MFI;
 
 	% --- Initialize categories
 	% obj.observed_categories{1} = obj.obs_struct ;
-	obj.observed_categories{1} = getInfo('obs_struct') ;
+	obj.observed_categories{1} = getInfo('obs_struct');
 end
 % --- Constructor (END) --- %
 
 % --- Other methods --- %
-function addObject (obj, data, theta, d)
+% function addObject (obj, data, theta, d)
+% 	% --- Create a new PERCEIVEDOBJECT object
+%     obj.objects{end+1} = PerceivedObject(data, theta, d) ;
+%     obj.addInput() ;
+% end
+
+function addObject (obj)
 	% --- Create a new PERCEIVEDOBJECT object
-    obj.objects{end+1} = PerceivedObject(data, theta, d) ;
-    obj.addInput() ;
+    obj.objects{end+1} = PerceivedObject(obj.RIR.data(:,end)    ,...
+    									 obj.RIR.theta_hist(end),...
+    									 obj.RIR.dist_hist(end)  ...
+    									);
+    obj.addInput();
 end
 
 function addInput (obj)
-	% if ~obj.objects{end}.requests.missing
-	if ~obj.getRequests(numel(obj.objects), 'missing')
+	if ~obj.objects{end}.requests.missing
+	% if ~obj.getRequests(numel(obj.objects), 'missing')
+		data = retrieveObservedData(obj, 0, 'best');
 		% --- Train nets
-		obj.MFI.newInput(obj.objects{end}.getBestData()) ;
+		obj.MFI.newInput(data) ;
 	end
 end
 
 function updateLabel (obj, data)
 	obj.objects{end}.addData(data) ;
 	obj.addInput() ;
+end
+
+function updataObjectData (obj)
+	obj.objects{end}.updateData(obj.RIR.data(:, end)   ,...
+								obj.RIR.theta_hist(end),...
+								obj.RIR.dist_hist(end)  ...
+							   );
 end
 
 function trainMSOM (obj)
@@ -89,14 +102,14 @@ function checkInference (obj)
 	labels = obj.labels ;
 	for iObj = obj.present_objects
 		% --- If an inference has been requested
-		if obj.getRequests(iObj, 'inference')
-		% if obj.objects{iObj}.requests.inference
+		% if obj.getRequests(iObj, 'inference')
+		if obj.objects{iObj}.requests.inference
 			% --- If visual data is still not available
-			if obj.getRequests(iObj, 'missing')
-			% if obj.objects{iObj}.requests.missing
+			% if obj.getRequests(iObj, 'missing')
+			if obj.objects{iObj}.requests.missing
 				% --- If a CHECK has been requested (-> motor order)
-				if obj.getRequests(iObj, 'check')
-				% if obj.objects{iObj}.requests.check
+				% if obj.getRequests(iObj, 'check')
+				if obj.objects{iObj}.requests.check
 					% --- Continue to turn the head to the object
 				% --- If a CHECK has not been yet requested -> trigger the motor order
 				else
@@ -119,21 +132,21 @@ function checkInference (obj)
 						% --- Request a CHECK of infered AV vs observed AV
 						obj.objects{iObj}.requests.check = true ;
 						obj.objects{iObj}.requests.label = AVClass ;
-						obj.incrementVariable(obj, 'observed_categories{search}.nb_inf');
-						% obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1 ;
+						% obj.incrementVariable(obj, 'observed_categories{search}.nb_inf');
+						obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1 ;
 					end
 				end
 			end
 		% --- If no inference requested (AV data available)
 		% --- But a verification is requested
 		% --- ADD A VERIFICATION WITH NO CHECK in order to verify the inference in the case we have AV thanks to DWmod
-	elseif obj.getRequests(iObj, 'verification')
-		% elseif obj.objects{iObj}.requests.verification
+	% elseif obj.getRequests(iObj, 'verification')
+		elseif obj.objects{iObj}.requests.verification
 			% --- We now have the full AV data
 			AVClass = obj.MFI.inferCategory(obj.objects{iObj}.getBestData()) ;
 			search = find(strcmp(AVClass, labels)) ;
 			% --- If infered AV is the same as observed AV
-			if strcmp(AVClass, obj.getRequests(iObj, 'label'))
+			if strcmp(AVClass, obj.objects{iObj}.requests.label)
 				obj.objects{iObj}.requests.verification = false ;
 				obj.objects{iObj}.requests.check = false ;
 
@@ -145,10 +158,10 @@ function checkInference (obj)
 				% --- 
 			end
 		% Else if all data available
-		elseif ~obj.getRequests(iObj, 'missing')
+		elseif ~obj.objects{iObj}.requests.missing
 			% --- Infer AV class
-			AVClass = obj.MFI.inferCategory(obj.objects{iObj}.getBestData()) ;
-			search = find(strcmp(AVClass, labels)) ;
+			AVClass = obj.MFI.inferCategory(getObject(obj, iObj, 'best'));
+			search = find(strcmp(AVClass, labels));
 
 			obj.objects{iObj}.setLabel(AVClass) ;
 			obj.objects{iObj}.cat = search ;
@@ -158,13 +171,13 @@ function checkInference (obj)
 end
 
 function bool = isPerformant (obj, idx)
-	if obj.observed_categories{idx}.perf >= 0.75
-		bool = true ;
-		if obj.observed_categories{idx}.perf == 1 && obj.observed_categories{idx}.nb_inf < 4
-			bool = false ;
+	if obj.observed_categories{idx}.perf >= getInfo('q')
+		bool = true;
+		if obj.observed_categories{idx}.perf == 1
+			bool = false;
 		end
 	else
-		bool = false ;
+		bool = false;
 	end
 end
 
@@ -206,13 +219,13 @@ function categorizeObjects (obj)
 	obj.reinitializeClasses() ;
 	for iObj = 1:numel(obj.objects)
 		if obj.objects{iObj}.cat > 0
-			incrementVariable(obj, 'observed_categories{obj.objects{iObj}.cat}.cpt');
+			% incrementVariable(obj, 'observed_categories{obj.objects{iObj}.cat}.cpt');
 
-			% obj.observed_categories{obj.objects{iObj}.cat}.cpt = obj.observed_categories{obj.objects{iObj}.cat}.cpt + 1 ;
+			obj.observed_categories{obj.objects{iObj}.cat}.cpt = obj.observed_categories{obj.objects{iObj}.cat}.cpt + 1 ;
 		else
 			% obj.incrementVariable(obj.observed_categories{1}.cpt);
-			incrementVariable(obj, 'obj.observed_categories{1}.cpt');
-			% obj.observed_categories{1}.cpt = obj.observed_categories{1}.cpt + 1 ;
+			% incrementVariable(obj, 'obj.observed_categories{1}.cpt');
+			obj.observed_categories{1}.cpt = obj.observed_categories{1}.cpt + 1 ;
 		end
 	end
 
@@ -290,8 +303,8 @@ end
 
 
 function updateObjects (obj, tmIdx)
-	% obj.counter = obj.counter + 1 ;
-	obj.incrementVariable(obj, 'counter');
+	% obj.counter = obj.counter + 1;
+	% obj.incrementVariable(obj, 'counter');
 	
 	obj.objects{end}.updateTime(tmIdx) ;
 
@@ -320,7 +333,7 @@ function updateObjects (obj, tmIdx)
 	arrayfun(@(x) obj.objects{x}.updateObj(), obj.present_objects) ;
 		
 end
-	
+
 end
 
 end
