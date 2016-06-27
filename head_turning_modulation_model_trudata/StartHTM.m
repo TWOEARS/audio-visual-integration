@@ -18,11 +18,11 @@ addpath(genpath('~/AuditoryModel/TwoEars-1.2'));
 % end
 
 % === Initialize Two!Ears model and check dependencies
-startTwoEars();
+% startTwoEars();
 
 % QR2matlab = client.load('QR2matlab') ;
 % QR2matlab.connect_port('dataIn', '/visp_auto_tracker/code_message') ;
-Jido = JidoInterface('/home/twoears/openrobots/lib/matlab');
+Jido = OdiInterface();
 
 %robot = Robot() ;
 % robot.initializeBass(bass, basc2) ;
@@ -67,6 +67,8 @@ headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs.robotConn
 %updateEnvironmentKS 			= bbs.createKS('UpdateEnvironmentKS', {bbs.robotConnect});
 %localizerKS = bbs.createKS('DnnLocationKS');
 localizerKS = bbs.createKS('GmmLocationKS');
+
+motorOrderKS = bbs.createKS('MotorOrderKS', {bbs.robotConnect});
 % 
 % bbs.blackboardMonitor.bind({bbs.scheduler},...
 % 						   {updateEnvironmentKS},...
@@ -102,8 +104,12 @@ bbs.blackboardMonitor.bind({auditoryClassifiersKS{end}},...
 						   {headTurningModulationKS},...
 						   'replaceOld' );
 
-setappdata(0, 'audio_labels', model_name) ;
-setappdata(0, 'visual_labels', {'siren', 'baby', 'female', 'fire'}) ;
+bbs.blackboardMonitor.bind({headTurningModulationKS},...
+                           {MotorOrderKS},...
+                           'replaceOld');
+
+% setappdata(0, 'audio_labels', model_name) ;
+% setappdata(0, 'visual_labels', {'siren', 'baby', 'female', 'fire'}) ;
 
 disp( 'Starting blackboard system.' );
 
