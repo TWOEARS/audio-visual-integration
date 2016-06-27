@@ -25,9 +25,10 @@ end
 % === Methods (BEG) === %
 methods
 % --- Constructor (BEG) --- %
-function obj = PerceivedEnvironment ()
-
-	obj.MFI = MultimodalFusionAndInference() ;
+function obj = PerceivedEnvironment (robot)
+	
+	obj.robot = robot;
+	obj.MFI = robot.MFI;
 
 	% --- Initialize categories
 	% obj.observed_categories{1} = obj.obs_struct ;
