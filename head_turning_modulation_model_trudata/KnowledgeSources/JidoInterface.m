@@ -93,9 +93,13 @@ classdef JidoInterface < handle
             audioBuffer = obj.bass.Audio();
             
             % Get binaural signals
-            % Sclaing factor estimated empirically
+            % Scaling factor estimated empirically
             earSignals = [cell2mat(audioBuffer.Audio.left) ./ (2^31); ...
                 0.7612 .* (cell2mat(audioBuffer.Audio.right) ./ (2^31))]';
+
+            disp(size(earSignals));
+            disp(obj.SampleRate);
+            disp(obj.bass.Audio);
             
             % Get default buffer size of the audio stream server
             bufferSize = size(earSignals, 1);
