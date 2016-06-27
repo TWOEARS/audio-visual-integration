@@ -6,77 +6,60 @@
 % (reference: Benjamin Cohen-Lhyver, Modulating the Auditory Turn-to Reflex on the Basis of Multimodal Feedback Loops:
 % the Dynamic Weighting Model, in IEEE-ROBIO 2015)
 % Author: Benjamin Cohen-Lhyver
-% Date: 21.04.16
-% Rev. 1.0
+% Date: 01.06.16
+% Rev. 2.0
 
 classdef HeadTurningModulationKS < AbstractKS
-    
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (SetAccess = public)
-    robot ;
+    head_position = 0;
+    nb_steps_init = 1;
+    nb_steps_final = 0;
 
-    HTM_robot ;
+    robot;
+    RIR;
 
-    % audio_labels = cell(0) ;
-
-    % visual_labels = cell(0) ;
-
-    % AVPairs = cell(0) ;
-
-    data = [] ;
+    data = [];
     
-    % compared_labels = cell(0) ;
+    classif_max = {};
 
-    classif_max = {} ;
+    classif_mfi = {};
 
-    classif_mfi = {} ;
+    gtruth = cell(0);
 
-    % cpt_goodClassif = 0 ;
-
-    gtruth = cell(0) ;
-
-    current_time = 0 ;
+    current_time = 0;
 
 end
 
 
 properties (SetAccess = public, GetAccess = public)
-    % nb_labels = 0 ;
-    energy_thr = 0.01 ;
-    INIT = true ;
-    % fov = 30 ;
-    smoothing_theta = 5 ;
-    cpt = 0 ;
-    last_movement = 0 ;
-    theta_hist = [] ;
-    % nb_audio_labels = 0 ;
-    % nb_visual_labels = 0 ;
-    % nb_AVPairs = 0 ;
+    energy_thr = 0.01;
+    smoothing_theta = 5;
+    cpt = 0;
+    last_movement = 0;
+    theta_hist = [];
 
-    statistics = struct('max', 0,...
-                        'max_mean', 0,...
-                        'mfi', 0,...
-                        'mfi_mean', 0,...
-                        'alpha_a', 0,...
-                        'alpha_v', 0,...
-                        'beta_a', 0,...
-                        'beta_v', 0) ;
-    % cpt11 = [] ;
-    % cpt12 = [] ;
-    % cpt21 = [] ;
-    % cpt22 = [] ;
+    statistics = [];
 
-    % goodClassifHist = [] ;
-
-    simulation_status = [] ;
+    simulation_status = [];
 end
 
 methods
 
 function obj = HeadTurningModulationKS (robot)
     obj = obj@AbstractKS();
-    obj.robot = robot ;
-    obj.invocationMaxFrequency_Hz = inf ;
-    obj.htmINIT() ;
+    obj.robot = robot;
+    obj.invocationMaxFrequency_Hz = inf;
+    initializeParameters(obj);
+
+
+    obj.MSOM = MultimodalSelfOrganizingMap();
+    obj.MFI = MultimodalFusionAndInference(obj.MSOM);
+    obj.MotorOrderKS = MotorOrderKS(obj);
+    obj.RIR = RobotInternalRepresentation(obj);
+
 end
 
 
@@ -87,8 +70,8 @@ function [b, wait] = canExecute (obj)
 end
 
 function execute (obj)
-    % if isappdata(0, 'HTM_robot')
-    %     obj.HTM_robot = getappdata(0, 'HTM_robot') ;
+    % if isappdata(0, 'RIR')
+    %     obj.RIR = getappdata(0, 'RIR') ;
     %     obj.audio_labels = getappdata(0, 'audio_labels') ;
     %     obj.visual_labels = getappdata(0, 'visual_labels') ;
     %     obj.nb_audio_labels = numel(obj.audio_labels) ;
@@ -96,11 +79,11 @@ function execute (obj)
     %     obj.nb_labels = obj.nb_audio_labels + obj.nb_visual_labels ;
     %     obj.INIT = false ;
     % end
-    if obj.INIT
-        obj.htmINIT() ;
-        notify(obj, 'KsFiredEvent') ;
-        return ;
-    end
+    % if obj.INIT
+    %     obj.htmINIT() ;
+    %     notify(obj, 'KsFiredEvent') ;
+    %     return ;
+    % end
     
     fprintf('\nHead Turning Modulation KS evaluation\n');
 
@@ -113,60 +96,60 @@ function execute (obj)
     classifiers_output = getClassifiersOutput(obj) ;
     % --- Retrieve estimated localisation of sound source
     % perceived_angle = obj.getLocalisationOutput() ;
-    perceived_angle = getLocalisationOutput(obj) ;
+    perceived_angle = getLocalisationOutput(obj);
     % --- Retrieve estimated distance of sound source (TODO)
-    perceived_distance = 3 ;
+    perceived_distance = 3;
 
     % --- Create a new object
     if create_new
-        obj.HTM_robot.addObject(classifiers_output, perceived_angle, perceived_distance) ;
-        obj.last_movement = obj.cpt ;
+        obj.RIR.addObject(classifiers_output, perceived_angle, perceived_distance);
+        obj.last_movement = obj.cpt;
     
     % --- Update object
     elseif ~create_new && ~do_nothing
-        obj.HTM_robot.updateLabel(classifiers_output) ;
-        obj.HTM_robot.updateAngle(perceived_angle) ;
+        obj.RIR.updateLabel(classifiers_output) ;
+        obj.RIR.updateAngle(perceived_angle) ;
     
     % --- The object is no longer present in the scene
     elseif ~create_new && do_nothing
-        if obj.HTM_robot.nb_objects > 0
-            obj.HTM_robot.getLastObj().presence = false ;
+        if obj.RIR.nb_objects > 0
+            obj.RIR.getLastObj().presence = false ;
         end
     end
     % --- Update all objects
-    obj.updateTime() ;
-    % obj.HTM_robot.updateObjects(t) ;
-    obj.HTM_robot.updateObjects(obj.cpt) ;
+    obj.updateTime();
+    % obj.RIR.updateObjects(t) ;
+    obj.RIR.updateObjects(obj.cpt);
 
-    obj.moveHead() ;
+    % obj.moveHead();
 
     %obj.simulationStatus() ;
 
     % obj.retrieveMfiCategorization(classifiers_output) ;
 
     if ~isempty(classifiers_output)
-        obj.data(:, obj.cpt) = classifiers_output ;
+        obj.data(:, obj.cpt) = classifiers_output;
     else
-        obj.data(:, obj.cpt) = generateEmptyVector() ;
+        obj.data(:, obj.cpt) = generateEmptyVector();
     end
 
     % --- Add the motor order to the Blackboard
-    % obj.blackboard.addData('moveHead', obj.HTM_robot.focus, false, obj.trigger.tmIdx) ;
+    % obj.blackboard.addData('moveHead', obj.RIR.focus, false, obj.trigger.tmIdx) ;
     notify(obj, 'KsFiredEvent') ;
 % end
 end
 
 function finished = isFinished(obj)
-    finished = obj.finished ;
+    finished = obj.finished;
 end
 
 function updateTime (obj)
-    obj.current_time = obj.blackboard.currentSoundTimeIdx ;
+    obj.current_time = obj.blackboard.currentSoundTimeIdx;
 end
 
 % function retrieveMfiCategorization (obj, classifiers_output)
 %     if ~isempty(classifiers_output)
-%         obj.classif_mfi{obj.cpt} = obj.HTM_robot.getMFI().inferCategory(classifiers_output) ;
+%         obj.classif_mfi{obj.cpt} = obj.RIR.getMFI().inferCategory(classifiers_output) ;
 %     else
 %         obj.classif_mfi{obj.cpt} = 'none_none' ;
 %     end
@@ -212,42 +195,42 @@ end
 % end
 % === TO BE MODIFIED === %
 
-function moveHead (obj)
-    currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data ;
-    % --- If no sound -> make the head turn to 0° (resting state)
-    focus = obj.HTM_robot.focus ;
+% function moveHead (obj)
+%     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data ;
+%     % --- If no sound -> make the head turn to 0° (resting state)
+%     focus = obj.RIR.focus ;
     
-    if ~isSoundPresent(obj)
-        theta = -currentHeadOrientation ;
-        % fprintf('\nMotor order: 0deg (resting state)\n') ;
-    % --- Turn to the sound source
-    elseif focus ~= 0 && isFocusedObjectPresent(obj)
-        % --- Smoothing the head movements
-        if obj.cpt - obj.last_movement >= 5
-            obj.last_movement = obj.cpt ;
-            theta = obj.HTM_robot.motorOrder() ;
-        else
-            theta = 0 ;
-        end
-    elseif isempty(obj.HTM_robot.getMFI().categories)
-        if obj.cpt - obj.last_movement >= 5
-            theta = obj.HTM_robot.getLastObj('theta') ;
-            obj.last_movement = obj.cpt ;
-        else
-            theta = 0 ;
-        end
-    else
-        theta = 0 ;
-    end
+%     if ~isSoundPresent(obj)
+%         theta = -currentHeadOrientation ;
+%         % fprintf('\nMotor order: 0deg (resting state)\n') ;
+%     % --- Turn to the sound source
+%     elseif focus ~= 0 && isFocusedObjectPresent(obj)
+%         % --- Smoothing the head movements
+%         if obj.cpt - obj.last_movement >= 5
+%             obj.last_movement = obj.cpt ;
+%             theta = obj.RIR.motorOrder() ;
+%         else
+%             theta = 0 ;
+%         end
+%     elseif isempty(obj.RIR.getMFI().categories)
+%         if obj.cpt - obj.last_movement >= 5
+%             theta = obj.RIR.getLastObj('theta') ;
+%             obj.last_movement = obj.cpt ;
+%         else
+%             theta = 0 ;
+%         end
+%     else
+%         theta = 0 ;
+%     end
 
-    obj.robot.moveRobot(0.2, 0.2, 0);
+%     obj.robot.moveRobot(0.2, 0.2, 0);
     
-%     maxAzimuth = theta + currentHeadOrientation ;
-%     maxAzimuth = mod(maxAzimuth, 360) ;
-%     obj.robot.robotController.omegaMax = 1000000.0 ;
-%     obj.robot.robotController.goalAzimuth = maxAzimuth ;
-%     obj.robot.robotController.finishedPlatformRotation = false ;
-end
+% %     maxAzimuth = theta + currentHeadOrientation ;
+% %     maxAzimuth = mod(maxAzimuth, 360) ;
+% %     obj.robot.robotController.omegaMax = 1000000.0 ;
+% %     obj.robot.robotController.goalAzimuth = maxAzimuth ;
+% %     obj.robot.robotController.finishedPlatformRotation = false ;
+% end
 
 % === TO BE MODIFIED === %
 function [create_new, do_nothing] = createNewObject (obj)
@@ -345,54 +328,6 @@ end
 
 % end
 % === TO BE MODIFIED === %
-
-
-% ==================================== %
-% ========== INITIALIZATION ========== %
-% ==================================== %
-
-function htmINIT (obj)
-    fprintf('\nInitialization of HeadTurningModulationKS\n');
-
-    % obj.audio_labels = getappdata(0, 'audio_labels') ;
-    % obj.visual_labels = getappdata(0, 'visual_labels') ;
-
-    % obj.AVPairs = {'door_knock', 'person_speech', 'siren_alert'} ;
-    % obj.nb_AVPairs = numel(obj.AVPairs) ;
-    information.audio_labels = getappdata(0, 'audio_labels');
-    information.nb_audio_labels = numel(information.audio_labels);
-    
-    information.visual_labels = getappdata(0, 'visual_labels');
-    information.nb_visual_labels = numel(information.visual_labels);
-
-    information.nb_labels = information.nb_audio_labels + information.nb_visual_labels;
-
-    information.AVPairs = {'siren_alarm', 'baby_baby', 'female_femaleSpeech', 'fire_fire'};
-    information.nb_AVPairs = numel(information.AVPairs) ;
-
-    information.fov = 30;
-
-    information.obs_struct = struct('label'     , 'none_none',...
-                                    'perf'      , 0,...
-                                    'nb_goodInf', 0,...
-                                    'nb_inf'    , 0,...
-                                    'cpt'       , 0,...
-                                    'proba'     , 0) ;
-
-    setappdata(0, 'information', information);
-    obj.HTM_robot = Robot() ;
-
-    % obj.nb_audio_labels = numel(obj.audio_labels) ;
-    % obj.nb_visual_labels = numel(obj.visual_labels) ;
-    % obj.nb_labels = obj.nb_audio_labels + obj.nb_visual_labels ;
-    obj.INIT = false ;
-    
-end
-
-% ==================================== %
-% ========== INITIALIZATION ========== %
-% ==================================== %
-
 
 end
     
