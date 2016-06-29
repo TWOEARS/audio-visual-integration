@@ -1,0 +1,54 @@
+
+<categoryStructure>    
+        <pair A="male" B="speech"> </pair>
+        <pair A="male" B="coughing"> </pair>
+        <pair A="male" B="crying"> </pair>
+        <pair A="male" B="piano"> </pair>
+        <pair A="male" B="violin"> </pair>
+        <pair A="male" B="drinking"> </pair>
+        <pair A="male" B="eating"> </pair>
+
+        <pair A="female" B="coughing"> </pair>
+        <pair A="female" B="singing"> </pair>
+        <pair A="female" B="laughing"> </pair>
+        <pair A="female" B="flute"> </pair>
+        <pair A="female" B="screaming"> </pair>
+        <pair A="female" B="harp"> </pair>
+        <pair A="female" B="eating"> </pair>
+
+        <pair A="baby" B="crying"> </pair>
+        <pair A="baby" B="laughing"> </pair> 
+
+        <pair A="bird" B="whistling"> </pair> 
+        <pair A="bird" B="flying"> </pair>
+
+        <pair A="dog" B="barking"> </pair>
+        <pair A="dog" B="panting"> </pair>
+
+        <pair A="cat" B="meowing"> </pair> 
+        <pair A="cat" B="scratching"> </pair> 
+
+        <pair A="door" B="knock"> </pair>
+        <pair A="door" B="closed"> </pair>
+
+        <pair A="siren" B="beeping"> </pair>
+
+        <pair A="train" B="arriving"> </pair> 
+        <pair A="train" B="braking"> </pair>
+        <pair A="train" B="alert"> </pair> 
+
+        <pair A="car" B="braking"> </pair>
+        <pair A="car" B="accelerating"> </pair>
+        <pair A="car" B="drifting"> </pair>
+
+        <pair A="glass" B="breaking"> </pair>
+        <pair A="glass" B="clinking"> </pair>
+
+        <pair A="bed" B="squeaking"> </pair>
+
+        <pair A="wind" B="blowing"> </pair>
+
+        <pair A="rain" B="falling"> </pair>
+
+        <pair A="switch" B="switched"> </pair>
+</categoryStructure>
