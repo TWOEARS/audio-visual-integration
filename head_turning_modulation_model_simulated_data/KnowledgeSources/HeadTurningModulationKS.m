@@ -20,7 +20,7 @@ properties (SetAccess = public, GetAccess = public)
     
     RIR;
 
-    data = [];
+    data = [] ;
 
     gtruth_data = [];
     gtruth;
