@@ -62,7 +62,7 @@ function updateLabel (obj, data)
 	obj.addInput() ;
 end
 
-function updataObjectData (obj)
+function updateObjectData (obj)
 	obj.objects{end}.updateData(obj.RIR.data(:, end)   ,...
 								obj.RIR.theta_hist(end),...
 								obj.RIR.dist_hist(end)  ...
@@ -98,41 +98,38 @@ function bool = getRequests (obj, iObj, request)
 	bool = obj.objects{iObj}.requests.(request);
 end
 
+
 function checkInference (obj)
 	labels = obj.labels ;
 	for iObj = obj.present_objects
 		% --- If an inference has been requested
-		% if obj.getRequests(iObj, 'inference')
 		if obj.objects{iObj}.requests.inference
 			% --- If visual data is still not available
-			% if obj.getRequests(iObj, 'missing')
 			if obj.objects{iObj}.requests.missing
 				% --- If a CHECK has been requested (-> motor order)
-				% if obj.getRequests(iObj, 'check')
 				if obj.objects{iObj}.requests.check
 					% --- Continue to turn the head to the object
 				% --- If a CHECK has not been yet requested -> trigger the motor order
 				else
 					% --- Simulate an AV inference
-					AVClass = obj.MFI.inferCategory(obj.objects{iObj}.getBestData()) ;
+                    data = retrieveObservedData(obj, iObj, 'best');
+					AVClass = obj.MFI.inferCategory(data);
 					search = find(strcmp(AVClass, labels)) ;
 					% --- If the category has been correctly inferred in the past
 					% --- CHECK is not needed -> we trust the inference
-					if obj.isPerformant(search)
-						% obj.setObject(iObj, 'check', false);
-						% obj.setObject(iObj, 'verification', false);
-
-						obj.objects{iObj}.requests.check = false ;
-						obj.objects{iObj}.requests.verification = false ;
-						obj.objects{iObj}.setLabel(AVClass) ;
-						obj.objects{iObj}.cat = search ;
+					if obj.isPerformant(search) 
+						if numel(obj.objects{iObj}.tmIdx) >= 1
+							obj.objects{iObj}.requests.check = false ;
+							obj.objects{iObj}.requests.verification = false ;
+							obj.objects{iObj}.setLabel(AVClass) ;
+							obj.objects{iObj}.cat = search ;
+						end
 					% --- If the category has not been well infered in the past
 					% --- CHECK is needed -> we don't trust the inference
 					else
 						% --- Request a CHECK of infered AV vs observed AV
 						obj.objects{iObj}.requests.check = true ;
 						obj.objects{iObj}.requests.label = AVClass ;
-						% obj.incrementVariable(obj, 'observed_categories{search}.nb_inf');
 						obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1 ;
 					end
 				end
@@ -140,10 +137,10 @@ function checkInference (obj)
 		% --- If no inference requested (AV data available)
 		% --- But a verification is requested
 		% --- ADD A VERIFICATION WITH NO CHECK in order to verify the inference in the case we have AV thanks to DWmod
-	% elseif obj.getRequests(iObj, 'verification')
 		elseif obj.objects{iObj}.requests.verification
 			% --- We now have the full AV data
-			AVClass = obj.MFI.inferCategory(obj.objects{iObj}.getBestData()) ;
+            data = retrieveObservedData(obj, iObj, 'best');
+			AVClass = obj.MFI.inferCategory(data);
 			search = find(strcmp(AVClass, labels)) ;
 			% --- If infered AV is the same as observed AV
 			if strcmp(AVClass, obj.objects{iObj}.requests.label)
@@ -154,32 +151,38 @@ function checkInference (obj)
 
 				obj.objects{iObj}.setLabel(AVClass) ;
 				obj.objects{iObj}.cat = search ;
+			% --- If infered AV is NOT the same as observed AV
 			else
-				% --- 
+				% --- Make the network learn with n more iterations
+				obj.highTrainingPhase() ;
 			end
 		% Else if all data available
 		elseif ~obj.objects{iObj}.requests.missing
 			% --- Infer AV class
-			AVClass = obj.MFI.inferCategory(getObject(obj, iObj, 'best'));
+            data = retrieveObservedData(obj, iObj, 'best');
+			AVClass = obj.MFI.inferCategory(data);
 			search = find(strcmp(AVClass, labels));
 
-			obj.objects{iObj}.setLabel(AVClass) ;
-			obj.objects{iObj}.cat = search ;
-			obj.objects{iObj}.requests.check = false ;
+			obj.objects{iObj}.setLabel(AVClass);
+			obj.objects{iObj}.cat = search;
+			obj.objects{iObj}.requests.check = false;
 		end
 	end
 end
 
 function bool = isPerformant (obj, idx)
-	if obj.observed_categories{idx}.perf >= getInfo('q')
+	perf = cell2mat(getCategory(obj, idx, 'perf'));
+	if perf >= getInfo('q') && perf < 1
+	% if obj.observed_categories{idx}.perf >= getInfo('q') && obj.observed_categories{idx}.perf < 1
 		bool = true;
-		if obj.observed_categories{idx}.perf == 1
-			bool = false;
-		end
+		% if obj.observed_categories{idx}.perf == 1 && obj.observed_categories{idx}.nb_inf < 7
+		% 	bool = false;
+		% end
 	else
 		bool = false;
 	end
 end
+
 
 
 function computeCategoryPerformance (obj)
@@ -236,10 +239,12 @@ function categorizeObjects (obj)
 
 end
 
+
 function countObjects (obj)
 	for iObj = 1:numel(obj.objects)
 		if iObj ~= obj.present_objects
-			AVClass = obj.MFI.inferCategory(obj.objects{iObj}.getBestData()) ;
+            data = retrieveObservedData(obj, iObj, 'best');
+			AVClass = obj.MFI.inferCategory(data) ;
 			obj.objects{iObj}.setLabel(AVClass) ;
 			search = find(strcmp(AVClass, obj.labels)) ;
 			obj.objects{iObj}.cat = search ;
@@ -302,6 +307,7 @@ end
 
 
 
+
 function updateObjects (obj, tmIdx)
 	% obj.counter = obj.counter + 1;
 	% obj.incrementVariable(obj, 'counter');
@@ -312,9 +318,7 @@ function updateObjects (obj, tmIdx)
 
 	obj.computePresence() ;
 
-	obj.labels = arrayfun(@(x) obj.observed_categories{x}.label,...
-					  	  1:numel(obj.observed_categories),...
-					  	  'UniformOutput', false) ;
+	obj.labels = getCategory(obj, 'all', 'label');
 
 	obj.setClasses() ;
 

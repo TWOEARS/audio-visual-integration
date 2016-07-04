@@ -49,16 +49,16 @@ function execute (obj)
     if ~isSoundPresent(obj)
         theta = -currentHeadOrientation;
     % --- Turn to the sound source
-    elseif focus ~= 0 && isFocusedObjectPresent(obj)
+    elseif focus ~= 0 && isFocusedObjectPresent(RIR)
         % --- Smoothing the head movements
         if obj.cpt - obj.last_movement >= getInfo('smoothing_head_movements')
             obj.last_movement = obj.cpt;
             theta = RIR.motorOrder();
         else
-            theta = 0 ;
+            theta = 0;
         end
     elseif isempty(RIR.getMFI().categories)
-        if obj.cpt - obj.last_movement >= 5
+        if obj.cpt - obj.last_movement >= 1
             theta = getObject(RIR, 0, 'theta');
             obj.last_movement = obj.cpt ;
         else
@@ -94,16 +94,16 @@ end
 %     obj.head_position_hist(end+1) = obj.head_position;
 % end
 
-function bool = isFocusedObjectPresent (obj)
-	robot = obj.htm.robot;
-    if isempty(robot.getEnv().present_objects)
-        bool = false ;
-    elseif find(robot.focus == robot.getEnv().present_objects)
-        bool = true ;
-    else
-        bool = false ;
-    end
-end
+% function bool = isFocusedObjectPresent (obj)
+% 	robot = obj.htm.robot;
+%     if isempty(robot.getEnv().present_objects)
+%         bool = false ;
+%     elseif find(robot.focus == robot.getEnv().present_objects)
+%         bool = true ;
+%     else
+%         bool = false ;
+%     end
+% end
 
 
 

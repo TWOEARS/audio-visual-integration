@@ -50,7 +50,8 @@ function initializeParameters (htm)
     audio_labels = retrieveAudioIdentityModels(htm);
 
     % visual_labels = retrieveVisualIdentityModels(htm);
-    visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};
+    % visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};
+    visual_labels = {'siren', 'dog', 'female', 'baby', 'engine', 'door', 'male', 'phone', 'female'};
 
     % information.nb_angles = numel(AVPairs);
     information.nb_angles = 3;

@@ -1,5 +1,5 @@
-function bool = isFocusedObjectPresent (obj)
-    if obj.HTM_robot.getObj(obj.HTM_robot.focus, 'presence')
+function bool = isFocusedObjectPresent (RIR)
+    if RIR.getObj(RIR.focus, 'presence')
         bool = true ;
     else
         bool = false ;

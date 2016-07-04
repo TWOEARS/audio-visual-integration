@@ -6,7 +6,7 @@
 
 function statistics = computeStatistics (htm)
     
-    % textprogressbar('HTM: computing statistics -- ');
+    textprogressbar('HTM: computing statistics -- ');
     
     p = getInfo('audio_labels'    ,...
                 'visual_labels'   ,...
@@ -54,13 +54,19 @@ function statistics = computeStatistics (htm)
     end
 
     sc = getInfo('scenario');
+    m = numel(sc.unique_idx)*numel(vec);
 
     for iLabel = sc.unique_idx
-        disp(iLabel);
+        n = find(iLabel == sc.unique_idx);
 
         d = generateProbabilities(audio_idx(iLabel), visual_idx(iLabel), 100);
 
         for jj = 1:numel(vec)
+            % --- DISPLAY --- %
+            tt = ((iLabel-1)*numel(vec)) + jj;
+            t = 100*(tt/m);
+            textprogressbar(t);
+            % --- DISPLAY --- %
             da = d;
             da(audio_idx(iLabel), :) = vec(jj);
             est = arrayfun(@(x) mfi.inferCategory(da(:, x)), 1:100, 'UniformOutput', false);
@@ -139,8 +145,9 @@ function statistics = computeStatistics (htm)
     htm.MSOM.assignNodesToCategories();
 
     % =====================
-
-    % textprogressbar(' -- DONE');
+    % --- DISPLAY --- %
+    textprogressbar(' -- DONE');
+    % --- DISPLAY --- %
 
     return;
 

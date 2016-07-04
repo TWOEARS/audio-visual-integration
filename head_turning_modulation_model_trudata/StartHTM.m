@@ -12,7 +12,9 @@
 
     disp( 'Initializing Two!Ears, setting up binaural simulator...' );
 
-    addpath(genpath('~/AuditoryModel/TwoEars-1.2'));
+    addpath(genpath('~/Dev/TwoEars-1.2'));
+    rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
+    rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/LVTE'));
 
     % if ~p.Sim
 
@@ -29,10 +31,12 @@
 
         auditoryClassifiersKS = createAuditoryIdentityKS(bbs, models, files);
 
-        signalLevelKS = bbs.createKS('SignalLevelKS') ;
-        visualIdentityKS = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
+        signalLevelKS = bbs.createKS('SignalLevelKS')
+        ;
+        visualIdentityKS = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
 
         headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs});
+        
         localizerKS = bbs.createKS('GmmLocationKS');
 
         motorOrderKS = bbs.createKS('MotorOrderKS', {bbs.robotConnect});

@@ -79,7 +79,7 @@ function obj = HeadTurningModulationKS (varargin)
     p.parse(varargin{:});
     p = p.Results;
 
-    addpath(genpath('../../HTM_v2'));
+    addpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
 
     obj.save = p.Save;
     obj.load = p.Load;

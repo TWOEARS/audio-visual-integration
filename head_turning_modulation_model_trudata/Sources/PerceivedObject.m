@@ -23,6 +23,7 @@ properties (SetAccess = public, GetAccess = public)
     weight = 0;
 
     d = 0;
+    dist_hist = [];
 
     cat    = 0 ; % int
     cat_hist = [];

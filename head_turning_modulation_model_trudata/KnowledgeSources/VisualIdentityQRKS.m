@@ -12,7 +12,7 @@ classdef VisualIdentityQRKS < AbstractKS
     end
 
     methods
-        function obj = VisualIdentityKS(robot)
+        function obj = VisualIdentityQRKS(robot)
             obj = obj@AbstractKS(); 
             % initialize class members
             obj.robot=robot;
