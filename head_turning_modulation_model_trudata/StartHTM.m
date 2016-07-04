@@ -36,6 +36,8 @@
         visualIdentityKS = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
 
         headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs});
+
+        objectDetectionKS = bbs.createKS('objectDetectionKS', {bbs});
         
         localizerKS = bbs.createKS('GmmLocationKS');
 
@@ -68,6 +70,10 @@
                                    'replaceOld' );
 
         bbs.blackboardMonitor.bind({visualIdentityKS},...
+                                   {objectDetectionKS},...
+                                   'replaceOld' );        
+
+        bbs.blackboardMonitor.bind({objectDetectionKS},...
                                    {headTurningModulationKS},...
                                    'replaceOld' );
 

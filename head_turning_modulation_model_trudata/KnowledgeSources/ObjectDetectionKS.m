@@ -9,7 +9,7 @@
 % Date: 01.06.16
 % Rev. 2.0
 
-classdef HeadTurningModulationKS < AbstractKS
+classdef ObjectDetectionKS < AbstractKS
 % ======================== %
 % === PROPERTIES [BEG] === %
 % ======================== %
@@ -45,18 +45,10 @@ end
 
 methods
 
-function obj = HeadTurningModulationKS (bbs)
+function obj = ObjectDetectionKS (bbs)
     obj = obj@AbstractKS();
     obj.bbs = bbs;
     obj.invocationMaxFrequency_Hz = inf;
-    
-    initializeParameters(obj);
-
-    obj.MSOM = MultimodalSelfOrganizingMapKS();
-    obj.MFI = MultimodalFusionAndInferenceKS(obj.MSOM);
-    % obj.MotorOrderKS = MotorOrderKS(obj);
-    obj.RIR = RobotInternalRepresentation(obj);
-
 end
 
 
@@ -68,75 +60,7 @@ end
 
 function execute (obj)
     
-    fprintf('\nHead Turning Modulation KS evaluation\n');
-
-    obj.cpt = obj.cpt + 1;
-
-    % [create_new, do_nothing] = obj.createNewObject();
-    
-
-    % --- Retrieve vector of probabilities
-    classifiers_output = getClassifiersOutput(obj);
-    % --- Retrieve estimated localisation of sound source
-    perceived_angle = getLocalisationOutput(obj);
-    % --- Retrieve estimated distance of sound source (TODO)
-    perceived_distance = 3;
-
-    if create_new % --- create a new object
-        obj.last_movement = obj.cpt;
-        obj.MSOM.idx_data = 1;
-        obj.RIR.updateData(classifiers_output, perceived_angle, perceived_distance);
-        
-        obj.RIR.addObject();
-
-    elseif ~create_new && ~do_nothing % --- update object
-        obj.RIR.updateData(classifiers_output, perceived_angle, perceived_distance);
-        obj.RIR.updateObject();
-        obj.MSOM.idx_data = obj.MSOM.idx_data + 1;
-    
-    elseif ~create_new && do_nothing % --- silence phase
-        if obj.RIR.nb_objects > 0
-            setObject(obj, 0, 'presence', false);
-        end
-        obj.RIR.updateData(classifiers_output, 0, 0);
-    end
-    % --- Update all objects
-    obj.updateTime();
-    obj.RIR.updateObjects(obj.cpt);
-
-    if ~isempty(classifiers_output)
-        obj.data(:, obj.cpt) = classifiers_output;
-    else
-        obj.data(:, obj.cpt) = generateEmptyVector();
-    end
-
-    if obj.blackboard.currentSoundTimeIdx > getInfo('duration')
-        obj.blackboardSystem.robotConnect.finished = true;
-        playNotification();
-    end
-
-    notify(obj, 'KsFiredEvent');
-% end
-end
-
-function finished = isFinished(obj)
-    finished = obj.finished;
-end
-
-function updateTime (obj)
-    obj.current_time = obj.blackboard.currentSoundTimeIdx;
-end
-
-% function retrieveMfiCategorization (obj, classifiers_output)
-%     if ~isempty(classifiers_output)
-%         obj.classif_mfi{obj.cpt} = obj.RIR.getMFI().inferCategory(classifiers_output) ;
-%     else
-%         obj.classif_mfi{obj.cpt} = 'none_none' ;
-%     end
-% end
-
-% === TO BE MODIFIED === %
-function [create_new, do_nothing] = createNewObject (obj)
+    fprintf('\nObject Detection KS evaluation\n');
 
     a = getInfo('nb_audio_labels');
     audio_data = obj.retrieveLastAudioData();
@@ -157,13 +81,17 @@ function [create_new, do_nothing] = createNewObject (obj)
             do_nothing = false ;             % --- update the current object
         end
     end
-end
-% === TO BE MODIFIED === %
+    
 
-% === TO BE MODIFIED === %
-% Related to the "createNewObject" function
-% that does not work with the setup of the current experiment.
-% Need to find a way to know when to create a new object.
+    obj.blackboard.addData('objectDetectionHypothese',...
+                           [create_new, do_nothing],...
+                           false,...
+                           obj.trigger.tmIdx);
+    
+    notify(obj, 'KsFiredEvent');
+
+end
+
 function audio_data = retrieveLastAudioData (obj)
     audio_data_all = obj.blackboard.getData('identityHypotheses');
 
@@ -188,29 +116,7 @@ function audio_data = retrieveLastAudioData (obj)
         audio_data = [zeros(getInfo('nb_audio_labels'), 1), audio_data];
     end
 end
-% === TO BE MODIFIED === %
-
-% === TO BE MODIFIED === %
-% Need to find a way to retrieve the groundtruth knowledge
-% for statistical purposes.
-
-% function retrieveGroundtruth (obj)
-%     % obj.gtruth = cell(obj.RIR.nb_objects, 1) ;
-%     al = 0 ;
-%     vl = 0 ;
-
-%     al = obj.simulation_status(1, obj.cpt) ;
-%     vl = obj.simulation_status(2, obj.cpt) ;
-
-%     if al == 0
-%         obj.gtruth{end+1} = 'none_none' ;
-%     else
-%         obj.gtruth{end+1} = [obj.visual_labels{vl}, '_', obj.audio_labels{al}] ;
-%     end
-
-% end
-% === TO BE MODIFIED === %
 
 end
-    
+
 end
