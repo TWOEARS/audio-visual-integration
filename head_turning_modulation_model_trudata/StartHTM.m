@@ -31,13 +31,13 @@
 
         auditoryClassifiersKS = createAuditoryIdentityKS(bbs, models, files);
 
-        signalLevelKS = bbs.createKS('SignalLevelKS')
-        ;
+        signalLevelKS = bbs.createKS('SignalLevelKS');
+        
         visualIdentityKS = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
 
         headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs});
 
-        objectDetectionKS = bbs.createKS('objectDetectionKS', {bbs});
+        objectDetectionKS = bbs.createKS('ObjectDetectionKS', {bbs});
         
         localizerKS = bbs.createKS('GmmLocationKS');
 

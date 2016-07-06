@@ -39,8 +39,7 @@ end
 
 function execute (obj)
     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data;
-    % --- If no sound -> make the head turn to 0deg (resting state)
-    htm = obj.blackboard.KSs{end-2};
+    htm = findKS(obj, 'HeadTurningModulationKS');
     RIR = htm.RIR;
     focus = RIR.focus;
 

@@ -74,6 +74,9 @@ function execute (obj)
 
     % [create_new, do_nothing] = obj.createNewObject();
     
+    object_detection = obj.blackboard.getLastData('objectDetectionHypothese').data;
+    create_new = object_detection(1);
+    do_nothing = object_detection(2);
 
     % --- Retrieve vector of probabilities
     classifiers_output = getClassifiersOutput(obj);

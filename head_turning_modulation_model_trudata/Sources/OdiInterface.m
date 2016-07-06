@@ -35,7 +35,7 @@ classdef OdiInterface < handle
             %obj.client = genomix.client('jido-base:8080');
             
             % Load KEMAR module
-            % obj.kemar = obj.client.load('kemar');
+            %obj.kemar = obj.client.load('kemar');
             
             % Load JIDO module
             obj.jido = obj.client.load('sendPosition'); % Il faut lier les ports
@@ -56,7 +56,7 @@ classdef OdiInterface < handle
             nChunksOnPort   = 20*0.5;
             obj.bass.Acquire('-a', hardware, obj.SampleRate, nFramesPerChunk, nChunksOnPort);
             
-%             QR2 = obj.qr_vision.Publish('-a');
+            QR2 = obj.qr_vision.Publish('-a');
             
             % Get BASS status info
             % audioObj = obj.bass.Audio(); % A voir

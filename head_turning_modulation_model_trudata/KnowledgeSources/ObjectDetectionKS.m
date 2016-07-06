@@ -60,7 +60,7 @@ end
 
 function execute (obj)
     
-    fprintf('\nObject Detection KS evaluation\n');
+    %fprintf('\nObject Detection KS evaluation\n');
 
     a = getInfo('nb_audio_labels');
     audio_data = obj.retrieveLastAudioData();
