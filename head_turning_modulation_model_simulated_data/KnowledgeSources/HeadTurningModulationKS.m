@@ -246,8 +246,7 @@ function run (obj)
 
     computeStatistics(obj);
 
-    [y, fs] = audioread('notification.wav');
-    soundsc(y, fs);
+    playNotification();
 
 end
 % --- Run function (END) --- %

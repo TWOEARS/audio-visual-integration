@@ -55,6 +55,7 @@ function initializeParameters (nb_steps, scene)
     information.cpt_silence = 10;
     information.cpt_object = 30;
 
+    information.notification = 'notification.wav';
 
     % =========================================================================== %
     % =========================================================================== %

@@ -14,12 +14,12 @@ function plotGoodClassifObj (htm, varargin)
         p.Objects = [p.Objects, p.Objects] ;
     end
     if sum(p.Objects) == 0
-        objects = 1:htm.robot.nb_objects ;
+        objects = 1:htm.RIR.nb_objects ;
     else
         objects = p.Objects(1):p.Objects(2) ;
     end
 
-    robot = htm.robot;
+    RIR = htm.RIR;
 
     cpt21 = htm.statistics.mfi ;
     cpt22 = htm.statistics.mfi_mean ;
@@ -27,8 +27,8 @@ function plotGoodClassifObj (htm, varargin)
     cpt12 = htm.statistics.max_mean ;
 
 
-    correct = zeros(htm.robot.nb_objects, 1) ;
-    correct2 = zeros(htm.robot.nb_objects, 1) ;
+    correct = zeros(htm.RIR.nb_objects, 1) ;
+    correct2 = zeros(htm.RIR.nb_objects, 1) ;
 
     info = getInfo('nb_audio_labels',...
                    'nb_visual_labels',...
@@ -37,9 +37,9 @@ function plotGoodClassifObj (htm, varargin)
     for iObj = objects
 
         % --- Object focused
-        if getObject(robot, iObj, 'theta') == 0
-        % if htm.robot.getObj(iObj).theta == 0
-            data = retrieveObservedData(robot, iObj);
+        if getObject(RIR, iObj, 'theta') == 0
+        % if htm.RIR.getObj(iObj).theta == 0
+            data = retrieveObservedData(RIR, iObj);
 
             audio_data = data(1:getInfo('nb_audio_labels'), :);
             visual_data = data(getInfo('nb_audio_labels')+1:end, :);
@@ -47,13 +47,13 @@ function plotGoodClassifObj (htm, varargin)
             idx_audio = find(sum(audio_data) == 0, 1, 'last')+1;
             idx_vision = find(sum(visual_data) == 0, 1, 'last')+1;
 
-            tmIdx = getObject(robot, iObj, 'tmIdx');
-            % tidx = getObject(robot, iObj, 'tmIdx'); 
+            tmIdx = getObject(RIR, iObj, 'tmIdx');
+            % tidx = getObject(RIR, iObj, 'tmIdx'); 
             if ~isempty(idx_audio)
-                % tidx = htm.robot.getObj(iObj).tmIdx(idx_audio) ;
+                % tidx = htm.RIR.getObj(iObj).tmIdx(idx_audio) ;
                 t = tmIdx(idx_audio);
             elseif ~isempty(idx_vision)
-                % tidx = htm.robot.getObj(iObj).tmIdx(idx_vision) ;
+                % tidx = htm.RIR.getObj(iObj).tmIdx(idx_vision) ;
                 t = tmIdx(idx_vision);
             end
             if mean(cpt21(tmIdx(1):t-1)) >= 0.5
@@ -74,8 +74,8 @@ function plotGoodClassifObj (htm, varargin)
 
     limits = zeros(1, info.nb_steps);
     tmIdx = zeros(1, info.nb_steps);
-    for iObj = 1:htm.robot.nb_objects
-        t = getObject(robot, iObj, 'tmIdx');
+    for iObj = 1:htm.RIR.nb_objects
+        t = getObject(RIR, iObj, 'tmIdx');
         
         x = t(1);
         
@@ -88,8 +88,8 @@ function plotGoodClassifObj (htm, varargin)
         
         patch(X, Y, [1, 1, 1], 'LineWidth', 2) ;
 
-        % ttt = min([htm.robot.getObj(iObj).tmIdx(end-9), htm.robot.getObj(iObj).tmIdx(1)+29]) ;
-        % ttt = size(htm.robot.getObj(iObj).data, 2) ;
+        % ttt = min([htm.RIR.getObj(iObj).tmIdx(end-9), htm.RIR.getObj(iObj).tmIdx(1)+29]) ;
+        % ttt = size(htm.RIR.getObj(iObj).data, 2) ;
         tt = t(1:s) ;
 
         % tt = ttt;
@@ -177,10 +177,10 @@ function plotGoodClassifObj (htm, varargin)
             lim = p.Lim ;
         end
     else
-        t1 = getObject(robot, p.Objects(1), 'tmIdx');
-        t2 = getObject(robot, p.Objects(2), 'tmIdx');
+        t1 = getObject(RIR, p.Objects(1), 'tmIdx');
+        t2 = getObject(RIR, p.Objects(2), 'tmIdx');
         lim(1) = t1(1) - 2;
-        lim(2) = t2(end);% + size(htm.data(:, getObject(robot, p.Objects(2), data), 2);
+        lim(2) = t2(end);% + size(htm.data(:, getObject(RIR, p.Objects(2), data), 2);
     end
     
     set(gca, 'XLim', lim, 'Ylim', [0, 1]) ;
