@@ -65,7 +65,7 @@ function obj = HeadTurningModulationKS (varargin)
 
     p = inputParser();
       p.addOptional('Scene', 0,...
-                    @(x) validateattributes(x, {'numeric'},{'vector', 'integer', 'positive'}));
+                    @(x) validateattributes(x, {'numeric'},{'vector', 'integer'}));
       p.addOptional('Steps', 1000,...
                     @(x) validateattributes(x, {'numeric'}, {'integer', 'positive'}));
       p.addOptional('Save', false,...
@@ -79,7 +79,7 @@ function obj = HeadTurningModulationKS (varargin)
     p.parse(varargin{:});
     p = p.Results;
 
-    addpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
+    % addpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
 
     obj.save = p.Save;
     obj.load = p.Load;
