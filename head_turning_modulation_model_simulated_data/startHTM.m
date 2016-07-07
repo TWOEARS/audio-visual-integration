@@ -1,5 +1,6 @@
 % === Parameters of the simulation
 
+<<<<<<< Updated upstream
 % --- Take all audiovisual pairs 
 addpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
 
@@ -48,3 +49,10 @@ plotGoodClassifObj(htm, 'Max', false, 'Objects', [1, 4]);
 plotSHM(htm);
 
 plotHits(htm, 'all');
+=======
+addpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
+rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_trudata'));
+rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/LVTE'));
+
+htm = HeadTurningModulationKS();
+>>>>>>> Stashed changes
