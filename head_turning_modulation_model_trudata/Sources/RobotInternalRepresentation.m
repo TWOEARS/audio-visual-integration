@@ -148,7 +148,7 @@ function updateObjects (obj, tmIdx)
         obj.getEnv().updateObjects(tmIdx);
     end
     % obj.nb_objects = numel(obj.getEnv().objects) ;
-    obj.computeFocus();
+    %obj.computeFocus();
 end
 
 function bool = isPresent (obj, idx)

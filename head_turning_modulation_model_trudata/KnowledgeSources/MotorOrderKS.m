@@ -41,18 +41,22 @@ function execute (obj)
     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data;
     htm = findKS(obj, 'HeadTurningModulationKS');
     RIR = htm.RIR;
-    focus = RIR.focus;
+    % focus = RIR.focus;
+    focus = obj.blackboard.getLastData('FocusedObject');
+    focus = focus.data('focus');
 
     obj.cpt = obj.cpt+1;
     
     if ~isSoundPresent(obj)
         theta = -currentHeadOrientation;
     % --- Turn to the sound source
-    elseif focus ~= 0 && isFocusedObjectPresent(RIR)
+    %elseif focus ~= 0 && isFocusedObjectPresent(RIR)
+    elseif focus ~= 0 && getObject(RIR, focus, 'presence')
         % --- Smoothing the head movements
         if obj.cpt - obj.last_movement >= getInfo('smoothing_head_movements')
             obj.last_movement = obj.cpt;
-            theta = RIR.motorOrder();
+            %theta = RIR.motorOrder();
+            theta = getObject(RIR, focus, 'theta');
         else
             theta = 0;
         end
@@ -61,10 +65,22 @@ function execute (obj)
             theta = getObject(RIR, 0, 'theta');
             obj.last_movement = obj.cpt ;
         else
-            theta = 0 ;
+            theta = 0;
         end
     else
-        theta = 0 ;
+        theta = 0;
+    end
+
+    data = getData(htm, 0);
+    if theta < 20 && sum(data(getInfo('nb_audio_labels'+1:end, end)) == 0)
+        theta = 180;
+    end
+    if theta > 340 && sum(data(getInfo('nb_audio_labels'+1:end, end)) == 0)
+        theta = 180;
+    end
+
+    if theta < 15
+        theta = 0;
     end
 
     obj.robot.moveRobot(0, 0, theta);

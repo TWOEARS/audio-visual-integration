@@ -37,6 +37,8 @@
 
         headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs});
 
+        htmFocusKS = bbs.createKS('HTMFocusKS', {bbs, headTurningModulationKS});
+
         objectDetectionKS = bbs.createKS('ObjectDetectionKS', {bbs});
         
         localizerKS = bbs.createKS('GmmLocationKS');
@@ -76,8 +78,12 @@
         bbs.blackboardMonitor.bind({objectDetectionKS},...
                                    {headTurningModulationKS},...
                                    'replaceOld' );
-
+                               
         bbs.blackboardMonitor.bind({headTurningModulationKS},...
+                                   {htmFocusKS},...
+                                   'replaceOld');
+
+        bbs.blackboardMonitor.bind({htmFocusKS},...
                                    {motorOrderKS},...
                                    'replaceOld');
 

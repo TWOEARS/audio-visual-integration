@@ -1,4 +1,4 @@
-function plotGoodClassif (obj, varargin)
+function plotGoodClassif (htm, varargin)
 
     p = inputParser ;
       p.addOptional('MinLim', 0) ;
@@ -17,39 +17,54 @@ function plotGoodClassif (obj, varargin)
     end
 
     if sum(p.Objects) == 0
-        objects = 1:obj.HTM_robot.nb_objects ;
+        objects = 1:htm.RIR.nb_objects ;
     else
         objects = p.Objects(1):p.Objects(2) ;
     end
 
-    cpt21 = obj.statistics.mfi ;
-    cpt22 = obj.statistics.mfi_mean ;
-    cpt11 = obj.statistics.max ;
-    cpt12 = obj.statistics.max_mean ;
+    cpt21 = htm.statistics.mfi ;
+    cpt22 = htm.statistics.mfi_mean ;
+    cpt11 = htm.statistics.max ;
+    cpt12 = htm.statistics.max_mean ;
 
-    correct = zeros(obj.HTM_robot.nb_objects, 1) ;
-    correct2 = zeros(obj.HTM_robot.nb_objects, 1) ;
+    RIR = htm.RIR;
+
+    correct = zeros(RIR.nb_objects, 1) ;
+    correct2 = zeros(RIR.nb_objects, 1) ;
     for iObj = objects
+
+        data = retrieveObservedData(RIR, iObj);
+
         % === Object focused
-        if obj.HTM_robot.getObj(iObj).theta == 0
-            idx_audio = find(sum(obj.HTM_robot.getObj(iObj).data(1:obj.nb_audio_labels, :)) == 0, 1, 'last')+1 ;
-            idx_vision = find(sum(obj.HTM_robot.getObj(iObj).data(obj.nb_audio_labels+1:end, :)) == 0, 1, 'last')+1 ;
+        % if getObject(RIR, iObj, 'theta') == 0
+            
+            audio_data = data(1:getInfo('nb_audio_labels'), :);
+            visual_data = data(getInfo('nb_audio_labels')+1:end, :);
+
+            idx_audio = find(sum(audio_data) == 0, 1, 'last');
+            idx_vision = find(sum(visual_data) == 0, 1, 'last');
+
+            % idx_audio = find(sum(htm.RIR.getObj(iObj).data(1:htm.nb_audio_labels, :)) == 0, 1, 'last')+1 ;
+            % idx_vision = find(sum(htm.RIR.getObj(iObj).data(htm.nb_audio_labels+1:end, :)) == 0, 1, 'last')+1 ;
+            tmIdx = getObject(RIR, iObj, 'tmIdx');
             if ~isempty(idx_audio)
-                tidx = obj.HTM_robot.getObj(iObj).tmIdx(idx_audio) ;
+                t = tmIdx(idx_audio);
             elseif ~isempty(idx_vision)
-                tidx = obj.HTM_robot.getObj(iObj).tmIdx(idx_vision) ;
+                % tidx = RIR.getObj(iObj).tmIdx(idx_vision) ;
+                t = tmIdx(idx_vision);
             end
-            if mean(cpt21(tidx-1:tidx-1)) > 0.5
+
+            if mean(cpt21(tmIdx(1):t)) > 0.5
                 correct(iObj) = 1 ;
             else
                 correct(iObj) = -1 ;
             end
-            if mean(cpt11(tidx-1:tidx-1)) > 0.5
+            if mean(cpt11(tmIdx(1):t)) >= 0.5
                 correct2(iObj) = 1 ;
             else
                 correct2(iObj) = -1 ;
             end
-        end
+        % end
     end
 
     % correct(p.Objects(1):p.Objects(end))
@@ -63,9 +78,11 @@ function plotGoodClassif (obj, varargin)
     hold on ;
 
     if p.Rect
-        for iObj = 1:obj.HTM_robot.nb_objects
-            x = obj.HTM_robot.getObj(iObj).tmIdx(1) ;
-            X = [x, x, x+30, x+30] ;
+        for iObj = 1:RIR.nb_objects
+            tmIdx = getObject(RIR, iObj, 'tmIdx');
+            x = tmIdx(1);
+            % X = [x, x, x+30, x+30] ;
+            X = [tmIdx(1), tmIdx(1), tmIdx(end), tmIdx(end)] ;
             if p.Max
                 Y1 = [0.5, 1, 1, 0.5] ;
             else
@@ -74,20 +91,24 @@ function plotGoodClassif (obj, varargin)
             Y2 = [0, 0.5, 0.5, 0] ;
 
             if correct(iObj) == -1
-                C1 = C_0 ;
+                C1 = C_0;
             elseif correct(iObj) == 1
-                C1 = C_2 ;
-            else
-                C1 = C_3 ;
+                data = getData(htm, iObj);
+                if sum(data(getInfo('nb_audio_labels')+1:end, 3)) > 0
+                    C1 = C_2;
+                else
+                    C1 = C_3;
+                end
             end
 
             if correct2(iObj) == -1
-                C2 = C_0 ;
+                C2 = C_0;
             elseif correct2(iObj) == 1
-                C2 = C_2 ;
+                C2 = C_2;
             else
-                C2 = C_3 ;
+                C2 = C_3;
             end
+
             if p.MFI
                 h1 = patch(X, Y1, C1) ;%, 'FaceAlpha', 0.6) ;
             end
@@ -102,37 +123,43 @@ function plotGoodClassif (obj, varargin)
     end
 
     if p.Curv
-        plot(cpt22(1:end), 'LineWidth', 4,...
-                            'LineStyle', '-',...
-                            'Color', [0.1, 0.1, 0.1]) ;
-        plot(cpt12(1:end), 'LineWidth', 4,...
-                            'LineStyle', '-',...
-                            'Color', [0.6, 0.6, 0.6]) ;
+        plot(cpt22(1:end)                  ,...
+                'LineWidth', 4             ,...
+                'LineStyle', '-'           ,...
+                'Color'    , [0.1, 0.1, 0.1]...
+            );
+        plot(cpt12(1:end)                  ,...
+                'LineWidth', 4             ,...
+                'LineStyle', '-'           ,...
+                'Color'    , [0.6, 0.6, 0.6]...
+            );
     end
 
 
-    lim = [0, 0] ;
+    lim = [0, 0];
     if sum(p.Objects) == 0
         if sum(p.Lim) == 0
             if p.MinLim == 0
-                lim(1) = 1 ;
+                lim(1) = 1;
             else
-                lim(1) = p.MinLim-10 ;
+                lim(1) = p.MinLim-10;
             end
             if p.MaxLim == 0
-                lim(2) = numel(cpt12) ;
+                lim(2) = numel(cpt12)+10;
             else
-                lim(2) = p.MaxLim+10 ;
+                lim(2) = p.MaxLim+10;
             end
         else
-            lim = p.Lim ;
+            lim = p.Lim;
         end
     else
-        lim(1) = obj.HTM_robot.getObj(p.Objects(1)).tmIdx(1)-10 ;
-        lim(2) = obj.HTM_robot.getObj(p.Objects(2)).tmIdx(end)+10 ;
+        tmIdx = getObject(RIR, p.Objects(1), 'tmIdx');
+        lim(1) = tmIdx(1)-20;
+        lim(2) = tmIdx(end)+20;
     end
     
-    set(gca, 'XLim', lim, 'Ylim', [0, 1]) ;
+    set(gca, 'XLim', lim,...
+             'Ylim', [0, 1]);
 
     title 'Mean of good classification over 1 simulation' ;
     xlabel 'time steps' ;

@@ -32,7 +32,7 @@ function initializeParameters (htm)
     % --- Performance criterion
     information.q = 0.75;
 
-    information.smoothing_head_movements = 5;
+    information.smoothing_head_movements = 1;
 
     information.notification = 'notification.wav';
 
