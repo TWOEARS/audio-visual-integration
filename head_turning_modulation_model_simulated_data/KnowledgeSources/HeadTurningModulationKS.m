@@ -103,14 +103,17 @@ function obj = HeadTurningModulationKS (varargin)
 
         obj.nb_steps_final = getInfo('nb_steps');
 
-        [obj.data, obj.gtruth, gs] = initializeScenario();
-        
         obj.statistics = getInfo('statistics');
-        obj.statistics.max = gs(:, 1);
-        obj.statistics.max_mean = gs(:, 2);
-        obj.gtruth_data = obj.data;
-
         obj.classif_mfi = repmat({'none_none'}, getInfo('nb_steps'), 1);
+
+        % [obj.data, obj.gtruth, gs] = initializeScenario(obj);
+        initializeScenario(obj);
+        
+        % obj.statistics = getInfo('statistics');
+        % obj.statistics.max = gs(:, 1);
+        % obj.statistics.max_mean = gs(:, 2);
+        % obj.gtruth_data = obj.data;
+
 
     end
 
@@ -157,16 +160,17 @@ function continueSimulation (obj, varargin)
     setInfo('scenario', s);
 
     obj.nb_steps_final = obj.nb_steps_final + getInfo('nb_steps');
-
-    [data, gtruth, gs] = initializeScenario();
-
-    obj.data = [obj.data, data];
-    obj.gtruth = [obj.gtruth ; gtruth];
-    obj.gtruth_data = [obj.gtruth_data, data];
-    obj.statistics.max = [obj.statistics.max ; gs(:, 1)];
-    obj.statistics.max_mean = [obj.statistics.max_mean ; gs(:, 2)];
-
     obj.classif_mfi = [obj.classif_mfi ; repmat({'none_none'}, getInfo('nb_steps'), 1)];
+
+    % [data, gtruth, gs] = initializeScenario(obj, 'Initialize', true);
+    initializeScenario(obj, 'Initialize', true);
+
+    % obj.data = [obj.data, data];
+    % obj.gtruth = [obj.gtruth ; gtruth];
+    % obj.gtruth_data = [obj.gtruth_data, data];
+    % obj.statistics.max = [obj.statistics.max ; gs(:, 1)];
+    % obj.statistics.max_mean = [obj.statistics.max_mean ; gs(:, 2)];
+
 
     if p.Run
         obj.run();
