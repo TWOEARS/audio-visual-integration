@@ -71,11 +71,13 @@ function execute (obj)
         theta = 0;
     end
 
-    data = getData(htm, 0);
-    if theta < 20 && sum(data(getInfo('nb_audio_labels'+1:end, end)) == 0)
+    data = getData(htm, 0); % --- get the data of the last object detected
+    
+    na = getInfo('nb_audio_labels');
+    if theta < 20 && sum(data(na+1:end, end)) == 0
         theta = 180;
     end
-    if theta > 340 && sum(data(getInfo('nb_audio_labels'+1:end, end)) == 0)
+    if theta > 340 && sum(data(na+1:end, end)) == 0
         theta = 180;
     end
 

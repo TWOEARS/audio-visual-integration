@@ -78,6 +78,8 @@ function execute (obj)
     create_new = object_detection(1);
     do_nothing = object_detection(2);
 
+    disp(obj.blackboard.getLastData('signalEnergy'));
+
     % --- Retrieve vector of probabilities
     classifiers_output = getClassifiersOutput(obj);
     % --- Retrieve estimated localisation of sound source
