@@ -44,7 +44,6 @@ plotGoodClassif(htm, 'Max', false);
 
 plotSHM(htm);
 
-<<<<<<< HEAD
 plotHits(htm, 'all');
 
 % addpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
@@ -52,8 +51,4 @@ plotHits(htm, 'all');
 % rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/LVTE'));
 
 htm = HeadTurningModulationKS();
-=======
 % plotHits(htm, 'all');
-
-htm = HeadTurningModulationKS();
->>>>>>> 631e9e4da2e93a2ce5fdadff508192775eace481
