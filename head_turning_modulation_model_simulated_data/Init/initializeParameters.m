@@ -50,7 +50,7 @@ function initializeParameters (nb_steps, scene)
     % information.cpt_simulation = 0;
 
     % --- Performance criterion
-    information.q = 0.75;
+    information.q = 0.5;
 
     information.cpt_silence = 10;
     information.cpt_object = 30;
@@ -118,7 +118,7 @@ function initializeParameters (nb_steps, scene)
     if scene == 0
         scene = 1:numel(AVPairs);
     elseif scene(end) > numel(AVPairs)
-        scene(end) = numel(AVPairs);
+        scene(scene > numel(AVPairs)) = [];
     end
 
     information.scenario = struct('idx'       , 1        ,...
