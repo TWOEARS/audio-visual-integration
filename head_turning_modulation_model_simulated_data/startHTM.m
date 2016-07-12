@@ -1,7 +1,7 @@
 % === Parameters of the simulation
 
 % --- Take all audiovisual pairs 
-addpath(genpath('~/SciWork/Dev/TwoEears-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data/'));
+addpath(genpath(pwd));
 
 % --- In the Init folder is an 'AVPairs.xml' file containing the audiovisual objects used for the simulation.
 % --- These pairs consist more on a comprehensive A-to-B pairing than a true audio+visual pairings.
@@ -45,10 +45,3 @@ plotGoodClassif(htm, 'Max', false);
 plotSHM(htm);
 
 plotHits(htm, 'all');
-
-% addpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
-% rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_trudata'));
-% rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/LVTE'));
-
-htm = HeadTurningModulationKS();
-% plotHits(htm, 'all');
