@@ -8,7 +8,7 @@ function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (h
 	p = p.Results;
 
 	% --- DISPLAY --- %
-	textprogressbar('HTM: initialization of simulated scenario -- ')
+	textprogressbar('HTM: generating the simulated scenario -- ')
 	% disp('HTM: initialization of simulated scenario');
 	% pause(0.25);
 	% disp('..................................................');
@@ -95,6 +95,8 @@ function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (h
 		htm.gtruth_data = simulatedData;
 		htm.statistics.max = groundTruth_stats(:, 1);
 		htm.statistics.max_mean = groundTruth_stats(:, 2);
+		htm.statistics.max_shm = htm.statistics.max;
+		htm.statistics.max_mean_shm = htm.statistics.max_mean;
 	else
 		htm.data = [htm.data, simulatedData];
 		htm.gtruth = [htm.gtruth ; groundTruth];
