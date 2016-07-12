@@ -26,7 +26,7 @@ function statistics = computeStatistics (htm)
     
     htm.statistics.mfi_mean = cumsum(htm.statistics.mfi) ./ (1:htm.nb_steps_final)';
 
-    htm.statistics.max_mean_shm = cum(htm.statistics.max_shm) ./ (1:p.nb_steps)';
+    htm.statistics.max_mean_shm = cumsum(htm.statistics.max_shm) ./ (1:p.nb_steps)';
 
     % return;
 
