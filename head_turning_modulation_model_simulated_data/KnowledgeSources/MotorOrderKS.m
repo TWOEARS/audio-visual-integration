@@ -31,13 +31,13 @@ function moveHead (obj)
     % --- If no sound -> make the head turn to 0° (resting state)
     focus = RIR.focus;
 
-    if obj.isFocusedObjectPresent() && focus ~= 0
+    if obj.isFocusedObjectPresent() && focus ~= 0 % --- move the head
         % theta = obj.motorOrder();
         theta = getObject(RIR, RIR.focus, 'theta');
         % obj.RIR.updateAngle(0);
         setObject(RIR, 0, 'theta', 0);
         %RIR.getLastObj().theta = 0;
-    else
+    else                                          % --- go back to resting state (O°)
         theta = -obj.head_position;
     end
     obj.head_position = mod(theta+obj.head_position, 360) ;
