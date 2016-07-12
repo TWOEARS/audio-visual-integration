@@ -227,10 +227,11 @@ function run (obj)
         end
         obj.RIR.updateObjects(iStep) ;
 
-        % !!!!!!!!!!!!!!!!!!!!!!!!!!!! %
-        % --- MOVE TO MOTORORDERKS --- %
-        % !!!!!!!!!!!!!!!!!!!!!!!!!!!! %
         obj.MotorOrderKS().moveHead();
+
+        if obj.MotorOrderKS.head_position_hist(end) == 0
+            obj.statistics.max_shm(iStep) = 0;
+        end
 
         % obj.moveHead();
 
