@@ -128,10 +128,10 @@ end
 
 function best_matching_unit = findBestBMU (obj, vector)
 	% --- Euclidian distance
-	tmp1 = sqrt(sum(bsxfun(@minus, vector(1:getInfo('nb_audio_labels'))', obj.som_weights{1}).^2, 2));
-	tmp2 = sqrt(sum(bsxfun(@minus, vector(getInfo('nb_audio_labels')+1:end)', obj.som_weights{2}).^2, 2));
-	tmp = tmp1.*tmp2;
-	[~, best_matching_unit] = min(tmp);
+	audio_weights = sqrt(sum(bsxfun(@minus, vector(1:getInfo('nb_audio_labels'))', obj.som_weights{1}).^2, 2));
+	visual_weigths = sqrt(sum(bsxfun(@minus, vector(getInfo('nb_audio_labels')+1:end)', obj.som_weights{2}).^2, 2));
+	combined_weights = audio_weights.*visual_weigths;
+	[~, best_matching_unit] = min(combined_weights);
 end
 
 function update_weights (obj, vector, bmu, ISTEP)
