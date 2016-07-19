@@ -91,10 +91,10 @@ function computeFocus (obj)
     end
     
     % --- DWmod-based focus computing
-    % dwmod_focus = obj.computeDWmodFocus() ;
+    % dwmod_focus = obj.computeDWmodFocus();
 
     % --- MFI-based focus computing
-    mfi_focus = obj.computeMFIFocus() ;
+    mfi_focus = obj.computeMFIFocus();
 
     % --- Comparison of the two results
     % if mfi_focus == 0
@@ -104,16 +104,16 @@ function computeFocus (obj)
     % 	focus = mfi_focus ;
     % 	obj.focus_origin(end+1) = -1 ;
     % end
-    focus = mfi_focus ;
+    focus = mfi_focus;
 
     if obj.isPresent(focus)
-        obj.focus = focus ;
+        obj.focus = focus;
     end
 
-    obj.computeSHM() ;
+    obj.computeSHM();
 
     % --- List the focus
-    obj.focus_hist = [obj.focus_hist, obj.focus] ;
+    obj.focus_hist = [obj.focus_hist, obj.focus];
 end
 
 function focus = computeDWmodFocus (obj)
