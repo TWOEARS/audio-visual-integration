@@ -4,7 +4,7 @@ function data = generateProbabilities (audio_idx, visual_idx, number)
         number = 1;
     end
 
-    epsilon = getInfo('thr_epsilon');
+    lambda = getInfo('lambda');
     % --- Audio vector
     nb_audio = getInfo('nb_audio_labels') ;
     % audio_idx = audio(2) ;
@@ -14,7 +14,7 @@ function data = generateProbabilities (audio_idx, visual_idx, number)
 
     for iStep = 1:number
         audio_vec = zeros(nb_audio, 1) ;
-        tmp = (1-epsilon)*rand + epsilon ;
+        tmp = (1-lambda)*rand + lambda ;
         audio_vec(audio_idx) = tmp ;
         
         idx_vec = 1:nb_audio ;
@@ -30,7 +30,7 @@ function data = generateProbabilities (audio_idx, visual_idx, number)
         % visual_idx = visual(2) ;
         
         visual_vec = zeros(nb_visual, 1) ;
-        tmp = (1-epsilon)*rand + epsilon ;
+        tmp = (1-lambda)*rand + lambda ;
         
         visual_vec(visual_idx) = tmp ;
         
