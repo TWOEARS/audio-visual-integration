@@ -59,11 +59,14 @@ function obj = HeadTurningModulationKS (bbs)
 
 end
 
-
-%% execute functionality
+% === Execute functionality
 function [b, wait] = canExecute (obj)
     b = true;
     wait = false;
+end
+
+function finished = isFinished(obj)
+    finished = obj.finished;
 end
 
 function execute (obj)
@@ -124,10 +127,6 @@ function execute (obj)
 % end
 end
 
-function finished = isFinished(obj)
-    finished = obj.finished;
-end
-
 function updateTime (obj)
     obj.current_time = obj.blackboard.currentSoundTimeIdx;
 end
@@ -140,59 +139,59 @@ end
 %     end
 % end
 
-% === TO BE MODIFIED === %
-function [create_new, do_nothing] = createNewObject (obj)
+% % === TO BE MODIFIED === %
+% function [create_new, do_nothing] = createNewObject (obj)
 
-    a = getInfo('nb_audio_labels');
-    audio_data = obj.retrieveLastAudioData();
-    if max(audio_data(:, end)) <= 0.2        % --- (t)   -> silence phase
-        if max(audio_data(:, end-1)) <= 0.2  % --- (t-1) -> silence phase
-            create_new = false ;             % --- don't create a new object
-            do_nothing = true ;              % --- don't update the current object
-        else                                 % --- (t-1) -> object phase
-            create_new = false ;             % --- don't create a new object
-            do_nothing = false ;             % --- update the current object
-        end
-    else                                     % --- (t)   -> object phase
-         if max(audio_data(:, end-1)) <= 0.2 % --- (t-1) -> silence phase
-            create_new = true ;              % --- create a new object
-            do_nothing = false ;             % --- update the current object
-        else                                 % --- (t-1) -> object phase
-            create_new = false ;             % --- don't create a new object
-            do_nothing = false ;             % --- update the current object
-        end
-    end
-end
-% === TO BE MODIFIED === %
+%     a = getInfo('nb_audio_labels');
+%     audio_data = obj.retrieveLastAudioData();
+%     if max(audio_data(:, end)) <= 0.2        % --- (t)   -> silence phase
+%         if max(audio_data(:, end-1)) <= 0.2  % --- (t-1) -> silence phase
+%             create_new = false ;             % --- don't create a new object
+%             do_nothing = true ;              % --- don't update the current object
+%         else                                 % --- (t-1) -> object phase
+%             create_new = false ;             % --- don't create a new object
+%             do_nothing = false ;             % --- update the current object
+%         end
+%     else                                     % --- (t)   -> object phase
+%          if max(audio_data(:, end-1)) <= 0.2 % --- (t-1) -> silence phase
+%             create_new = true ;              % --- create a new object
+%             do_nothing = false ;             % --- update the current object
+%         else                                 % --- (t-1) -> object phase
+%             create_new = false ;             % --- don't create a new object
+%             do_nothing = false ;             % --- update the current object
+%         end
+%     end
+% end
+% % === TO BE MODIFIED === %
 
 % === TO BE MODIFIED === %
 % Related to the "createNewObject" function
 % that does not work with the setup of the current experiment.
 % Need to find a way to know when to create a new object.
-function audio_data = retrieveLastAudioData (obj)
-    audio_data_all = obj.blackboard.getData('identityHypotheses');
+% function audio_data = retrieveLastAudioData (obj)
+%     audio_data_all = obj.blackboard.getData('identityHypotheses');
 
-    if numel(audio_data_all) > 1
-        audio_data_1 = cell2mat(...
-                                arrayfun(@(x) audio_data_all(end-1).data(x).p,...
-                                         1:getInfo('nb_audio_labels'),...
-                                         'UniformOutput', false)...
-                                )';
-        audio_data_2 = cell2mat(...
-                                arrayfun(@(x) audio_data_all(end).data(x).p,...
-                                         1:getInfo('nb_audio_labels'),...
-                                         'UniformOutput', false)...
-                                )';
-        audio_data = [audio_data_1, audio_data_2] ;
-    else
-        audio_data = cell2mat(...
-                                arrayfun(@(x) audio_data_all(end).data(x).p,...
-                                         1:getInfo('nb_audio_labels'),...
-                                         'UniformOutput', false)...
-                                )' ;
-        audio_data = [zeros(getInfo('nb_audio_labels'), 1), audio_data];
-    end
-end
+%     if numel(audio_data_all) > 1
+%         audio_data_1 = cell2mat(...
+%                                 arrayfun(@(x) audio_data_all(end-1).data(x).p,...
+%                                          1:getInfo('nb_audio_labels'),...
+%                                          'UniformOutput', false)...
+%                                 )';
+%         audio_data_2 = cell2mat(...
+%                                 arrayfun(@(x) audio_data_all(end).data(x).p,...
+%                                          1:getInfo('nb_audio_labels'),...
+%                                          'UniformOutput', false)...
+%                                 )';
+%         audio_data = [audio_data_1, audio_data_2] ;
+%     else
+%         audio_data = cell2mat(...
+%                                 arrayfun(@(x) audio_data_all(end).data(x).p,...
+%                                          1:getInfo('nb_audio_labels'),...
+%                                          'UniformOutput', false)...
+%                                 )' ;
+%         audio_data = [zeros(getInfo('nb_audio_labels'), 1), audio_data];
+%     end
+% end
 % === TO BE MODIFIED === %
 
 % === TO BE MODIFIED === %
