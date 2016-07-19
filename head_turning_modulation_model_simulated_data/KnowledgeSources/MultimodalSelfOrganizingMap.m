@@ -117,13 +117,13 @@ function feed (obj, data)
 		end
 	% end
 
-	obj.findClusters();
+	obj.clusterizeMSOM();
 end
 
 
 function best_matching_unit = findBMU (obj, vector, modality)
 	% --- Euclidian distance
-	[~, best_matching_unit] = min(sqrt(sum(bsxfun(@minus, vector', obj.som_weights{modality}).^2, 2))) ;
+	[~, best_matching_unit] = min(sqrt(sum(bsxfun(@minus, vector', obj.som_weights{modality}).^2, 2)));
 end
 
 function best_matching_unit = findBestBMU (obj, vector)
@@ -137,24 +137,24 @@ end
 function update_weights (obj, vector, bmu, ISTEP)
 
 	na = getInfo('nb_audio_labels');
-	tmp = obj.mu(ISTEP) * obj.aleph{bmu, ISTEP} ;
+	tmp = obj.mu(ISTEP) * obj.aleph{bmu, ISTEP};
 	% dw = mu * aleph * bsxfun(@minus, vector', obj.som_weights{modality}) ;
-	vec = vector(1:na) ;
-	dw = bsxfun(@times, tmp, bsxfun(@minus, vec', obj.som_weights{1})) ;
-	obj.som_weights{1} = obj.som_weights{1} + dw ; 
+	vec = vector(1:na);
+	dw = bsxfun(@times, tmp, bsxfun(@minus, vec', obj.som_weights{1}));
+	obj.som_weights{1} = obj.som_weights{1} + dw;
 
-	vec = vector(na+1:end) ;
-	dw = bsxfun(@times, tmp, bsxfun(@minus, vec', obj.som_weights{2})) ;
-	obj.som_weights{2} = obj.som_weights{2} + dw ; 
+	vec = vector(na+1:end);
+	dw = bsxfun(@times, tmp, bsxfun(@minus, vec', obj.som_weights{2}));
+	obj.som_weights{2} = obj.som_weights{2} + dw;
 end
 
-function findClusters (obj)
+function clusterizeMSOM (obj)
 
-	[~, max_a] = max(obj.som_weights{1}, [], 2) ;
-	[~, max_v] = max(obj.som_weights{2}, [], 2) ;
+	[~, max_a] = max(obj.som_weights{1}, [], 2);
+	[~, max_v] = max(obj.som_weights{2}, [], 2);
 
 	% obj.categories = [max_v(1), max_a(1)] ;
-	obj.categories = unique([max_v, max_a], 'Rows') ;
+	obj.categories = unique([max_v, max_a], 'Rows');
 end
 
 function assignNodesToCategories (obj)
