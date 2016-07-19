@@ -1,17 +1,20 @@
 function AVPair = mergeLabels (varargin)
-    
+
+    % --- cell of pairs to merge
     if iscell(varargin{1}) %&& isstr(varargin{1}{1})
         pairs = varargin(1);
         AVPair = cell(size(pairs, 1), 1);
         for iPair = 1:size(pairs, 1)
             AVPair{iPair} = strjoin(pairs{iPair}, '_');
         end
+    % --- all pairs have to be merged
     elseif nargin == 1 && strcmp(varargin{1}, 'all')
 		AVPairs = getInfo('AVPairs');
         AVPair = cell(getInfo('nb_AVPairs'), 1);
         for iPair = 1:getInfo('nb_AVPairs')
             AVPair{iPair} = strjoin(AVPairs{iPair}, '_');
         end
+    % --- one 
     elseif nargin == 1 && numel(varargin{1}) == 1
         AVPairs = getInfo('AVPairs');
 		AVPair = strjoin(AVPairs{varargin{1}}, '_');

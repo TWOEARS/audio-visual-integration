@@ -229,7 +229,7 @@ function run (obj)
 
         obj.MotorOrderKS().moveHead();
 
-        if obj.MotorOrderKS.head_position_hist(end) == 0
+        if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
             obj.statistics.max_shm(iStep) = 0;
         end
 
