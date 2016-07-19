@@ -25,37 +25,56 @@ function initializeParameters (nb_steps, scene)
                          'scenario'        , []...
                          );
 
+    path_to_folder = '../../examples/attention_simulation';
 
-    % ================ %
-    % === EDITABLE === %
-    % ================ %
-    % --- Field of view of the robot
-    information.fov = 30;
-    % --- Max distance of an object to the robot
-    information.distance_max = 4;
-    % --- Number of sound sources
+    config_file = xmlread([path_to_folder, filesep, 'Config.xml']);
 
-    % --- Thresholds used for experts outputs emulation
-    % --- Minimum
-    information.thr_epsilon = 0.7;
-    % --- Wrong AV Pair
-    information.thr_wrong = 0.3;
+    parameters = config_file.getElementsByTagName('pair');
 
-    information.smoothing = 1;
-    % --- ???
-    % information.thr_both = 1;
+    nb_parameters = parameters.getLength();
+
+    for iPair = 0:8
+        pair = parameters.item(iPair);
+
+        parameter = char(pair.getAttribute('parameter'));
+        value = char(pair.getAttribute('value'));
+        if ~strcmp(parameter, 'notification')
+            value = str2num(value);
+        end
+
+        information.(parameter) = value;
+    end
+
+    % % ================ %
+    % % === EDITABLE === %
+    % % ================ %
+    % % --- Field of view of the robot
+    % information.fov = 30;
+    % % --- Max distance of an object to the robot
+    % information.distance_max = 4;
+    % % --- Number of sound sources
+
+    % % --- Thresholds used for experts outputs emulation
+    % % --- Minimum
+    % information.thr_epsilon = 0.7;
+    % % --- Wrong AV Pair
+    % information.thr_wrong = 0.3;
+
+    % information.smoothing = 1;
+    % % --- ???
+    % % information.thr_both = 1;
     
-    % information.cpt_object = 30;
+    % % information.cpt_object = 30;
+    % % information.cpt_silence = 10;
+    % % information.cpt_simulation = 0;
+
+    % % --- Performance criterion
+    % information.q = 0.8;
+
     % information.cpt_silence = 10;
-    % information.cpt_simulation = 0;
+    % information.cpt_object = 30;
 
-    % --- Performance criterion
-    information.q = 0.5;
-
-    information.cpt_silence = 10;
-    information.cpt_object = 30;
-
-    information.notification = 'notification.wav';
+    % information.notification = 'notification.wav';
 
     % =========================================================================== %
     % =========================================================================== %
