@@ -1,3 +1,9 @@
+% 'RobotInternalRepresentation' class
+% This class is part of the HeadTurningModulationKS
+% Author: Benjamin Cohen-Lhyver
+% Date: 01.02.16
+% Rev. 2.0
+
 classdef RobotInternalRepresentation < handle
 
 % --------------- %
@@ -35,13 +41,13 @@ methods
 function obj = RobotInternalRepresentation (htm)
     obj.MFI = htm.MFI;
     % --- At initialization: create a new environment
-    obj.addEnvironment() ;
+    obj.addEnvironment();
 
 end
 
 % === Other methods
 function finished = isFinished (obj)
-    finished = obj.finished ;
+    finished = obj.finished;
 end
 
 
@@ -51,14 +57,11 @@ end
 
 % === Add a new object to the environment
 function addObject (obj)
-    % if obj.nb_objects > 0
-    %     obj.getLastObj().presence = false ;
-    % end
-    obj.getEnv().addObject() ;
+    obj.getEnv().addObject();
     obj.nb_objects = obj.nb_objects + 1;
 end
 
-
+% === Update
 function updateObject (obj)
     obj.getEnv().updateObjectData();
 end
@@ -69,56 +72,56 @@ function updateData (obj, data, theta, d)
     obj.dist_hist(end+1) = d;
 end
 
-% === Compute focus
-function computeFocus (obj)
+% % === Compute focus
+% function computeFocus (obj)
 
-    if isempty(obj.getEnv().objects)
-        obj.focus_hist = [obj.focus_hist, 0];
-        return;
-    end
+%     if isempty(obj.getEnv().objects)
+%         obj.focus_hist = [obj.focus_hist, 0];
+%         return;
+%     end
     
-    % --- DWmod-based focus computing
-    dwmod_focus = obj.computeDWmodFocus();
+%     % --- DWmod-based focus computing
+%     dwmod_focus = obj.computeDWmodFocus();
 
-    % --- MFI-based focus computing
-    mfi_focus = obj.computeMFIFocus();
+%     % --- MFI-based focus computing
+%     mfi_focus = obj.computeMFIFocus();
 
-    % --- Comparison of the two results
-    if mfi_focus == 0
-    	focus = dwmod_focus ;
-    	obj.focus_origin(end+1) = 0;
-    else
-    	focus = mfi_focus ;
-    	obj.focus_origin(end+1) = -1;
-    end
-    % focus = mfi_focus ;
+%     % --- Comparison of the two results
+%     if mfi_focus == 0
+%     	focus = dwmod_focus ;
+%     	obj.focus_origin(end+1) = 0;
+%     else
+%     	focus = mfi_focus ;
+%     	obj.focus_origin(end+1) = -1;
+%     end
+%     % focus = mfi_focus ;
 
-    if obj.isPresent(focus)
-        obj.focus = focus;
-    end
+%     if obj.isPresent(focus)
+%         obj.focus = focus;
+%     end
 
-    obj.computeSHM();
+%     obj.computeSHM();
 
-    % --- List the focus
-    obj.focus_hist = [obj.focus_hist, obj.focus];
-end
+%     % --- List the focus
+%     obj.focus_hist = [obj.focus_hist, obj.focus];
+% end
 
-function focus = computeDWmodFocus (obj)
-	focus = obj.getMaxWeightObject();
-    if getObject(obj, focus, 'weight') < 0.98
-    	focus = 0;
-    end
-end
+% function focus = computeDWmodFocus (obj)
+% 	focus = obj.getMaxWeightObject();
+%     if getObject(obj, focus, 'weight') < 0.98
+%     	focus = 0;
+%     end
+% end
 
-function focus = computeMFIFocus (obj)
-	focus = 0 ;
-	if getObject(obj, 0, 'presence')
-        request = getObject(obj, 0, 'requests');
-		if request.check
-			focus = numel(obj.getEnv().objects);
-		end
-	end
-end
+% function focus = computeMFIFocus (obj)
+% 	focus = 0 ;
+% 	if getObject(obj, 0, 'presence')
+%         request = getObject(obj, 0, 'requests');
+% 		if request.check
+% 			focus = numel(obj.getEnv().objects);
+% 		end
+% 	end
+% end
 
 function computeSHM (obj)
     if obj.focus ~= obj.previous_focus
@@ -151,13 +154,13 @@ function updateObjects (obj, tmIdx)
     %obj.computeFocus();
 end
 
-function bool = isPresent (obj, idx)
-    if find(idx == obj.getEnv().present_objects)
-        bool = true;
-    else
-        bool = false;
-    end 
-end
+% function bool = isPresent (obj, idx)
+%     if find(idx == obj.getEnv().present_objects)
+%         bool = true;
+%     else
+%         bool = false;
+%     end 
+% end
 
 function theta = motorOrder (obj)
     if ~isempty(obj.getEnv().objects) && obj.focus ~= 0
