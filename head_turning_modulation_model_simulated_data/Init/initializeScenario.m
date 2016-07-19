@@ -52,7 +52,7 @@ function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (h
 			groundTruth{iStep, 1} = mergeLabels(object);
 			decision = rand;
 			% --- Simulate classification errors
-			if decision > info.thr_wrong || ~isempty(find(tsteps == iStep)) % --- no error inserted
+			if decision > info.epsilon || ~isempty(find(tsteps == iStep)) % --- no error inserted
 				visual_idx = tmp_visual_idx;
 				audio_idx = tmp_audio_idx;
 				groundTruth{iStep, 2} = mergeLabels(object);
