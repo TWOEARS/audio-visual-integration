@@ -23,12 +23,6 @@ properties (SetAccess = public)
     mfiFocus = 0;
     dwFOcus = 0;
 
-end
-
-
-properties (SetAccess = public, GetAccess = public)
-    %energy_thr = 0.01;
-    %smoothing_theta = 5;
     cpt = 0;
     last_movement = 0;
     theta_hist = [];
@@ -38,8 +32,12 @@ properties (SetAccess = public, GetAccess = public)
     simulation_status = [];
 end
 
+% ===================== %
+% === METHODS (BEG) === %
+% ===================== %
 methods
 
+% === Constructor === %
 function obj = HTMFocusKS (bbs, htm)
     obj = obj@AbstractKS();
     obj.bbs = bbs;
@@ -52,14 +50,15 @@ function obj = HTMFocusKS (bbs, htm)
 end
 
 
-%% execute functionality
+% === Other Methods === %
+% --- Execute functionality
 function [b, wait] = canExecute (obj)
     b = true;
     wait = false;
 end
 
 function execute (obj)
-    RIR = obj.RIR;
+    RIR = obj.RIR; % --- RobotInternalRepresentaion
 
     if isempty(RIR.getEnv().objects)
         obj.blackboard.addData('FocusedObject', 0,...
@@ -89,7 +88,6 @@ function execute (obj)
     end
 
     % --- List the focus
-    %obj.focus_hist = [obj.focus_hist, obj.focus];
 
     focusedObject = containers.Map({'focus', 'focus_origin'},...
                                    {focus, focus_origin});
@@ -101,6 +99,7 @@ function execute (obj)
 
 end
 
+% === Compute focused object thanks to the DYNAMIC WEIGHTING module (DWmod) algorithm
 function focus = computeDWmodFocus (obj)
     focus = obj.getMaxWeightObject();
     if getObject(obj.RIR, focus, 'weight') < 0.98
@@ -108,6 +107,7 @@ function focus = computeDWmodFocus (obj)
     end
 end
 
+% === Compute focused object thanks to the MULTIMODAL FUSION and INFERENCE module (MFImod) algorithm
 function focus = computeMFIFocus (obj)
     focus = 0;
     if getObject(obj.RIR, 0, 'presence')
@@ -118,7 +118,7 @@ function focus = computeMFIFocus (obj)
     end
 end
 
-
+% === Check if the considered object is present in the environment
 function bool = isPresent (obj, idx)
     if find(idx == obj.RIR.getEnv().present_objects)
         bool = true;
@@ -128,7 +128,7 @@ function bool = isPresent (obj, idx)
 end
 
 
-% === Get Objects of Max Weight
+% === Get Objects of Max Weight (DWmod computation)
 function request = getMaxWeightObject (obj)
     RIR = obj.RIR;
     obj_weights = getObject(RIR, 'all', 'weight');
@@ -146,5 +146,11 @@ end
 
 
 end
+
+% ===================== %
+% === Methods (END) === %
+% ===================== %
+
+
 
 end

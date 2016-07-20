@@ -96,7 +96,6 @@ function obj = HeadTurningModulationKS (varargin)
            obj.dist_hist = getappdata(0, 'distHist');
        end
     else
-        % disp('HTM: No appropriate simulation data found');
         disp('HTM: creating simulation');
 
         initializeParameters(p.Steps, p.Scene);
@@ -106,14 +105,7 @@ function obj = HeadTurningModulationKS (varargin)
         obj.statistics = getInfo('statistics');
         obj.classif_mfi = repmat({'none_none'}, getInfo('nb_steps'), 1);
 
-        % [obj.data, obj.gtruth, gs] = initializeScenario(obj);
         initializeScenario(obj);
-        
-        % obj.statistics = getInfo('statistics');
-        % obj.statistics.max = gs(:, 1);
-        % obj.statistics.max_mean = gs(:, 2);
-        % obj.gtruth_data = obj.data;
-
 
     end
 
@@ -162,15 +154,7 @@ function continueSimulation (obj, varargin)
     obj.nb_steps_final = obj.nb_steps_final + getInfo('nb_steps');
     obj.classif_mfi = [obj.classif_mfi ; repmat({'none_none'}, getInfo('nb_steps'), 1)];
 
-    % [data, gtruth, gs] = initializeScenario(obj, 'Initialize', true);
     initializeScenario(obj, 'Initialize', true);
-
-    % obj.data = [obj.data, data];
-    % obj.gtruth = [obj.gtruth ; gtruth];
-    % obj.gtruth_data = [obj.gtruth_data, data];
-    % obj.statistics.max = [obj.statistics.max ; gs(:, 1)];
-    % obj.statistics.max_mean = [obj.statistics.max_mean ; gs(:, 2)];
-
 
     if p.Run
         obj.run();
@@ -205,12 +189,10 @@ function run (obj)
             % --- Degrade data if object is NOT in field of view
             obj.degradeData(theta, iStep);
             obj.MSOM.idx_data = 1;
-            % if obj.RIR.nb_objects > 0
-            %     obj.RIR.getLastObj().presence = false ;
-            % end
 
             obj.RIR.updateData(obj.data(:, iStep), theta, d);
             obj.RIR.addObject();
+
         elseif ~create_new && ~do_nothing % --- update object
             theta = getObject(obj, 0, 'theta');
             % --- Degrade data if object is NOT in field of view
@@ -218,6 +200,7 @@ function run (obj)
             obj.RIR.updateData(obj.data(:, iStep), theta, d);
             obj.RIR.updateObject();
             obj.MSOM.idx_data = obj.MSOM.idx_data+1;
+
         elseif ~create_new && do_nothing % --- silence phase
             if obj.RIR.nb_objects > 0
                 setObject(obj, 0, 'presence', false);

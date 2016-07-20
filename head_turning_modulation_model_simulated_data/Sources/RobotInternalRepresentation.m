@@ -38,7 +38,6 @@ function obj = RobotInternalRepresentation (htm)
     obj.MFI = htm.MFI;
     obj.MotorOrderKS = htm.MotorOrderKS();
     obj.addEnvironment();
-    % obj.focus_hist = zeros(1, getappdata(0, 'nb_steps')) ;
 end
 
 % === Other methods
@@ -47,34 +46,18 @@ function addEnvironment (obj)
 end
 
 % === Add a new object to the environment
-% function addObject (obj, input_vector, theta, d)
 function addObject (obj)
-    % obj.getEnv().addObject(obj.data(:, end)   ,...
-    %                        obj.theta_hist(end),...
-    %                        obj.dist_hist(end)  ...
-    %                       );
     obj.getEnv().addObject();
     obj.nb_objects = obj.nb_objects + 1;
-    % obj.dist_hist = [obj.dist_hist, d];
-    % obj.theta_hist = [obj.theta_hist, theta];
 end
 
 % === Update the label of the last object with a new INPUT_VECTOR
-% function updateLabel (obj, input_vector)
 function updateObject (obj)
     obj.getEnv().updateObjectData(obj.data(:, end)   ,...
                                   obj.theta_hist(end),...
                                   obj.dist_hist(end)  ...
                                  );
-    % obj.getEnv().objects{end}.updateAngle(obj.theta_hist(end));
-    % obj.dist_hist = [obj.dist_hist, obj.dist_hist(end)];
-    % obj.theta_hist = [obj.theta_hist, theta];
 end
-
-% === Update the angle of the last object with a new THETA
-% function updateAngle (obj, theta)
-%     obj.getEnv().objects{end}.updateAngle(theta) ;
-% end
 
 function updateData (obj, data, theta, d)
     obj.data(:, end+1) = data;
