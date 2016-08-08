@@ -248,7 +248,7 @@ end
 function storeMsomWeights (obj, iStep)
     if mod(iStep, getInfo('nb_steps')/10) == 0 && iStep ~= 1
         msom_weights = getappdata(0, 'msom_weights');
-        msom_weights = [msom_weights ; obj.MFI.MSOM.som_weights];
+        msom_weights = [msom_weights ; obj.MSOM.weights_vectors];
         setappdata(0, 'msom_weights', msom_weights);
     end
 end

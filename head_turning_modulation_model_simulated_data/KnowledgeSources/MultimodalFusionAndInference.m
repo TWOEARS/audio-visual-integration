@@ -82,8 +82,8 @@ function AVCategory = inferCategory (obj, input_vector)
 end
 
 function [alabel, vlabel] = findLabels (obj, bmu)
-	[~, alabel] = max(obj.MSOM.som_weights{1}(bmu, :));
-	[~, vlabel] = max(obj.MSOM.som_weights{2}(bmu, :));
+	[~, alabel] = max(obj.MSOM.weights_vectors{1}(bmu, :));
+	[~, vlabel] = max(obj.MSOM.weights_vectors{2}(bmu, :));
 end
 
 function [data, value] = checkMissingModality (obj, input_vector)

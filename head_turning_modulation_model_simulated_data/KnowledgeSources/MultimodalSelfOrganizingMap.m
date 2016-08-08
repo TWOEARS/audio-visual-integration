@@ -8,9 +8,9 @@ properties (SetAccess = public, GetAccess = public)
     sigmas = struct('initial', 1.5e0,...
     				'final'  , 1.0e-1);
 
-    % som_weights = 0 ;
-    som_weights = cell(0) ;
-    som_grid = [] ;
+    % weights_vectors = 0 ;
+    weights_vectors = cell(0) ;
+    connections = [];
 
     modalities = 0 ;
     nb_modalities = 0 ;
@@ -67,15 +67,15 @@ function obj = MultimodalSelfOrganizingMap (varargin)
 
 	obj.idx_mod = cumsum([1, obj.modalities]);
 
-	% obj.som_weights = cell(1, obj.nb_modalities) ;
+	% obj.weights_vectors = cell(1, obj.nb_modalities) ;
 	
 	obj.nb_nodes = obj.som_dimension(1)*obj.som_dimension(2) ;
 
-	obj.som_grid = zeros(obj.nb_nodes, 2) ;
-	[obj.som_grid(:, 1), obj.som_grid(:, 2)] = ind2sub(obj.som_dimension, 1:obj.nb_nodes) ;
+	obj.connections = zeros(obj.nb_nodes, 2) ;
+	[obj.connections(:, 1), obj.connections(:, 2)] = ind2sub(obj.som_dimension, 1:obj.nb_nodes) ;
 	
 	for iMod = 1:obj.nb_modalities
-		obj.som_weights{iMod} = rand(obj.nb_nodes, obj.modalities(iMod)) ;
+		obj.weights_vectors{iMod} = rand(obj.nb_nodes, obj.modalities(iMod)) ;
 	end
 
 	obj.setParameters(obj.nb_iterations) ;
@@ -97,7 +97,7 @@ function setParameters (obj, nb_iterations)
 
 	for iNode = 1:obj.nb_nodes
 		for iStep = 1:nb_iterations
-			obj.aleph{iNode, iStep} = exp(-sum((bsxfun(@minus, obj.som_grid(iNode, :), obj.som_grid).^2), 2) / (2*obj.sig(iStep).^2)) ;
+			obj.aleph{iNode, iStep} = exp(-sum((bsxfun(@minus, obj.connections(iNode, :), obj.connections).^2), 2) / (2*obj.sig(iStep).^2)) ;
 		end
 	end
 end
@@ -123,13 +123,13 @@ end
 
 function best_matching_unit = findBMU (obj, vector, modality)
 	% --- Euclidian distance
-	[~, best_matching_unit] = min(sqrt(sum(bsxfun(@minus, vector', obj.som_weights{modality}).^2, 2)));
+	[~, best_matching_unit] = min(sqrt(sum(bsxfun(@minus, vector', obj.weights_vectors{modality}).^2, 2)));
 end
 
 function best_matching_unit = findBestBMU (obj, vector)
 	% --- Euclidian distance
-	audio_weights = sqrt(sum(bsxfun(@minus, vector(1:getInfo('nb_audio_labels'))', obj.som_weights{1}).^2, 2));
-	visual_weigths = sqrt(sum(bsxfun(@minus, vector(getInfo('nb_audio_labels')+1:end)', obj.som_weights{2}).^2, 2));
+	audio_weights = sqrt(sum(bsxfun(@minus, vector(1:getInfo('nb_audio_labels'))', obj.weights_vectors{1}).^2, 2));
+	visual_weigths = sqrt(sum(bsxfun(@minus, vector(getInfo('nb_audio_labels')+1:end)', obj.weights_vectors{2}).^2, 2));
 	combined_weights = audio_weights.*visual_weigths;
 	[~, best_matching_unit] = min(combined_weights);
 end
@@ -138,20 +138,20 @@ function update_weights (obj, vector, bmu, ISTEP)
 
 	na = getInfo('nb_audio_labels');
 	tmp = obj.mu(ISTEP) * obj.aleph{bmu, ISTEP};
-	% dw = mu * aleph * bsxfun(@minus, vector', obj.som_weights{modality}) ;
+	% dw = mu * aleph * bsxfun(@minus, vector', obj.weights_vectors{modality}) ;
 	vec = vector(1:na);
-	dw = bsxfun(@times, tmp, bsxfun(@minus, vec', obj.som_weights{1}));
-	obj.som_weights{1} = obj.som_weights{1} + dw;
+	dw = bsxfun(@times, tmp, bsxfun(@minus, vec', obj.weights_vectors{1}));
+	obj.weights_vectors{1} = obj.weights_vectors{1} + dw;
 
 	vec = vector(na+1:end);
-	dw = bsxfun(@times, tmp, bsxfun(@minus, vec', obj.som_weights{2}));
-	obj.som_weights{2} = obj.som_weights{2} + dw;
+	dw = bsxfun(@times, tmp, bsxfun(@minus, vec', obj.weights_vectors{2}));
+	obj.weights_vectors{2} = obj.weights_vectors{2} + dw;
 end
 
 function clusterizeMSOM (obj)
 
-	[~, max_a] = max(obj.som_weights{1}, [], 2);
-	[~, max_v] = max(obj.som_weights{2}, [], 2);
+	[~, max_a] = max(obj.weights_vectors{1}, [], 2);
+	[~, max_v] = max(obj.weights_vectors{2}, [], 2);
 
 	% obj.categories = [max_v(1), max_a(1)] ;
 	obj.categories = unique([max_v, max_a], 'Rows');
@@ -159,8 +159,8 @@ end
 
 function assignNodesToCategories (obj)
 
-	[~, max_a] = max(obj.som_weights{1}, [], 2) ;
-	[~, max_v] = max(obj.som_weights{2}, [], 2) ;
+	[~, max_a] = max(obj.weights_vectors{1}, [], 2) ;
+	[~, max_v] = max(obj.weights_vectors{2}, [], 2) ;
 
 	obj.cat = cell(size(obj.categories, 1), 1) ;
 	for iCat = 1:size(obj.categories, 1)
@@ -174,8 +174,8 @@ end
 function request = getDistances (obj, data)
 	request = [] ;
 	for iVec = 1:size(data, 2)
-		tmp1 = sqrt(sum(bsxfun(@minus, data(1:obj.modalities(1), iVec)', obj.som_weights{1}).^2, 2)) ;
-		tmp2 = sqrt(sum(bsxfun(@minus, data(obj.modalities(1)+1:end, iVec)', obj.som_weights{2}).^2, 2)) ;
+		tmp1 = sqrt(sum(bsxfun(@minus, data(1:obj.modalities(1), iVec)', obj.weights_vectors{1}).^2, 2)) ;
+		tmp2 = sqrt(sum(bsxfun(@minus, data(obj.modalities(1)+1:end, iVec)', obj.weights_vectors{2}).^2, 2)) ;
 		tmp = tmp1.*tmp2 ;
 		request = [request, tmp] ;
 	end
