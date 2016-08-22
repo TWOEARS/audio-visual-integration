@@ -21,7 +21,7 @@ properties (SetAccess = public)
  
     current_time = 0;
     mfiFocus = 0;
-    dwFOcus = 0;
+    dwFocus = 0;
 
     cpt = 0;
     last_movement = 0;
