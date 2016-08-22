@@ -15,7 +15,7 @@ function plotFocus (htm)
 	nb_tsteps = getInfo('nb_steps');
 
 	xvec = linspace(0, 60.004, nb_tsteps) ;
-	naive = zeros(1, numel(htm.focus_hist)) ;
+	naive = zeros(1, numel(htm.RIR.focus_hist)) ;
 
 	colors = {'black', 'red', 'green'} ;
 	audio_labels = htm.MFI.audio_labels ;

@@ -32,6 +32,7 @@ properties (SetAccess = public, GetAccess = public)
     MSOM;
     MFI;
     MotorOrderKS;
+    HTMFocusKS;
 
 
 end
@@ -113,6 +114,7 @@ function obj = HeadTurningModulationKS (varargin)
     obj.MFI = MultimodalFusionAndInference(obj.MSOM);
     obj.MotorOrderKS = MotorOrderKS(obj);
     obj.RIR = RobotInternalRepresentation(obj);
+    obj.HTMFocusKS = HTMFocusKS(htm);
 
     if p.Run
         obj.run();

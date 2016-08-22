@@ -29,7 +29,8 @@ end
 function moveHead (obj)
 	RIR = obj.htm.RIR;
     % --- If no sound -> make the head turn to 0° (resting state)
-    focus = RIR.focus;
+    % focus = RIR.focus;
+    focus = htm.HTMFocusKS.focus;
 
     if obj.isFocusedObjectPresent() && focus ~= 0 % --- move the head
         % theta = obj.motorOrder();
