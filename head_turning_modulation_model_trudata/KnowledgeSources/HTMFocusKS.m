@@ -23,13 +23,6 @@ properties (SetAccess = public)
     mfiFocus = 0;
     dwFocus = 0;
 
-    cpt = 0;
-    last_movement = 0;
-    theta_hist = [];
-
-    statistics = [];
-
-    simulation_status = [];
 end
 
 % ===================== %
