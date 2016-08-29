@@ -226,16 +226,16 @@ end
 function computeCategoryPerformance (obj)
 	for iClass = 1:numel(obj.observed_categories)
 		obj.observed_categories{iClass}.perf = obj.observed_categories{iClass}.nb_goodInf/...
-											   obj.observed_categories{iClass}.nb_inf ;
+											   obj.observed_categories{iClass}.nb_inf;
 
 		if isnan(obj.observed_categories{iClass}.perf) || isinf(obj.observed_categories{iClass}.perf)
-			obj.observed_categories{iClass}.perf = 0 ;
+			obj.observed_categories{iClass}.perf = 0;
 		end
 
-		obj.observed_categories{iClass}.proba = obj.observed_categories{iClass}.cpt/numel(obj.objects) ;
+		obj.observed_categories{iClass}.proba = obj.observed_categories{iClass}.cpt/numel(obj.objects);
 
 		if isnan(obj.observed_categories{iClass}.proba) || isinf(obj.observed_categories{iClass}.proba)
-			obj.observed_categories{iClass}.proba = 0 ;
+			obj.observed_categories{iClass}.proba = 0;
 		end
 	end
 end
@@ -253,7 +253,7 @@ end
 
 function reinitializeClasses (obj)
 	for iClass = 1:numel(obj.observed_categories)
-		obj.observed_categories{iClass}.cpt = 0 ;
+		obj.observed_categories{iClass}.cpt = 0;
 	end
 end
 
@@ -309,6 +309,7 @@ function computeWeights (obj)
 			else
 				decreaseObjectWeight(obj.objects{iObj});
 			end
+			obj.observed_categories{obj_cat}.congruence = obj.objects{iObj}.weight;
 		end
 	end
 end
