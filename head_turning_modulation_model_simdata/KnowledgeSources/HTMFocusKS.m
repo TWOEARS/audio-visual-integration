@@ -9,7 +9,7 @@
 % Date: 01.06.16
 % Rev. 2.0
 
-classdef HTMFocusKS < AbstractKS
+classdef HTMFocusKS < handle
 % ======================== %
 % === PROPERTIES [BEG] === %
 % ======================== %
@@ -17,20 +17,15 @@ properties (SetAccess = public)
     htm; 
     RIR;
  
-    current_time = 0;
-    mfiFocus = 0;
-    dwFocus = 0;
+    % current_time = 0;
+    % mfiFocus = 0;
+    % dwFocus = 0;
 
     focused_object = 0;
     focus_origin = 0; % to be renamed as "focus_type"
+    previous_focus = 0;
+    focus_hist = [];
 
-    cpt = 0;
-    last_movement = 0;
-    theta_hist = [];
-
-    statistics = [];
-
-    simulation_status = [];
 end
 
 % ===================== %
@@ -50,9 +45,8 @@ function computeFocus (obj)
     RIR = obj.RIR; % --- RobotInternalRepresentaion
 
     if isempty(RIR.getEnv().objects)
-        obj.blackboard.addData('FocusedObject', 0,...
-                               false, obj.trigger.tmIdx);
-        notify(obj, 'KsFiredEvent');
+        obj.focus_hist = [obj.focus_hist, 0];
+        obj.focus_origin = [obj.focus_origin, 0];
         return;
     end
     
@@ -65,7 +59,7 @@ function computeFocus (obj)
     % --- Comparison of the two results
     if mfi_focus == 0
         focus = dwmod_focus ;
-        focus_origin = 0;
+        focus_origin = 1;
     else
         focus = mfi_focus ;
         focus_origin = -1;
@@ -76,10 +70,10 @@ function computeFocus (obj)
         focus = 0;
     end
 
-    % --- List the focus
-
     obj.focused_object = focus;
-    obj.focus_origin = focus_origin;
+    obj.focus_origin = [obj.focus_origin, focus_origin];
+
+    obj.focus_hist = [obj.focus_hist, obj.focused_object];
 
 end
 
@@ -99,6 +93,13 @@ function focus = computeMFIFocus (obj)
         if request.check
             focus = numel(obj.RIR.getEnv().objects);
         end
+    end
+end
+
+function computeSHM (obj)
+    if obj.focused_object ~= obj.previous_focus
+        obj.shm = obj.shm + 1;
+        obj.previous_focus = obj.focus;
     end
 end
 
