@@ -1,21 +1,27 @@
-
 function plotHits (htm, vec)
 
     p = getInfo('AVPairs',...
                 'nb_audio_labels',...
-                'nb_labels');
+                'nb_labels',...
+                'scenario');
 
-    msom = htm.MSOM ;
+    idx = p.scenario.scene{:};
+    AVPairs = p.AVPairs(idx);
+
+    msom = htm.MSOM;
     
     if nargin == 1
-        labels = mergeLabels(p.AVPairs);
+        labels = mergeLabels(AVPairs);
 		disp(labels);
 		BOOL = false;
-		str = input('Please select an audiovisual pair: ', 's');
+		str = input('Please select an audiovisual pair: ');
 		while ~BOOL
 			varargin{1} = str;
+            if isnumeric(str)
+                str = labels{str};
+            end
 			if ~strcmp(str, labels)
-				str = input('Error: Wrong Field. \nPlease select again a field to retrieve: ', 's');
+				str = input('Error: Wrong Field. \nPlease select again a field to retrieve: ');
 			else
 				BOOL = true;
 			end
@@ -37,11 +43,14 @@ function plotHits (htm, vec)
                 disp(labels);
                 BOOL = false;
                 disp('Error: Wrong label');
-                str = input('Please select a correct audiovisual pair: ', 's');
+                str = input('Please select a correct audiovisual pair: ');
                 while ~BOOL
                     varargin{1} = str;
+                    if isnumeric(str)
+                        str = labels{str};
+                    end
                     if ~strcmp(str, labels)
-                        str = input('Error: Wrong Field. \nPlease select again a field to retrieve: ', 's');
+                        str = input('Error: Wrong Field. \nPlease select again a field to retrieve: ');
                     else
                         BOOL = true;
                     end
@@ -103,7 +112,7 @@ function plotHits (htm, vec)
         if ~isempty(data{iLabel})
             vec = mean(data{iLabel}, 2);
             axis;
-            subplot(subplot_dim1, subplot_dim2, iLabel) ;
+            subplot(subplot_dim1, subplot_dim2, iLabel);
 
             set(gca, 'XLim' , [1, msom.som_dimension(1)+1],...
                      'YLim' , [1, msom.som_dimension(1)+1],...
@@ -119,8 +128,8 @@ function plotHits (htm, vec)
             dist3 = zeros(msom.nb_nodes, s) ;
 
             for iVec = 1:s
-                dist1(:, iVec) = sqrt(sum(bsxfun(@minus, vec(1:msom.modalities(1), iVec)', msom.som_weights{1}).^2, 2)) ;
-                dist2(:, iVec) = sqrt(sum(bsxfun(@minus, vec(msom.modalities(1)+1:end, iVec)', msom.som_weights{2}).^2, 2)) ;
+                dist1(:, iVec) = sqrt(sum(bsxfun(@minus, vec(1:msom.modalities(1), iVec)', msom.weights_vectors{1}).^2, 2)) ;
+                dist2(:, iVec) = sqrt(sum(bsxfun(@minus, vec(msom.modalities(1)+1:end, iVec)', msom.weights_vectors{2}).^2, 2)) ;
                 dist3(:, iVec) = dist1(:, iVec).*dist2(:, iVec) ;
             end
 
@@ -169,7 +178,7 @@ function plotHits (htm, vec)
                 end
             end
             for iData = 1:size(vec, 2)
-                bmu = msom.findBestBMU(vec(:, iData)) ;
+                bmu = msom.getCombinedBMU(vec(:, iData)) ;
                 x = I(bmu) ;
                 y = J(bmu) ;
                 rectangle('Position', [x, y, 1, 1],...
@@ -177,6 +186,8 @@ function plotHits (htm, vec)
                           'LineWidth', 4,...
                           'LineStyle', '--') ;
             end
+        else
+            % subplot(subplot_dim1, subplot_dim2, iLabel);
         end
     end
     if nb_labels == 1
