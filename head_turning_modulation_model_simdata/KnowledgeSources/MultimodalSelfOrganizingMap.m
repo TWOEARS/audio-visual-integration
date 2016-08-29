@@ -1,6 +1,17 @@
+% 'MultimodalSelfOrganizingMap' class
+% This class implements a modified SOM that aims at clustering the input vectors coming from the classifiers.
+% It outputs a categorized 2D map with as many subdimensions (or submaps) as the number of modalities available.
+% At the moment, the Two!Ears system an handle two modalities: vision & audition.
+% (reference: Benjamin Cohen-Lhyver, Multimodal fusion and inference using binaural audition and vision, ICA 2016)
+% Author: Benjamin Cohen-Lhyver
+% Date: 21.05.16
+% Rev. 2.0
+
 classdef MultimodalSelfOrganizingMap < handle
 
-% --- Properties --- %
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (SetAccess = public, GetAccess = public)
     lrates = struct('initial', 0.5,...
     			    'final'  , 0.1);
@@ -9,47 +20,50 @@ properties (SetAccess = public, GetAccess = public)
     				'final'  , 1.0e-1);
 
     % weights_vectors = 0 ;
-    weights_vectors = cell(0) ;
+    weights_vectors = cell(0);
     connections = [];
 
-    modalities = 0 ;
-    nb_modalities = 0 ;
-    leading = 0 ;
-    idx_mod = [] ;
+    modalities = 0;
+    nb_modalities = 0;
+    leading = 0;
+    idx_mod = [];
 
-    nb_nodes = 0 ;
-    som_dimension = [0, 0] ;
+    nb_nodes = 0;
+    som_dimension = [0, 0];
 
-    INIT = false ;
+    INIT = false;
 
-    nb_iterations = 0 ;
+    nb_iterations = 0;
 
-    categories = cell(0) ;
-    cat = cell(0) ;
+    categories = cell(0);
+    cat = cell(0);
 
-    aleph = [] ;
-    mu = [] ;
-    sig = [] ;
+    aleph = [];
+    mu = [];
+    sig = [];
 
     cpt = 0;
 
     idx_data;
-
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
 
+% === CONSTRUCTOR [BEG] === %
 function obj = MultimodalSelfOrganizingMap (varargin)
-
 	p = inputParser ;
-	  % p.addOptional('Dim', [10, 10]) ;
-	  p.addOptional('Iterations', 10) ;
-	  % p.addOptional('Modalities', 0) ;
-	  p.addOptional('Leading', 1) ;
-	p.parse(varargin{:}) ;
-	p = p.Results ;
+	  p.addOptional('Iterations', 10);
+	  p.addOptional('Leading', 1);
+	p.parse(varargin{:});
+	p = p.Results;
 
-	obj.nb_iterations = p.Iterations ;
+	obj.nb_iterations = p.Iterations;
 
 	obj.nb_modalities = 2;
 
@@ -57,7 +71,6 @@ function obj = MultimodalSelfOrganizingMap (varargin)
 	nv = getInfo('nb_visual_labels');
 	
 	tmp = na * nv;
-	% tmp = 12 * 12;
 	
 	obj.som_dimension = [ceil(sqrt(tmp)), ceil(sqrt(tmp))];
 
@@ -69,18 +82,18 @@ function obj = MultimodalSelfOrganizingMap (varargin)
 
 	% obj.weights_vectors = cell(1, obj.nb_modalities) ;
 	
-	obj.nb_nodes = obj.som_dimension(1)*obj.som_dimension(2) ;
+	obj.nb_nodes = obj.som_dimension(1)*obj.som_dimension(2);
 
-	obj.connections = zeros(obj.nb_nodes, 2) ;
-	[obj.connections(:, 1), obj.connections(:, 2)] = ind2sub(obj.som_dimension, 1:obj.nb_nodes) ;
+	obj.connections = zeros(obj.nb_nodes, 2);
+	[obj.connections(:, 1), obj.connections(:, 2)] = ind2sub(obj.som_dimension, 1:obj.nb_nodes);
 	
 	for iMod = 1:obj.nb_modalities
-		obj.weights_vectors{iMod} = rand(obj.nb_nodes, obj.modalities(iMod)) ;
+		obj.weights_vectors{iMod} = rand(obj.nb_nodes, obj.modalities(iMod));
 	end
 
-	obj.setParameters(obj.nb_iterations) ;
-
+	obj.setParameters(obj.nb_iterations);
 end
+% === CONSTRUCTOR [END] === %
 
 function setParameters (obj, nb_iterations)
 
@@ -112,7 +125,7 @@ function feed (obj, data)
 		idx = randperm(size(data, 2), size(data, 2));
 
 		for iStep = 1:size(data, 2)
-			bmu = obj.findBestBMU(data(:, idx(iStep)));
+			bmu = obj.getCombinedBMU(data(:, idx(iStep)));
 			obj.update_weights(data(:, idx(iStep)), bmu, ISTEP);
 		end
 	% end
@@ -120,18 +133,35 @@ function feed (obj, data)
 	obj.clusterizeMSOM();
 end
 
-
-function best_matching_unit = findBMU (obj, vector, modality)
+function best_matching_unit = getBMU (obj, vector, modality)
 	% --- Euclidian distance
-	[~, best_matching_unit] = min(sqrt(sum(bsxfun(@minus, vector', obj.weights_vectors{modality}).^2, 2)));
+	% euclidian_distance = euclidianDistance(vector, modality);
+	d = obj.euclidianDistance(vector, modality);
+	[~, best_matching_unit] = min(d);
+	% [~, best_matching_unit] = min(sqrt(sum(bsxfun(@minus, vector', obj.weights_vectors{modality}).^2, 2)));
 end
 
-function best_matching_unit = findBestBMU (obj, vector)
+function best_matching_unit = getCombinedBMU (obj, vector)
+	na = getInfo('nb_audio_labels');
 	% --- Euclidian distance
-	audio_weights = sqrt(sum(bsxfun(@minus, vector(1:getInfo('nb_audio_labels'))', obj.weights_vectors{1}).^2, 2));
-	visual_weigths = sqrt(sum(bsxfun(@minus, vector(getInfo('nb_audio_labels')+1:end)', obj.weights_vectors{2}).^2, 2));
-	combined_weights = audio_weights.*visual_weigths;
-	[~, best_matching_unit] = min(combined_weights);
+	audio_distance = obj.euclidianDistance(vector(1:na), 1);
+	visual_distance = obj.euclidianDistance(vector(na+1:end), 2);
+	% audio_distance = sqrt(sum(bsxfun(@minus, vector(1:getInfo('nb_audio_labels'))', obj.weights_vectors{1}).^2, 2));
+	% visual_distance = sqrt(sum(bsxfun(@minus, vector(getInfo('nb_audio_labels')+1:end)', obj.weights_vectors{2}).^2, 2));
+	combined_distance = audio_distance.*visual_distance;
+	[~, best_matching_unit] = min(combined_distance);
+end
+
+% function [audio_distance, visual_distance, combined_distance] = findBestBMU2 (obj, vector)
+% 	% --- Euclidian distance
+% 	audio_distance = sqrt(sum(bsxfun(@minus, vector(1:getInfo('nb_audio_labels'))', obj.weights_vectors{1}).^2, 2));
+% 	visual_distance = sqrt(sum(bsxfun(@minus, vector(getInfo('nb_audio_labels')+1:end)', obj.weights_vectors{2}).^2, 2));
+% 	combined_distance = audio_distance.*visual_distance;
+% 	% [~, best_matching_unit] = min(combined_weights);
+% end
+
+function euclidian_distance = euclidianDistance (obj, vector, modality)
+	euclidian_distance = sqrt(sum(bsxfun(@minus, vector', obj.weights_vectors{modality}).^2, 2));
 end
 
 function update_weights (obj, vector, bmu, ISTEP)
@@ -183,5 +213,11 @@ end
 
 
 end
+% ===================== %
+% === METHODS [END] === %
+% ===================== %
 
 end
+% =================== %
+% === END OF FILE === %
+% =================== %
