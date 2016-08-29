@@ -66,38 +66,38 @@ function updateData (obj, data, theta, d)
 end
 
 % === Compute focus
-function computeFocus (obj)
-    % global ISTEP ;
-    if isempty(obj.getEnv().objects)
-        obj.focus_hist = [obj.focus_hist, 0] ;
-        return ;
-    end
+% function computeFocus (obj)
+%     % global ISTEP ;
+%     if isempty(obj.getEnv().objects)
+%         obj.focus_hist = [obj.focus_hist, 0] ;
+%         return ;
+%     end
     
-    % --- DWmod-based focus computing
-    % dwmod_focus = obj.computeDWmodFocus();
+%     % --- DWmod-based focus computing
+%     % dwmod_focus = obj.computeDWmodFocus();
 
-    % --- MFI-based focus computing
-    mfi_focus = obj.computeMFIFocus();
+%     % --- MFI-based focus computing
+%     mfi_focus = obj.computeMFIFocus();
 
-    % --- Comparison of the two results
-    % if mfi_focus == 0
-    % 	focus = dwmod_focus ;
-    % 	obj.focus_origin(end+1) = 0 ;
-    % else
-    % 	focus = mfi_focus ;
-    % 	obj.focus_origin(end+1) = -1 ;
-    % end
-    focus = mfi_focus;
+%     % --- Comparison of the two results
+%     % if mfi_focus == 0
+%     % 	focus = dwmod_focus ;
+%     % 	obj.focus_origin(end+1) = 0 ;
+%     % else
+%     % 	focus = mfi_focus ;
+%     % 	obj.focus_origin(end+1) = -1 ;
+%     % end
+%     focus = mfi_focus;
 
-    if obj.isPresent(focus)
-        obj.focus = focus;
-    end
+%     if obj.isPresent(focus)
+%         obj.focus = focus;
+%     end
 
-    obj.computeSHM();
+%     obj.computeSHM();
 
-    % --- List the focus
-    obj.focus_hist = [obj.focus_hist, obj.focus];
-end
+%     % --- List the focus
+%     obj.focus_hist = [obj.focus_hist, obj.focus];
+% end
 
 function focus = computeDWmodFocus (obj)
 	focus = obj.getMaxWeightObject();
@@ -145,7 +145,7 @@ function updateObjects (obj, tmIdx)
         obj.getEnv().updateObjects(tmIdx);
     end
     %obj.nb_objects = numel(obj.getEnv().objects) ;
-    obj.computeFocus();
+    % obj.computeFocus();
 end
 
 function bool = isPresent (obj, idx)
