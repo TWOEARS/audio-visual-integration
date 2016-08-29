@@ -16,11 +16,9 @@ classdef HeadTurningModulationKS < handle
 properties (SetAccess = public, GetAccess = public)
     head_position = 0;
 
-    % theta_obj = [];
-    
     RIR;
 
-    data = [] ;
+    data = [];
 
     gtruth_data = [];
     gtruth;
@@ -33,8 +31,6 @@ properties (SetAccess = public, GetAccess = public)
     MFI;
     MotorOrderKS;
     HTMFocusKS;
-
-
 end
 
 properties (SetAccess = private, GetAccess = public)
@@ -48,8 +44,6 @@ properties (SetAccess = private, GetAccess = public)
     load = false;
     continue_simulation = false;
 end
-
-
 % ======================== %
 % === PROPERTIES [END] === %
 % ======================== %
@@ -59,9 +53,8 @@ end
 % ===================== %
 methods
 
-% ========================= %
+
 % === CONSTRUCTOR [BEG] === %
-% ========================= %
 function obj = HeadTurningModulationKS (varargin)
 
     p = inputParser();
@@ -112,18 +105,16 @@ function obj = HeadTurningModulationKS (varargin)
 
     obj.MSOM = MultimodalSelfOrganizingMap();
     obj.MFI = MultimodalFusionAndInference(obj.MSOM);
-    obj.MotorOrderKS = MotorOrderKS(obj);
     obj.RIR = RobotInternalRepresentation(obj);
-    obj.HTMFocusKS = HTMFocusKS(htm);
+    obj.HTMFocusKS = HTMFocusKS(obj);
+    obj.MotorOrderKS = MotorOrderKS(obj, obj.HTMFocusKS);
 
     if p.Run
         obj.run();
     end
 
 end
-% ========================= %
 % === CONSTRUCTOR [END] === %
-% ========================= %
 
 function continueSimulation (obj, varargin)
     p = inputParser();
@@ -156,7 +147,7 @@ function continueSimulation (obj, varargin)
     obj.nb_steps_final = obj.nb_steps_final + getInfo('nb_steps');
     obj.classif_mfi = [obj.classif_mfi ; repmat({'none_none'}, getInfo('nb_steps'), 1)];
 
-    initializeScenario(obj, 'Initialize', true);
+    initializeScenario(obj, 'Initialize', false);
 
     if p.Run
         obj.run();
@@ -178,7 +169,9 @@ function run (obj)
     for iStep = obj.nb_steps_init:obj.nb_steps_final
 
         % --- DISPLAY --- %
-        t = 100*(iStep/obj.nb_steps_final);
+        relative_tstep = (iStep - obj.nb_steps_init) + 1;
+        relative_final = (obj.nb_steps_final - obj.nb_steps_init) + 1;
+        t = 100*(relative_tstep/relative_final);
         textprogressbar(t);
         % --- DISPLAY --- %
 
@@ -210,15 +203,15 @@ function run (obj)
             end
             obj.RIR.updateData(obj.data(:, iStep), 0, 0);
         end
-        obj.RIR.updateObjects(iStep) ;
+        obj.RIR.updateObjects(iStep);
+
+        obj.HTMFocusKS.computeFocus();
 
         obj.MotorOrderKS().moveHead();
 
         if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
             obj.statistics.max_shm(iStep) = 0;
         end
-
-        % obj.moveHead();
 
         obj.retrieveMfiCategorization(iStep) ; %% Data is fed into MFImod
 
@@ -229,6 +222,8 @@ function run (obj)
     end
 
     obj.saveData();
+
+    obj.MSOM.assignNodesToCategories();
 
     % --- DISPLAY --- %
     textprogressbar(' -- DONE');
