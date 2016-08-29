@@ -26,7 +26,7 @@ function statistics = computeStatistics (htm)
     
     htm.statistics.mfi_mean = cumsum(htm.statistics.mfi) ./ (1:htm.nb_steps_final)';
 
-    htm.statistics.max_mean_shm = cumsum(htm.statistics.max_shm) ./ (1:p.nb_steps)';
+    htm.statistics.max_mean_shm = cumsum(htm.statistics.max_shm) ./ (1:htm.nb_steps_final)';
 
     % return;
 
@@ -57,18 +57,22 @@ function statistics = computeStatistics (htm)
 
     sc = getInfo('scenario');
     m = numel(sc.unique_idx)*numel(vec);
+    cpt = 0;
 
     for iLabel = sc.unique_idx
+        cpt = cpt+1;
         n = find(iLabel == sc.unique_idx);
 
         d = generateProbabilities(audio_idx(iLabel), visual_idx(iLabel), 100);
 
         for jj = 1:numel(vec)
+
             % --- DISPLAY --- %
-            tt = ((iLabel-1)*numel(vec)) + jj;
+            tt = ((cpt-1)*numel(vec)) + jj;
             t = 100*(tt/m);
             textprogressbar(t);
             % --- DISPLAY --- %
+
             da = d;
             da(audio_idx(iLabel), :) = vec(jj);
             est = arrayfun(@(x) mfi.inferCategory(da(:, x)), 1:100, 'UniformOutput', false);
