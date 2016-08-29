@@ -71,9 +71,9 @@ function AVCategory = inferCategory (obj, input_vector)
 		AVCategory = 'none_none';
 	   	return;
 	case 3
-		bmu = obj.MSOM.findBestBMU(data);
+		bmu = obj.MSOM.getCombinedBMU(data);
 	otherwise
-		bmu = obj.MSOM.findBMU(data, value);
+		bmu = obj.MSOM.getBMU(data, value);
 	end
 	
 	[alabel, vlabel] = obj.findLabels(bmu);
