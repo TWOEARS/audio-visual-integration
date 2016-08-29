@@ -82,9 +82,11 @@ function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (h
 
 	if p.Initialize
 		groundTruth_stats(:, 2) = cumsum(groundTruth_stats(:, 1)) ./ (1:info.nb_steps)';
-	else
-		groundTruth_stats(:, 1) = [htm.statistics.max ; groundTruth_stats(:, 1)];
-		groundTruth_stats(:, 2) = cumsum(groundTruth_stats(:, 1)) ./ (1:htm.nb_steps_final)';
+    else
+        tmp = zeros(htm.nb_steps_final, 2);
+		tmp(:, 1) = [htm.statistics.max ; groundTruth_stats(:, 1)];
+		tmp(:, 2) = cumsum(tmp(:, 1)) ./ (1:htm.nb_steps_final)';
+        groundTruth_stats = tmp;
 	end
 
 
@@ -103,6 +105,8 @@ function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (h
 		htm.gtruth_data = [htm.gtruth_data, simulatedData];
 		htm.statistics.max = groundTruth_stats(:, 1);
 		htm.statistics.max_mean = groundTruth_stats(:, 2);
+		htm.statistics.max_shm = htm.statistics.max;
+		htm.statistics.max_mean_shm = htm.statistics.max_mean;
 	end
 
 	pause(0.25)
