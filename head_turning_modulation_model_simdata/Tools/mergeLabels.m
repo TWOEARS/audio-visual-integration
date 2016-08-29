@@ -2,7 +2,7 @@ function AVPair = mergeLabels (varargin)
 
     % --- cell of pairs to merge
     if iscell(varargin{1}) %&& isstr(varargin{1}{1})
-        pairs = varargin(1);
+        pairs = varargin{1};
         AVPair = cell(size(pairs, 1), 1);
         for iPair = 1:size(pairs, 1)
             AVPair{iPair} = strjoin(pairs{iPair}, '_');
