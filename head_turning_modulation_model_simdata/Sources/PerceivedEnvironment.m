@@ -10,11 +10,14 @@ classdef PerceivedEnvironment < handle
 properties (SetAccess = public, GetAccess = public)
     present_objects = [] 	 ; % objects present in the environment
     objects 		= cell(0); % all detected objects 
-    MFI;
     labels = {};
     nb_classes = 0;
     observed_categories = cell(0);
+    hyper_categories = cell(0);
+
     RIR;
+    MFI;
+    MSOM;
 end
 % === Properties (END) === %
 
@@ -25,6 +28,7 @@ function obj = PerceivedEnvironment (RIR)
 	% obj = obj@RIR();
 	obj.RIR = RIR;
 	obj.MFI = RIR.MFI;
+	obj.MSOM = RIR.MSOM;
 
 	% --- Initialize categories
 	obj.observed_categories{1} = getInfo('obs_struct');
@@ -145,23 +149,24 @@ function checkInference (obj)
 					% --- Simulate an AV inference
                     data = retrieveObservedData(obj, iObj, 'best');
 					AVClass = obj.MFI.inferCategory(data);
-					search = find(strcmp(AVClass, labels)) ;
+					search = find(strcmp(AVClass, labels));
 					% --- If the category has been correctly inferred in the past
 					% --- CHECK is not needed -> we trust the inference
-					if obj.isPerformant(search) 
+					if obj.isPerformant(search)
+						obj.checkConnectivity(data, search);
 						if numel(obj.objects{iObj}.tmIdx) >= 1
-							obj.objects{iObj}.requests.check = false ;
-							obj.objects{iObj}.requests.verification = false ;
-							obj.objects{iObj}.setLabel(AVClass) ;
-							obj.objects{iObj}.cat = search ;
+							obj.objects{iObj}.requests.check = false;
+							obj.objects{iObj}.requests.verification = false;
+							obj.objects{iObj}.setLabel(AVClass);
+							obj.objects{iObj}.cat = search;
 						end
 					% --- If the category has not been well infered in the past
 					% --- CHECK is needed -> we don't trust the inference
 					else
 						% --- Request a CHECK of infered AV vs observed AV
-						obj.objects{iObj}.requests.check = true ;
-						obj.objects{iObj}.requests.label = AVClass ;
-						obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1 ;
+						obj.objects{iObj}.requests.check = true;
+						obj.objects{iObj}.requests.label = AVClass;
+						obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
 					end
 				end
 			end
@@ -172,20 +177,20 @@ function checkInference (obj)
 			% --- We now have the full AV data
             data = retrieveObservedData(obj, iObj, 'best');
 			AVClass = obj.MFI.inferCategory(data);
-			search = find(strcmp(AVClass, labels)) ;
+			search = find(strcmp(AVClass, labels));
 			% --- If infered AV is the same as observed AV
 			if strcmp(AVClass, obj.objects{iObj}.requests.label)
-				obj.objects{iObj}.requests.verification = false ;
-				obj.objects{iObj}.requests.check = false ;
+				obj.objects{iObj}.requests.verification = false;
+				obj.objects{iObj}.requests.check = false;
 
-				obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf+1 ;
+				obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf+1;
 
-				obj.objects{iObj}.setLabel(AVClass) ;
-				obj.objects{iObj}.cat = search ;
+				obj.objects{iObj}.setLabel(AVClass);
+				obj.objects{iObj}.cat = search;
 			% --- If infered AV is NOT the same as observed AV
 			else
 				% --- Make the network learn with n more iterations
-				obj.highTrainingPhase() ;
+				obj.highTrainingPhase();
 			end
 		% Else if all data available
 		elseif ~obj.objects{iObj}.requests.missing
@@ -197,6 +202,101 @@ function checkInference (obj)
 			obj.objects{iObj}.setLabel(AVClass);
 			obj.objects{iObj}.cat = search;
 			obj.objects{iObj}.requests.check = false;
+		end
+	end
+end
+
+function checkConnectivity (obj, input_vector, inferred_label)
+	[data, value] = obj.MFI.checkMissingModality(input_vector);
+
+	switch value
+	case 0    % ---------------------------- no data
+		AVCategory = 'none_none';
+	   	return;
+	case 3    % ---------------------------- full data
+		% bmu = obj.MSOM.getCombinedBMU(data);
+		return;
+		na = getInfo('nb_audio_labels');
+		% --- Euclidian distance
+		audio_distance = obj.MSOM.euclidianDistance(input_vector(1:na), 1);
+		visual_distance = obj.MSOM.euclidianDistance(input_vector(na+1:end), 2);
+		d = audio_distance.*visual_distance;
+    case 1 % ---------------------------- one of the modality is missing
+        % bmu = obj.MSOM.getBMU(data, value);
+        vector = input_vector(1:getInfo('nb_audio_labels'));
+        d = obj.MSOM.euclidianDistance(vector, value);
+    case 2
+        vector = input_vector(getInfo('nb_audio_labels')+1:end);
+        d = obj.MSOM.euclidianDistance(vector, value);
+	end
+
+	nodes = obj.processDistances(d);
+	labels = obj.getLabels(nodes);
+	labels_idx = obj.processLabels(labels, value, inferred_label);
+	c = cell(0);
+	for iLabel = labels_idx
+		tmp = [labels{iLabel}{2}, '_', labels{iLabel}{1}];
+		BOOL = true;
+		for ii = 1:numel(c)
+			if strcmp(c{ii}, tmp)
+				BOOL = false;
+			end
+		end
+		if BOOL
+			c{end+1} = tmp;
+		end
+	end
+
+	obj.createHyperCategory(inferred_label, c);
+
+end
+
+function createHyperCategory (obj, inferred_label, c)
+	obj.hyper_categories{end+1} = {inferred_label, c};
+end
+
+function nodes = processDistances (obj, d)
+	m = mean(d);
+	s = std(d);
+	thr = m - 2*s;
+	nodes = find(d <= thr);
+end
+
+function labels = getLabels (obj, nodes)
+	audio_labels = getInfo('audio_labels');
+	visual_labels = getInfo('visual_labels');
+	labels = cell(numel(nodes), 1);
+	for iNode = 1:numel(nodes)
+		[a, v] = obj.MFI.findLabels(nodes(iNode));
+		% labels{iNode} = mergeLabels(v, a);
+		labels{iNode} = {audio_labels{a}, visual_labels{v}};
+	end
+end
+
+function tmp2 = processLabels (obj, labels, modality, inferred_label)
+	%[v, a] = unmergeLabels(inferred_label);
+    [v, a] = obj.MFI.findLabels(inferred_label);
+	if modality == 1
+		c = a;
+		d = v;
+		other_modality = 2;
+	else
+		c = v;
+		d = a;
+		other_modality = 1;
+	end
+	
+	tmp = [];
+	for iLabel = 1:numel(labels)
+		if strcmp(labels{iLabel}{modality}, c)
+			tmp(end+1) = iLabel;
+		end
+	end
+
+	tmp2 = [];
+	for iLabel = tmp
+		if ~strcmp(labels{iLabel}{other_modality}, d)
+			tmp2(end+1) = iLabel;
 		end
 	end
 end
