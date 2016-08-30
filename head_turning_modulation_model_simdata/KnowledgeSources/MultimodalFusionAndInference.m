@@ -57,22 +57,22 @@ end
 
 function AVCategory = inferCategory (obj, input_vector)
 	
-	AVCategory = '' ;
+	AVCategory = '';
 	
 	if isempty(obj.MSOM.categories)
 		AVCategory = 'none_none';
-		return ;
+		return;
 	end
 
 	[data, value] = obj.checkMissingModality(input_vector);
 
 	switch value
-	case 0
+	case 0    % ---------------------------- no data
 		AVCategory = 'none_none';
 	   	return;
-	case 3
+	case 3    % ---------------------------- full data
 		bmu = obj.MSOM.getCombinedBMU(data);
-	otherwise
+	otherwise % ---------------------------- one of the modality is missing
 		bmu = obj.MSOM.getBMU(data, value);
 	end
 	
@@ -81,19 +81,22 @@ function AVCategory = inferCategory (obj, input_vector)
 	AVCategory = mergeLabels(vlabel, alabel);
 end
 
+% --- Find the corresponding labels given the BMU computed earlier
 function [alabel, vlabel] = findLabels (obj, bmu)
 	[~, alabel] = max(obj.MSOM.weights_vectors{1}(bmu, :));
 	[~, vlabel] = max(obj.MSOM.weights_vectors{2}(bmu, :));
 end
 
+% --- From the INPUT_VECTOR, find what modality seems to be missing
 function [data, value] = checkMissingModality (obj, input_vector)
 	nb_audio_labels = getInfo('nb_audio_labels');
 
 	if sum(input_vector(1:nb_audio_labels)) < 0.2 &&...
 	   sum(input_vector(nb_audio_labels+1:end)) < 0.2
 	   value = 0;
-	   AVCategory = 'none_none';
-	   return;
+	   data = input_vector;
+	   % AVCategory = 'none_none';
+	   % return;
 	% --- Audio missing
 	% --- Find BMU with VISUAL components
 	elseif sum(input_vector(1:nb_audio_labels)) < 0.2
