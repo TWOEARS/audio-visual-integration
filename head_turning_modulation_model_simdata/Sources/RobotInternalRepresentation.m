@@ -20,6 +20,7 @@ properties (SetAccess = public, GetAccess = public)
     nb_objects     = 0 ;
     focus_origin = [] ;
     MFI;
+    MSOM;
     theta_hist = [];
     dist_hist = [];
     data = [];
@@ -36,6 +37,7 @@ methods
 % === Constructor === %
 function obj = RobotInternalRepresentation (htm)
     obj.MFI = htm.MFI;
+    obj.MSOM = htm.MSOM;
     obj.MotorOrderKS = htm.MotorOrderKS();
     obj.addEnvironment();
 end
