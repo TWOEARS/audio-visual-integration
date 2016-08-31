@@ -87,7 +87,7 @@ function [alabel, vlabel] = findLabels (obj, bmu)
 	[~, vlabel] = max(obj.MSOM.weights_vectors{2}(bmu, :));
 end
 
-% --- From the INPUT_VECTOR, find what modality seems to be missing
+% --- From the INPUT_VECTOR, find what modality seems to be missing and output the present modality
 function [data, value] = checkMissingModality (obj, input_vector)
 	nb_audio_labels = getInfo('nb_audio_labels');
 
