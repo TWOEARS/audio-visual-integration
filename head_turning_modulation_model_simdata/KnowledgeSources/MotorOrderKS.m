@@ -38,7 +38,7 @@ function moveHead (obj)
 
     if obj.isFocusedObjectPresent() && focus ~= 0 % --- move the head
         % theta = obj.motorOrder();
-        theta = getObject(RIR, RIR.focus, 'theta');
+        theta = getObject(RIR, focus, 'theta');
         % obj.RIR.updateAngle(0);
         setObject(RIR, 0, 'theta', 0);            % --- go back to resting position (O°)
         %RIR.getLastObj().theta = 0;
