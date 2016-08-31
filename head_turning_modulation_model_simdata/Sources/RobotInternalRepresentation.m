@@ -10,35 +10,38 @@ classdef RobotInternalRepresentation < handle
 
 
 
-% --- Properties --- %
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (SetAccess = public, GetAccess = public)
-    environments   = cell(0) ; % list of environments
-    focus          = 0 ; % current focused object by the robot
-    previous_focus = 0 ;
-    focus_hist     = [] ;
-    shm            = 0 ;
-    nb_objects     = 0 ;
-    focus_origin = [] ;
+    environments   = cell(0); % list of environments
+    % focus          = 0; % current focused object by the robot
+    % previous_focus = 0;
+    % shm            = 0;
+    nb_objects     = 0;
+    % focus_origin = [];
     MFI;
     MSOM;
     theta_hist = [];
     dist_hist = [];
     data = [];
     head_position = 0;
-    head_position_hist = [];
+    % head_position_hist = [];
     MotorOrderKS;
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
-
-% --------------- %
-% --- METHODS --- %
-% -             - %
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
 % === Constructor === %
 function obj = RobotInternalRepresentation (htm)
     obj.MFI = htm.MFI;
     obj.MSOM = htm.MSOM;
-    obj.MotorOrderKS = htm.MotorOrderKS();
+    obj.MotorOrderKS = htm.MotorOrderKS;
     obj.addEnvironment();
 end
 
@@ -242,10 +245,13 @@ end
 % --------------------- %
 
 
+% ===================== %
+% === METHODS [END] === % 
+% ===================== %
 end
-% -             - %
-% --- METHODS --- %
-% --------------- %
+% =================== %
+% === CLASS [END] === % 
+% =================== %
 end
 
 
