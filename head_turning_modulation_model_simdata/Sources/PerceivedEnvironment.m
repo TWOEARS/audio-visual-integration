@@ -218,16 +218,16 @@ function checkConnectivity (obj, input_vector, inferred_label)
 		return;
 		na = getInfo('nb_audio_labels');
 		% --- Euclidian distance
-		audio_distance = obj.MSOM.euclidianDistance(input_vector(1:na), 1);
-		visual_distance = obj.MSOM.euclidianDistance(input_vector(na+1:end), 2);
+		audio_distance = obj.MSOM.euclidianDistance(data(1:na), 1);
+		visual_distance = obj.MSOM.euclidianDistance(data(na+1:end), 2);
 		d = audio_distance.*visual_distance;
-    case 1 % ---------------------------- one of the modality is missing
+    case 1 % ---------------------------- vision missing
         % bmu = obj.MSOM.getBMU(data, value);
-        vector = input_vector(1:getInfo('nb_audio_labels'));
-        d = obj.MSOM.euclidianDistance(vector, value);
-    case 2
-        vector = input_vector(getInfo('nb_audio_labels')+1:end);
-        d = obj.MSOM.euclidianDistance(vector, value);
+        % vector = input_vector(1:getInfo('nb_audio_labels'));
+        d = obj.MSOM.euclidianDistance(data, value);
+    case 2 % ---------------------------- audio missing
+        % vector = input_vector(getInfo('nb_audio_labels')+1:end);
+        d = obj.MSOM.euclidianDistance(data, value);
 	end
 
 	nodes = obj.processDistances(d);
@@ -247,7 +247,9 @@ function checkConnectivity (obj, input_vector, inferred_label)
 		end
 	end
 
-	obj.createHyperCategory(inferred_label, c);
+	if ~isempty(c)
+		obj.createHyperCategory(inferred_label, c);
+	end
 
 end
 
@@ -258,7 +260,7 @@ end
 function nodes = processDistances (obj, d)
 	m = mean(d);
 	s = std(d);
-	thr = m - 2*s;
+	thr = m - 1*s;
 	nodes = find(d <= thr);
 end
 
@@ -416,24 +418,24 @@ end
 
 function request = getCategories (obj, varargin)
 	if nargin == 1
-		request = obj.observed_categories ;
+		request = obj.observed_categories;
 	elseif nargin == 2
 		if isstr(varargin{1})
 			request = arrayfun(@(x) obj.observed_categories{x}.(varargin{1}),...
 							   1:numel(obj.observed_categories),...
-							   'UniformOutput', false) ;
+							   'UniformOutput', false);
 		else
-			request = arrayfun(@(x) obj.observed_categories{x}, varargin{1}) ;
+			request = arrayfun(@(x) obj.observed_categories{x}, varargin{1});
 		end
 	else
 		if isstr(varargin{1})
-			field = varargin{1} ;
-			idx = varargin{2} ;
+			field = varargin{1};
+			idx = varargin{2};
 		else
-			idx = varargin{1} ;
-			field = varargin{2} ;
+			idx = varargin{1};
+			field = varargin{2};
 		end
-		request = arrayfun(@(x) obj.observed_categories{x}.(field), idx) ;
+		request = arrayfun(@(x) obj.observed_categories{x}.(field), idx);
 	end
 end
 
