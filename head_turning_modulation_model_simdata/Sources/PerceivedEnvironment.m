@@ -1,5 +1,9 @@
 % 'PerceivedEnvironment' class
 % This class is part of the HeadTurningModulationKS
+% It implements the Environment the robot is currently exploring.
+% This class enables it to gather:
+% 		1. the congruence distribution of the AV categories it has created
+% 		2. the audiovisual objects it has already observed in it.
 % Author: Benjamin Cohen-Lhyver
 % Date: 01.02.16
 % Rev. 2.0
@@ -15,9 +19,9 @@ properties (SetAccess = public, GetAccess = public)
     observed_categories = cell(0);
     hyper_categories = cell(0);
 
-    RIR;
-    MFI;
-    MSOM;
+    RIR;					% RobotInternalRepresentation class -> The representation the robot has of itself
+    MFI;					% MultimodalFusion&Inference class 
+    MSOM;					% MultimodalSelfOrganizingMap class
 end
 % === Properties (END) === %
 
@@ -25,7 +29,6 @@ end
 methods
 % --- Constructor (BEG) --- %
 function obj = PerceivedEnvironment (RIR)
-	% obj = obj@RIR();
 	obj.RIR = RIR;
 	obj.MFI = RIR.MFI;
 	obj.MSOM = RIR.MSOM;
@@ -153,7 +156,7 @@ function checkInference (obj)
 					% --- If the category has been correctly inferred in the past
 					% --- CHECK is not needed -> we trust the inference
 					if obj.isPerformant(search)
-						obj.checkConnectivity(data, search);
+						%obj.checkConnectivity(data, search);
 						if numel(obj.objects{iObj}.tmIdx) >= 1
 							obj.objects{iObj}.requests.check = false;
 							obj.objects{iObj}.requests.verification = false;
