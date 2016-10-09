@@ -1,4 +1,5 @@
-function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (htm, varargin)
+% function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (htm, varargin)
+function initializeScenario (htm, varargin)
 
 
 	p = inputParser();
@@ -19,6 +20,7 @@ function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (h
 	simulatedData = zeros(info.nb_labels, info.nb_steps);
 	groundTruth = repmat({'none_none'}, info.nb_steps, 2);
 	groundTruth_stats = ones(info.nb_steps, 2);
+	sources = zeros(info.nb_steps, 1);
 
 	scene = info.scenario.scene{end};
 
@@ -42,6 +44,15 @@ function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (h
 			object = objects_idx(idx/2);
             visual_label = info.AVPairs{object}{1};
 			audio_label = info.AVPairs{object}{2};
+
+			% --- Assign a source to this object
+			pos = find(info.scenario.scene{end} == object);
+			tmp = randi(numel(info.repartition{pos}));
+			if sources(iStep-1) == 0
+				sources(iStep) = info.repartition{pos}(tmp);
+			else
+				sources(iStep) = sources(iStep-1);
+			end
 
 			tmp_visual_idx = find(strcmp(visual_label, info.visual_labels));
             %tmp_visual_idx = tmp_visual_idx(randi(numel(tmp_visual_idx)));
@@ -99,6 +110,7 @@ function [simulatedData, groundTruth, groundTruth_stats] = initializeScenario (h
 		htm.statistics.max_mean = groundTruth_stats(:, 2);
 		htm.statistics.max_shm = htm.statistics.max;
 		htm.statistics.max_mean_shm = htm.statistics.max_mean;
+		htm.sources = sources;
 	else
 		htm.data = [htm.data, simulatedData];
 		htm.gtruth = [htm.gtruth ; groundTruth];
