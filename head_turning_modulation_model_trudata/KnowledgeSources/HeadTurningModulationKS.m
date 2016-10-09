@@ -1,7 +1,7 @@
 % 'HeadTurningModulationKS' class
 % This knowledge source triggers head movements based on two modules:
 % 1. MultimodalFusionAndInference module;
-% (reference to come)
+% (reference: Benjamin Cohen-Lhyver, Multimodal Fusion and Inference Using Binaural Audition and Vision, ICA 2016)
 % 2. Dynamic Weighing module 
 % (reference: Benjamin Cohen-Lhyver, Modulating the Auditory Turn-to Reflex on the Basis of Multimodal Feedback Loops:
 % the Dynamic Weighting Model, in IEEE-ROBIO 2015)
@@ -15,34 +15,58 @@ classdef HeadTurningModulationKS < AbstractKS
 % ======================== %
 properties (SetAccess = public)
     head_position = 0;
-    nb_steps_init = 1;
-    nb_steps_final = 0;
  
-    RIR;
-
     bbs = [];
 
     data = [];
  
     current_time = 0;
-    MSOM;
-    MFI;
 
-end
-
-
-properties (SetAccess = public, GetAccess = public)
-    %energy_thr = 0.01;
-    %smoothing_theta = 5;
-    cpt = 0;
-    last_movement = 0;
-    theta_hist = [];
+    MotorOrderKS;
+    HTMFocusKS;
+    
+    RIR; % Robot_Internal_Representation class
+    MSOM; % Multimodal_Self_Organizing_Map class
+    MFI; % Multimodal_Fusion_&_Inference class
+    MotorOrderKS;
+    HTMFocusKS; % Head_Turning_Modulation_Focus class
+    EMKS; % Environmental_Map class
+    ObjectDetectionKS;
+    ALKS;
+    VLKS;
+    ACKS;
+    VCKS;
 
     statistics = [];
 
-    simulation_status = [];
+    sources = [];
+
+    current_object = 0;
+    current_object_hist = [];
+
+    info;
+
+    iStep = 0;
+
+    save = false;
+    load = false;
+    continue_simulation = false;
+
 end
 
+
+% properties (SetAccess = public, GetAccess = public)
+%     cpt = 0;
+%     last_movement = 0;
+%     theta_hist = [];
+% end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
+
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
 
 function obj = HeadTurningModulationKS (bbs)
@@ -52,10 +76,22 @@ function obj = HeadTurningModulationKS (bbs)
     
     initializeParameters(obj);
 
-    obj.MSOM = MultimodalSelfOrganizingMapKS();
-    obj.MFI = MultimodalFusionAndInferenceKS(obj.MSOM);
-    % obj.MotorOrderKS = MotorOrderKS(obj);
-    obj.RIR = RobotInternalRepresentation(obj);
+    obj.MSOM                 = MultimodalSelfOrganizingMap();
+    obj.MFI                  = MultimodalFusionAndInference(obj.MSOM);
+    obj.RIR                  = RobotInternalRepresentation(obj);
+    
+    obj.HTMFocusKS           = HTMFocusKS(obj);
+    obj.MotorOrderKS         = MotorOrderKS(obj, obj.HTMFocusKS);
+    
+    obj.EMKS                 = EnvironmentalMapKS(obj);
+
+    obj.ALKS  = AudioLocalizationKS(obj);
+    obj.VLKS = VisualLocalizationKS(obj);
+
+    obj.ACKS = AudioClassificationExpertsKS(obj);
+    obj.VCKS = VisualClassificationExpertsKS(obj);
+
+    obj.ObjectDetectionKS    = ObjectDetectionKS(obj);
 
 end
 
@@ -69,59 +105,74 @@ function finished = isFinished(obj)
     finished = obj.finished;
 end
 
+% === 'RUN' FUNCTION [BEG] === %
 function execute (obj)
     
     fprintf('\nHead Turning Modulation KS evaluation\n');
 
     obj.cpt = obj.cpt + 1;
 
-    % [create_new, do_nothing] = obj.createNewObject();
-    
-    object_detection = obj.blackboard.getLastData('objectDetectionHypothese').data;
-    create_new = object_detection(1);
-    do_nothing = object_detection(2);
+    object_detection = obj.blackboard.getLastData('objectDetectionHypothese').data; % Is a new object present in the scene?
 
-    disp(obj.blackboard.getLastData('signalEnergy'));
+    object_detection = obj.ObjectDetectionKS.decision(1, end); % --- 1st value: 1(create object) or 2(update object)
+    obj.current_object = obj.ObjectDetectionKS.decision(2, end); % --- 2nd value: id of the object. ≠ from focus!
+    obj.current_object_hist(end+1) = obj.current_object; % --- Update history of sources
 
-    % --- Retrieve vector of probabilities
-    classifiers_output = getClassifiersOutput(obj);
-    % --- Retrieve estimated localisation of sound source
-    perceived_angle = getLocalisationOutput(obj);
-    % --- Retrieve estimated distance of sound source (TODO)
-    perceived_distance = 3;
+    data = getClassifiersOutput(obj);
+    audio_theta = getLocalisationOutput();
 
-    if create_new % --- create a new object
-        obj.last_movement = obj.cpt;
-        obj.MSOM.idx_data = 1;
-        obj.RIR.updateData(classifiers_output, perceived_angle, perceived_distance);
-        
-        obj.RIR.addObject();
+   if object_detection == 1 % --- Create new object
+        % theta = generateAngle(obj.gtruth{iStep, 1});
+        % audio_theta = obj.ALKS.hyp_hist(end); % --- Grab the audio localization output
+        %visual_theta = obj.VLKS.getVisualLocalization(); % --- Grab the visual localization output
 
-    elseif ~create_new && ~do_nothing % --- update object
-        obj.RIR.updateData(classifiers_output, perceived_angle, perceived_distance);
-        obj.RIR.updateObject();
-        obj.MSOM.idx_data = obj.MSOM.idx_data + 1;
-    
-    elseif ~create_new && do_nothing % --- silence phase
-        if obj.RIR.nb_objects > 0
-            setObject(obj, 0, 'presence', false);
+        % obj.degradeData(audio_theta, iStep); % --- Remove visual components if object is NOT in field of view
+        obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
+
+        obj.RIR.updateData(data, audio_theta); % --- Updating the RIR observed data
+        obj.RIR.addObject(); % --- Add the object
+        setObject(obj, obj.current_object, 'presence', true); % --- The object is present but not necessarily facing the robot
+        % setObject(obj, 0, 'presence', true);
+
+    % elseif ~create_new && ~do_nothing % --- update object
+    elseif object_detection == 2 % --- Update object
+        % theta = getObject(obj, obj.current_object, 'theta');
+        % theta = obj.ALKS.hyp_hist(end); % --- Grab the audio localization output
+
+        % obj.degradeData(theta, iStep); % --- Remove visual components if object is NOT in field of view
+        obj.RIR.updateData(data, audio_theta); % --- Updating the RIR observed data
+        obj.RIR.updateObject(); % --- Update the current object
+        obj.MSOM.idx_data = obj.MSOM.idx_data+1;
+        setObject(obj, obj.current_object, 'presence', true); % --- The object is present but not necessarily facing the robot
+
+    % elseif ~create_new && do_nothing % --- silence phase
+    elseif object_detection == 0 % --- silence phase
+        if obj.RIR.nb_objects > 0 && getObject(obj, obj.current_object_hist(end-1), 'presence') && obj.current_object_hist(end-1) ~= 0
+            setObject(obj, obj.current_object_hist(end-1), 'presence', false);
+            o = obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(1);
+            obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(end+1) = o;
+            obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta = o;
+            % obj.RIR.getLastObj().presence = false;
         end
-        obj.RIR.updateData(classifiers_output, 0, 0);
+        obj.RIR.updateData(obj.data(:, iStep), -1);
     end
+
     % --- Update all objects
     obj.updateTime();
-    obj.RIR.updateObjects(obj.cpt);
 
-    if ~isempty(classifiers_output)
-        obj.data(:, obj.cpt) = classifiers_output;
-    else
-        obj.data(:, obj.cpt) = generateEmptyVector();
-    end
+    obj.RIR.updateObjects();
 
-    if obj.blackboard.currentSoundTimeIdx > getInfo('duration')
-        obj.blackboardSystem.robotConnect.finished = true;
-        playNotification();
-    end
+
+    % if ~isempty(classifiers_output)
+    %     obj.data(:, obj.cpt) = classifiers_output;
+    % else
+    %     obj.data(:, obj.cpt) = generateEmptyVector();
+    % end
+
+    % if obj.blackboard.currentSoundTimeIdx > getInfo('duration')
+    %     obj.blackboardSystem.robotConnect.finished = true;
+    %     playNotification();
+    % end
 
     notify(obj, 'KsFiredEvent');
 % end
@@ -138,61 +189,6 @@ end
 %         obj.classif_mfi{obj.cpt} = 'none_none' ;
 %     end
 % end
-
-% % === TO BE MODIFIED === %
-% function [create_new, do_nothing] = createNewObject (obj)
-
-%     a = getInfo('nb_audio_labels');
-%     audio_data = obj.retrieveLastAudioData();
-%     if max(audio_data(:, end)) <= 0.2        % --- (t)   -> silence phase
-%         if max(audio_data(:, end-1)) <= 0.2  % --- (t-1) -> silence phase
-%             create_new = false ;             % --- don't create a new object
-%             do_nothing = true ;              % --- don't update the current object
-%         else                                 % --- (t-1) -> object phase
-%             create_new = false ;             % --- don't create a new object
-%             do_nothing = false ;             % --- update the current object
-%         end
-%     else                                     % --- (t)   -> object phase
-%          if max(audio_data(:, end-1)) <= 0.2 % --- (t-1) -> silence phase
-%             create_new = true ;              % --- create a new object
-%             do_nothing = false ;             % --- update the current object
-%         else                                 % --- (t-1) -> object phase
-%             create_new = false ;             % --- don't create a new object
-%             do_nothing = false ;             % --- update the current object
-%         end
-%     end
-% end
-% % === TO BE MODIFIED === %
-
-% === TO BE MODIFIED === %
-% Related to the "createNewObject" function
-% that does not work with the setup of the current experiment.
-% Need to find a way to know when to create a new object.
-% function audio_data = retrieveLastAudioData (obj)
-%     audio_data_all = obj.blackboard.getData('identityHypotheses');
-
-%     if numel(audio_data_all) > 1
-%         audio_data_1 = cell2mat(...
-%                                 arrayfun(@(x) audio_data_all(end-1).data(x).p,...
-%                                          1:getInfo('nb_audio_labels'),...
-%                                          'UniformOutput', false)...
-%                                 )';
-%         audio_data_2 = cell2mat(...
-%                                 arrayfun(@(x) audio_data_all(end).data(x).p,...
-%                                          1:getInfo('nb_audio_labels'),...
-%                                          'UniformOutput', false)...
-%                                 )';
-%         audio_data = [audio_data_1, audio_data_2] ;
-%     else
-%         audio_data = cell2mat(...
-%                                 arrayfun(@(x) audio_data_all(end).data(x).p,...
-%                                          1:getInfo('nb_audio_labels'),...
-%                                          'UniformOutput', false)...
-%                                 )' ;
-%         audio_data = [zeros(getInfo('nb_audio_labels'), 1), audio_data];
-%     end
-% end
-% === TO BE MODIFIED === %
 
 % === TO BE MODIFIED === %
 % Need to find a way to retrieve the groundtruth knowledge
