@@ -6,7 +6,10 @@
 
 classdef PerceivedObject < handle
 
-% --- Properties --- %
+
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (SetAccess = public, GetAccess = public)
 	label = 'none_none';
     audio_label = 'none';
@@ -28,6 +31,8 @@ properties (SetAccess = public, GetAccess = public)
     cat    = 0 ; % int
     cat_hist = [];
 
+    missing_hist = [];
+
 end
 properties (SetAccess = public, GetAccess = public)
     focus = 0;
@@ -36,21 +41,27 @@ properties (SetAccess = public, GetAccess = public)
     requests = struct('inference'   , false,...
     				  'check'       , false,...
     				  'verification', false,...
-    				  'label' 		, '',...
-    				  'missing'     , true);
+    				  'label' 		, ''   ,...
+    				  'missing'     , true ,...
+    				  'checked'     , false ...
+    				 );
     tmIdx = [];
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
-% --- Methods --- %
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
 % --- Constructor (BEG) --- %
-function obj = PerceivedObject (data, theta, d)
+function obj = PerceivedObject (data, theta)
 	obj.theta = theta;
-	obj.d = d;
+	% obj.d = d;
 	obj.tsteps = 1;
 	obj.presence = true;
 	obj.cpt = obj.cpt+1;
-	% obj.cpt = obj.cpt + 1 ;
 	obj.addData(data) ;
 end
 % --- Constructor (END) --- %
@@ -60,7 +71,6 @@ function addData (obj, data)
 	% obj.data = obj.data_tmp ;
 	obj.missingModality(data);
 	obj.requestInference();
-	% obj.weightData() ;
 end
 
 function missingModality (obj, data)
@@ -90,6 +100,7 @@ function requestInference (obj)
 			end
 		end
 	end
+	obj.missing_hist(end+1) = obj.requests.missing;
 end
 
 function setLabel (obj, label)
@@ -107,14 +118,14 @@ function updateData (obj, data, theta, d)
 	obj.addData(data);
 	obj.theta_hist(end+1) = theta;
 	obj.theta = theta;
-	obj.dist_hist(end+1) = d;
-	obj.d = d;
+	% obj.dist_hist(end+1) = d;
+	% obj.d = d;
 end
 
-function updateAngle (obj, theta)
-	obj.theta_hist = [obj.theta_hist, obj.theta] ;
-	obj.theta = theta ;
-end
+% function updateAngle (obj, theta)
+% 	obj.theta_hist = [obj.theta_hist, obj.theta] ;
+% 	obj.theta = theta ;
+% end
 
 function updateTime (obj, t)
 	if obj.presence
@@ -127,7 +138,7 @@ function updateObj (obj)
 	if isempty(obj.cat_hist)
 		obj.cat_hist = obj.cat;
 		obj.tsteps = 1;
-		return ;
+		return;
 	end
 
 	if obj.cat == obj.cat_hist(end)
