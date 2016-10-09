@@ -1,4 +1,13 @@
-function initializeParameters (nb_steps, scene)
+% 'initializeParameters' function
+% This function creates the INFO variable which will be used all along the simulations.
+% It cares all the needed information for the system to work, depending also on the user inputs.
+% The file 'Config.xml' is used to retrieve some of the user parameters.
+% Two more parameters are needed:
+% 1. NB_STEPS is the duration of the simulation
+% 2. SCENE is the indexes of the audiovisual pairs simulated in the current scenario.
+% These audiovisual pairs are listed in the 'AVPairs.xml' file and the indexes refer to the lines of this file.
+
+function initializeParameters ()
 
     disp('HTM: initialization of parameters');
     pause(0.25);
@@ -15,10 +24,13 @@ function initializeParameters (nb_steps, scene)
 						 'distance_max'	   , 0 ,...
 						 'nb_angles'	   , 0 ,...
 						 'sources_position', [],...
+                         'distances'       , [],...
+                         'repartition'     , [],...
 						 'obs_struct'	   , [],...
 						 'statistics'	   , [],...
 						 'thr_epsilon'	   , 0 ,...
 						 'thr_wrong'       , 0 ,...
+                         'thr_theta'       , 10,...
                          'nb_steps'        , 0 ,...
                          'cpt_silence'     , 0 ,...
                          'cpt_object'      , 0 ,...
@@ -33,17 +45,22 @@ function initializeParameters (nb_steps, scene)
 
     nb_parameters = parameters.getLength();
 
-    for iPair = 0:8
+    for iPair = 0:nb_parameters-1
         pair = parameters.item(iPair);
 
         parameter = char(pair.getAttribute('parameter'));
         value = char(pair.getAttribute('value'));
         if ~strcmp(parameter, 'notification')
-            value = str2num(value);
+            if strcmp(parameter, 'avpairs')
+                scene = str2num(value);
+            else
+                value = str2num(value);
+            end
         end
-
         information.(parameter) = value;
     end
+
+    information = rmfield(information, 'avpairs');
 
     % % ================ %
     % % === EDITABLE === %
@@ -87,13 +104,32 @@ function initializeParameters (nb_steps, scene)
     % --- 'AVPairs.xml' can be edited
     [AVPairs, audio_labels, visual_labels] = retrieveAudioVisualLabels();
 
-    information.nb_angles = numel(AVPairs);
+    % information.nb_angles = numel(AVPairs);
+    information.nb_angles = numel(information.nb_sources);
     % --- Positions of the sound sources.
     % --- They are here plaed regularly around the robot,
     % --- outside the field of view of the robot when at resting state
-    information.sources_position = linspace(information.fov+1,...
-                                            360-information.fov-1,...
-                                            information.nb_angles);
+    % information.sources_position = linspace(information.fov+1,...
+    %                                         360-information.fov-1,...
+    %                                         information.nb_angles);
+
+    % --- Determining the sources position in a 2D environment
+    tmp_sources_angular_pos = linspace(0,...
+                                       360,...
+                                       information.nb_sources+1);
+    information.sources_position = tmp_sources_angular_pos(1:end-1);
+
+    information.distances = rand(1, information.nb_sources) + randi([3, 7], 1, information.nb_sources);
+    % d(d <= 3) = d(d <= 3) + 3;
+    % d(d >= information.distance_max) = d(d >= information.distance_max) - 1.5;
+    % if d <= 3
+    %     d = d+4;
+    % end
+    %information.distances = d;
+
+    % avpairs = mergeLabels(AVPairs(scene));
+
+    % information.positions = [avpairs, information.sources_position'];
 
     information.audio_labels    = audio_labels;
     information.nb_audio_labels = numel(information.audio_labels);
@@ -149,9 +185,11 @@ function initializeParameters (nb_steps, scene)
                                   'unique_idx', {scene}   ...
                                  );
 
+    information.repartition = assignSource(scene, information.nb_sources);
+    
     % [information.nb_objects, information.nb_steps] = adjustLength(nb_steps);
 
-    
+    nb_steps = information.nb_steps;
     s = information.cpt_silence + information.cpt_object;
     nb_objects = ceil(nb_steps / s);
     
