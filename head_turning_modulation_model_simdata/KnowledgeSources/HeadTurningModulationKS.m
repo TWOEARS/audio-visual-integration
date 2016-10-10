@@ -118,7 +118,7 @@ function obj = HeadTurningModulationKS (varargin)
     end
 
     obj.MSOM = MultimodalSelfOrganizingMap();
-    obj.MFI = MultimodalFusionAndInference(obj.MSOM);
+    obj.MFI = MultimodalFusionAndInference(obj);
     obj.RIR = RobotInternalRepresentation(obj);
     
     obj.HTMFocusKS           = HTMFocusKS(obj);
@@ -222,10 +222,10 @@ function run (obj)
             % theta = generateAngle(obj.gtruth{iStep, 1});
             %visual_theta = obj.VLKS.getVisualLocalization(); % --- Grab the visual localization output
 
-            obj.degradeData(audio_theta, iStep); % --- Remove visual components if object is NOT in field of view
+            obj.degradeData(); % --- Remove visual components if object is NOT in field of view
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
 
-            obj.RIR.updateData(obj.data(:, iStep), audio_theta); % --- Updating the RIR observed data
+            obj.RIR.updateData(); % --- Updating the RIR observed data
             obj.RIR.addObject(); % --- Add the object
             setObject(obj, obj.current_object, 'presence', true); % --- The object is present but not necessarily facing the robot
             % setObject(obj, 0, 'presence', true);
@@ -235,22 +235,26 @@ function run (obj)
             % theta = getObject(obj, obj.current_object, 'theta');
             % theta = obj.ALKS.hyp_hist(end); % --- Grab the audio localization output
 
-            obj.degradeData(audio_theta, iStep); % --- Remove visual components if object is NOT in field of view
-            obj.RIR.updateData(obj.data(:, iStep), audio_theta); % --- Updating the RIR observed data
+            obj.degradeData(); % --- Remove visual components if object is NOT in field of view
+            obj.RIR.updateData(); % --- Updating the RIR observed data
             obj.RIR.updateObject(); % --- Update the current object
             obj.MSOM.idx_data = obj.MSOM.idx_data+1;
             setObject(obj, obj.current_object, 'presence', true); % --- The object is present but not necessarily facing the robot
 
         % elseif ~create_new && do_nothing % --- silence phase
         elseif object_detection == 0 % --- silence phase
-            if obj.RIR.nb_objects > 0 && getObject(obj, obj.current_object_hist(end-1), 'presence') && obj.current_object_hist(end-1) ~= 0
-                setObject(obj, obj.current_object_hist(end-1), 'presence', false);
-                o = obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(1);
-                obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(end+1) = o;
-                obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta = o;
-                % obj.RIR.getLastObj().presence = false;
+            if obj.RIR.nb_objects > 0 
+                idx = obj.current_object_hist(end-1);
+                if idx ~= 0 && getObject(obj, idx, 'presence')
+                    setObject(obj, idx, 'presence', false);
+                    obj.RIR.getEnv().objects{idx}.updateAngle('init');
+                    % o = obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(1);
+                    % obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(end+1) = o;
+                    % obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta = o;
+                    % obj.RIR.getLastObj().presence = false;
+                end
             end
-            obj.RIR.updateData(obj.data(:, iStep), -1);
+            obj.RIR.updateData();
         end
         obj.RIR.updateObjects();
 
@@ -298,9 +302,11 @@ function updateAngles (obj)
     head_position = obj.RIR.head_position;
     objects_id = 1:obj.RIR.nb_objects;
     objects_id(obj.current_object) = [];
+    
     if isempty(objects_id)
         return;
     end
+
     for iObject = objects_id
         previous_theta = getObject(obj, iObject, 'theta_hist');
         theta = abs(head_position - previous_theta(end));
@@ -308,9 +314,10 @@ function updateAngles (obj)
     end
 end
 
-function degradeData (obj, theta, iStep)
+function degradeData (obj)
+    theta = obj.ALKS.hyp_hist(end);
     if ~isInFieldOfView(theta)
-        obj.data(getInfo('nb_audio_labels')+1:end, iStep) = 0;
+        obj.data(getInfo('nb_audio_labels')+1:end, obj.iStep) = 0;
     end
 end
 

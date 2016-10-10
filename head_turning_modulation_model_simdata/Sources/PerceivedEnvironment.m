@@ -417,7 +417,7 @@ end
 
 function computePresence (obj)
 	obj.present_objects = [] ;
-	for iObj = 1:numel(obj.objects)
+	for iObj = 1:obj.RIR.nb_objects
 		if obj.objects{iObj}.presence
 			obj.present_objects(end+1) = iObj;
 		end

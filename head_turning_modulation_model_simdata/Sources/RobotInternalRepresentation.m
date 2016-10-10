@@ -66,8 +66,11 @@ function updateObject (obj)
                                   %obj.dist_hist(end)  ...
 end
 
-function updateData (obj, data, theta)
-    obj.data(:, end+1) = data;
+function updateData (obj)
+    iStep = obj.htm.iStep;
+    obj.data(:, end+1) = obj.htm.data(:, iStep);
+    
+    theta = obj.htm.ALKS.hyp_hist(end);
     obj.theta_hist(end+1) = theta;
     %obj.dist_hist(end+1) = d;
 end
@@ -180,6 +183,3 @@ end
 % === CLASS [END] === % 
 % =================== %
 end
-
-
-

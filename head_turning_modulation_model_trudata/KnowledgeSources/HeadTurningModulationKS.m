@@ -76,22 +76,22 @@ function obj = HeadTurningModulationKS (bbs)
     
     initializeParameters(obj);
 
-    obj.MSOM                 = MultimodalSelfOrganizingMap();
-    obj.MFI                  = MultimodalFusionAndInference(obj.MSOM);
-    obj.RIR                  = RobotInternalRepresentation(obj);
+    obj.MSOM = MultimodalSelfOrganizingMap();
+    obj.MFI = MultimodalFusionAndInference(obj);
+    obj.RIR = RobotInternalRepresentation(obj);
     
-    obj.HTMFocusKS           = HTMFocusKS(obj);
-    obj.MotorOrderKS         = MotorOrderKS(obj, obj.HTMFocusKS);
+    obj.HTMFocusKS = HTMFocusKS(obj);
+    obj.MotorOrderKS = MotorOrderKS(obj, obj.HTMFocusKS);
     
-    obj.EMKS                 = EnvironmentalMapKS(obj);
+    obj.EMKS = EnvironmentalMapKS(obj);
 
-    obj.ALKS  = AudioLocalizationKS(obj);
+    obj.ALKS = AudioLocalizationKS(obj);
     obj.VLKS = VisualLocalizationKS(obj);
 
     obj.ACKS = AudioClassificationExpertsKS(obj);
     obj.VCKS = VisualClassificationExpertsKS(obj);
 
-    obj.ObjectDetectionKS    = ObjectDetectionKS(obj);
+    obj.ObjectDetectionKS = ObjectDetectionKS(obj);
 
 end
 
@@ -162,6 +162,8 @@ function execute (obj)
 
     obj.RIR.updateObjects();
 
+    obj.updateAngles();
+
 
     % if ~isempty(classifiers_output)
     %     obj.data(:, obj.cpt) = classifiers_output;
@@ -180,6 +182,26 @@ end
 
 function updateTime (obj)
     obj.current_time = obj.blackboard.currentSoundTimeIdx;
+end
+
+
+function updateAngles (obj)
+    if obj.current_object == 0
+        return;
+    end
+    head_position = obj.RIR.head_position;
+    objects_id = 1:obj.RIR.nb_objects;
+    objects_id(obj.current_object) = [];
+    
+    if isempty(objects_id)
+        return;
+    end
+
+    for iObject = objects_id
+        previous_theta = getObject(obj, iObject, 'theta_hist');
+        theta = abs(head_position - previous_theta(end));
+        obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
+    end
 end
 
 % function retrieveMfiCategorization (obj, classifiers_output)

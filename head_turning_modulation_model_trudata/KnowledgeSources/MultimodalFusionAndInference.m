@@ -10,6 +10,7 @@ classdef MultimodalFusionAndInference < handle
 properties (SetAccess = public, GetAccess = public)
     categories = {};
     inputs = [];
+    htm;
     MSOM; % Multimodal Self-Organizing Map
     nb_categories = 0;
     labels = {};
@@ -18,9 +19,10 @@ end
 methods
 
 % --- Constructor (BEG) --- %
-function obj = MultimodalFusionAndInference (MSOM)
+function obj = MultimodalFusionAndInference (htm)
 	% --- Initialize MSOM
-	obj.MSOM = MSOM;
+	obj.htm = htm;
+	obj.MSOM = htm.MSOM;
 end
 % --- Constructor (END) --- %
 
@@ -86,6 +88,7 @@ function [alabel, vlabel] = findLabels (obj, bmu)
 	[~, vlabel] = max(obj.MSOM.som_weights{2}(bmu, :));
 end
 
+% === TO BE CHANGED >>> NO ROBUST TO TRUE DATA === %
 function [data, value] = checkMissingModality (obj, input_vector)
 	nb_audio_labels = getInfo('nb_audio_labels');
 

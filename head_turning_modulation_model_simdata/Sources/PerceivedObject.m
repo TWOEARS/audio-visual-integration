@@ -154,8 +154,14 @@ function updateTime (obj, t)
 end
 
 function updateAngle (obj, theta)
-	if theta <= 5
-		theta = 0;
+	if isstr(theta)
+		if strcmp(theta, 'init')
+			theta = obj.theta_hist(1);
+		end
+	else
+		if theta <= 5
+			theta = 0;
+		end
 	end
 	obj.theta = theta;
 	obj.theta_hist(end+1) = theta;

@@ -10,6 +10,7 @@ classdef MultimodalFusionAndInference < handle
 properties (SetAccess = public, GetAccess = public)
     categories = {};
     inputs = [];
+    htm;
     MSOM; % Multimodal Self-Organizing Map
     nb_categories = 0;
     labels = {};
@@ -18,9 +19,10 @@ end
 methods
 
 % --- Constructor (BEG) --- %
-function obj = MultimodalFusionAndInference (MSOM)
+function obj = MultimodalFusionAndInference (htm)
 	% --- Initialize MSOM
-	obj.MSOM = MSOM;
+	obj.htm = htm;
+	obj.MSOM = htm.MSOM;
 end
 % --- Constructor (END) --- %
 
