@@ -16,8 +16,6 @@ classdef HeadTurningModulationKS < handle
 properties (SetAccess = public, GetAccess = public)
     head_position = 0;
 
-    RIR;
-
     data = [];
 
     gtruth_data = [];
@@ -27,10 +25,24 @@ properties (SetAccess = public, GetAccess = public)
     classif_mfi = {};
 
     statistics = [];
-    MSOM;
-    MFI;
+
+    sources = [];
+
+    current_object = 0;
+    current_object_hist = [];
+
+
+    RIR; % Robot_Internal_Representation class
+    MSOM; % Multimodal_Self_Organizing_Map class
+    MFI; % Multimodal_Fusion_&_Inference class
     MotorOrderKS;
-    HTMFocusKS;
+    HTMFocusKS; % Head_Turning_Modulation_Focus class
+    EMKS; % Environmental_Map class
+    ObjectDetectionKS;
+    ALKS;
+    VLKS;
+    ACKS;
+    VCKS;
 end
 
 properties (SetAccess = private, GetAccess = public)
@@ -40,6 +52,9 @@ end
 properties (SetAccess = private, GetAccess = public)
     nb_steps_init = 1;
     nb_steps_final = 0;
+
+    iStep = 0;
+
     save = false;
     load = false;
     continue_simulation = false;
@@ -53,23 +68,22 @@ end
 % ===================== %
 methods
 
-
 % === CONSTRUCTOR [BEG] === %
 function obj = HeadTurningModulationKS (varargin)
 
     p = inputParser();
-      p.addOptional('Scene', 0,...
-                    @(x) validateattributes(x, {'numeric'},{'vector', 'integer'}));
-      p.addOptional('Steps', 1000,...
-                    @(x) validateattributes(x, {'numeric'}, {'integer', 'positive'}));
+      % p.addOptional('Scene', 0,...
+      %               @(x) validateattributes(x, {'numeric'},{'vector', 'integer'}));
+      % p.addOptional('Steps', 1000,...
+      %               @(x) validateattributes(x, {'numeric'}, {'integer', 'positive'}));
       p.addOptional('Save', false,...
                     @islogical);
       p.addOptional('Load', false,...
                     @islogical);
-      p.addOptional('Run', true,...
-                    @islogical);
-      p.addOptional('GUI', false,...
-                    @islogical);
+      % p.addOptional('Run', true,...
+      %               @islogical);
+      % p.addOptional('GUI', false,...
+      %               @islogical);
     p.parse(varargin{:});
     p = p.Results;
 
@@ -92,7 +106,7 @@ function obj = HeadTurningModulationKS (varargin)
     else
         disp('HTM: creating simulation');
 
-        initializeParameters(p.Steps, p.Scene);
+        initializeParameters();
 
         obj.nb_steps_final = getInfo('nb_steps');
 
@@ -103,19 +117,30 @@ function obj = HeadTurningModulationKS (varargin)
 
     end
 
-    obj.MSOM = MultimodalSelfOrganizingMap();
-    obj.MFI = MultimodalFusionAndInference(obj.MSOM);
-    obj.RIR = RobotInternalRepresentation(obj);
-    obj.HTMFocusKS = HTMFocusKS(obj);
-    obj.MotorOrderKS = MotorOrderKS(obj, obj.HTMFocusKS);
+    obj.MSOM                 = MultimodalSelfOrganizingMap();
+    obj.MFI                  = MultimodalFusionAndInference(obj.MSOM);
+    obj.RIR                  = RobotInternalRepresentation(obj);
+    
+    obj.HTMFocusKS           = HTMFocusKS(obj);
+    obj.MotorOrderKS         = MotorOrderKS(obj, obj.HTMFocusKS);
+    
+    obj.EMKS                 = EnvironmentalMapKS(obj);
 
-    if p.Run
+    obj.ALKS  = AudioLocalizationKS(obj);
+    obj.VLKS = VisualLocalizationKS(obj);
+
+    obj.ACKS = AudioClassificationExpertsKS(obj);
+    obj.VCKS = VisualClassificationExpertsKS(obj);
+
+    obj.ObjectDetectionKS    = ObjectDetectionKS(obj);
+    % if p.Run
         obj.run();
-    end
+    % end
 
 end
 % === CONSTRUCTOR [END] === %
 
+% === Alternative to the constructor === %
 function continueSimulation (obj, varargin)
     p = inputParser();
       p.addOptional('Scene', [],...
@@ -155,59 +180,85 @@ function continueSimulation (obj, varargin)
 
 end
 
-% -------------------------- %
-% --- Run function [BEG] --- %
-% -------------------------- %
+
+% === 'RUN' FUNCTION [BEG] === %
 function run (obj)
 
     nb_steps = getInfo('nb_steps');
 
     % --- DISPLAY --- %
-    textprogressbar('HTM: running simulation -- ');
+    obj.displayProgressBar('init');
     % --- DISPLAY --- %
         
     for iStep = obj.nb_steps_init:obj.nb_steps_final
+        obj.iStep = iStep;
 
         % --- DISPLAY --- %
-        relative_tstep = (iStep - obj.nb_steps_init) + 1;
-        relative_final = (obj.nb_steps_final - obj.nb_steps_init) + 1;
-        t = 100*(relative_tstep/relative_final);
-        textprogressbar(t);
+        obj.displayProgressBar('update');
         % --- DISPLAY --- %
+
+        % --- Compute Audio & Visual Localization
+        obj.ALKS.execute();
+        audio_theta = obj.ALKS.hyp_hist(end); % --- Grab the audio localization output
+        
+        obj.VLKS.execute();
 
         % --- Object detection
-        [create_new, do_nothing] = obj.simulationStatus(iStep);
+        % [create_new, do_nothing] = obj.simulationStatus(iStep);
+        % --- ODKS aims at providing an information about objects in the scene
+        % --- In particular, it will process the incoming data to make an hypothesis about the novelty of these data.
+        obj.ObjectDetectionKS.execute();
+        
+        object_detection = obj.ObjectDetectionKS.decision(1, end); % --- 1st value: 1(create object) or 2(update object)
+        obj.current_object = obj.ObjectDetectionKS.decision(2, end); % --- 2nd value: id of the object emitting. ≠ from focus!
+        % if obj.current_object == obj.HTMFocusKS.focused_object
+        %     object_detection == 2;
+        % end
+        obj.current_object_hist(end+1) = obj.current_object; % --- Update history of sources
 
-        if create_new % --- create new object
-            theta = generateAngle();
-            d = generateDistance();
-            % --- Degrade data if object is NOT in field of view
-            obj.degradeData(theta, iStep);
-            obj.MSOM.idx_data = 1;
+        % if create_new 
+        % --- Processing the ObjectDetectionKS output for time step iStep
+        if object_detection == 1 % --- Create new object
+            % theta = generateAngle(obj.gtruth{iStep, 1});
+            %visual_theta = obj.VLKS.getVisualLocalization(); % --- Grab the visual localization output
 
-            obj.RIR.updateData(obj.data(:, iStep), theta, d);
-            obj.RIR.addObject();
+            obj.degradeData(audio_theta, iStep); % --- Remove visual components if object is NOT in field of view
+            obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
 
-        elseif ~create_new && ~do_nothing % --- update object
-            theta = getObject(obj, 0, 'theta');
-            % --- Degrade data if object is NOT in field of view
-            obj.degradeData(theta, iStep);
-            obj.RIR.updateData(obj.data(:, iStep), theta, d);
-            obj.RIR.updateObject();
+            obj.RIR.updateData(obj.data(:, iStep), audio_theta); % --- Updating the RIR observed data
+            obj.RIR.addObject(); % --- Add the object
+            setObject(obj, obj.current_object, 'presence', true); % --- The object is present but not necessarily facing the robot
+            % setObject(obj, 0, 'presence', true);
+
+        % elseif ~create_new && ~do_nothing % --- update object
+        elseif object_detection == 2 % --- Update object
+            % theta = getObject(obj, obj.current_object, 'theta');
+            % theta = obj.ALKS.hyp_hist(end); % --- Grab the audio localization output
+
+            obj.degradeData(audio_theta, iStep); % --- Remove visual components if object is NOT in field of view
+            obj.RIR.updateData(obj.data(:, iStep), audio_theta); % --- Updating the RIR observed data
+            obj.RIR.updateObject(); % --- Update the current object
             obj.MSOM.idx_data = obj.MSOM.idx_data+1;
+            setObject(obj, obj.current_object, 'presence', true); % --- The object is present but not necessarily facing the robot
 
-        elseif ~create_new && do_nothing % --- silence phase
-            if obj.RIR.nb_objects > 0
-                setObject(obj, 0, 'presence', false);
+        % elseif ~create_new && do_nothing % --- silence phase
+        elseif object_detection == 0 % --- silence phase
+            if obj.RIR.nb_objects > 0 && getObject(obj, obj.current_object_hist(end-1), 'presence') && obj.current_object_hist(end-1) ~= 0
+                setObject(obj, obj.current_object_hist(end-1), 'presence', false);
+                o = obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(1);
+                obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(end+1) = o;
+                obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta = o;
                 % obj.RIR.getLastObj().presence = false;
             end
-            obj.RIR.updateData(obj.data(:, iStep), 0, 0);
+            obj.RIR.updateData(obj.data(:, iStep), -1);
         end
-        obj.RIR.updateObjects(iStep);
+        obj.RIR.updateObjects();
 
         obj.HTMFocusKS.computeFocus();
 
         obj.MotorOrderKS().moveHead();
+
+        obj.updateAngles();
 
         if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
             obj.statistics.max_shm(iStep) = 0;
@@ -215,18 +266,22 @@ function run (obj)
 
         obj.retrieveMfiCategorization(iStep) ; %% Data is fed into MFImod
 
-        obj.storeMsomWeights(iStep);
+        % obj.storeMsomWeights(iStep);
 
-        obj.info = getInfo('all');
+        % obj.info = getInfo('all');
+
+        obj.EMKS.updateMap();
 
     end
+
+    obj.EMKS.endSimulation();
 
     obj.saveData();
 
     obj.MSOM.assignNodesToCategories();
 
     % --- DISPLAY --- %
-    textprogressbar(' -- DONE');
+    obj.displayProgressBar('end');
     % --- DISPLAY --- %
 
     computeStatistics(obj);
@@ -234,11 +289,28 @@ function run (obj)
     playNotification();
 
 end
-% --- Run function (END) --- %
+% === 'RUN' FUNCTION [END] === %
+
+function updateAngles (obj)
+    if obj.current_object == 0
+        return;
+    end
+    head_position = obj.RIR.head_position;
+    objects_id = 1:obj.RIR.nb_objects;
+    objects_id(obj.current_object) = [];
+    if isempty(objects_id)
+        return;
+    end
+    for iObject = objects_id
+        previous_theta = getObject(obj, iObject, 'theta_hist');
+        theta = abs(head_position - previous_theta(end));
+        obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
+    end
+end
 
 function degradeData (obj, theta, iStep)
     if ~isInFieldOfView(theta)
-        obj.data(getInfo('nb_audio_labels')+1:end, iStep) = 0 ;
+        obj.data(getInfo('nb_audio_labels')+1:end, iStep) = 0;
     end
 end
 
@@ -258,42 +330,59 @@ function retrieveMfiCategorization (obj, iStep)
     end
 end
 
-function [create_new, do_nothing] = simulationStatus (obj, iStep)
-    if sum(obj.data(:, iStep)) == 0             % --- silence phase
-        create_new = false;
-        do_nothing = true;
-    elseif sum(obj.data(:, iStep-1)) == 0 &&... % --- previous iStep was silence
-           sum(obj.data(:, iStep)) ~= 0         % --- current iStep is not anymore
-        create_new = true;
-        do_nothing = false;
-    else                                        % --- within an object
-        create_new = false;
-        do_nothing = false;
-    end
-end
+% function [create_new, do_nothing] = simulationStatus (obj, iStep)
+%     % --- No object in the scene
+%     if sum(obj.data(:, iStep)) == 0             % --- silence phase
+%         create_new = false;
+%         do_nothing = true;
+%     % --- Create a new object
+%     elseif sum(obj.data(:, iStep-1)) == 0 &&... % --- previous iStep was silence
+%            sum(obj.data(:, iStep)) ~= 0         % --- current iStep is not anymore
+%         create_new = true;
+%         do_nothing = false;
+%     % --- Update current object
+%     else                                        % --- within an object
+%         create_new = false;
+%         do_nothing = false;
+%     end
+% end
 
 
-function plot (obj, string)
+% function plot (obj, string)
 
-    plot_fcn = getInfo('plot_fcn');
+%     plot_fcn = getInfo('plot_fcn');
     
-    idx = find(strcmp(string, plot_fcn));
+%     idx = find(strcmp(string, plot_fcn));
 
-    switch idx
-    case 1
-        plotFocus(obj);
-    case 2
-        plotGoodClassif(obj);
-    case 3
-        plotGoodClassifObj(obj);
-    case 4
-        plotSHM(obj);
-    case 5
-        plotHits(obj);
-    case 6
-        plotHeadMovements(obj);
-    case 7
-        plotStatistics(obj);
+%     switch idx
+%     case 1
+%         plotFocus(obj);
+%     case 2
+%         plotGoodClassif(obj);
+%     case 3
+%         plotGoodClassifObj(obj);
+%     case 4
+%         plotSHM(obj);
+%     case 5
+%         plotHits(obj);
+%     case 6
+%         plotHeadMovements(obj);
+%     case 7
+%         plotStatistics(obj);
+%     end
+% end
+
+function displayProgressBar (obj, sim_status)
+    if strcmp(sim_status, 'init')
+        textprogressbar('HTM: running simulation -- ');
+    elseif strcmp(sim_status, 'end')
+        textprogressbar(' -- DONE');
+    else
+        iStep = obj.iStep;
+        relative_tstep = (iStep - obj.nb_steps_init) + 1;
+        relative_final = (obj.nb_steps_final - obj.nb_steps_init) + 1;
+        t = 100*(relative_tstep/relative_final);
+        textprogressbar(t);
     end
 end
 
@@ -320,11 +409,11 @@ function saveData (obj)
 end
 
 
+end
 % ===================== %
 % === METHODS [END] === % 
 % ===================== %
 end
 % =================== %
-% === CLASS [END] === % 
+% === END OF FILE === %
 % =================== %
-end
