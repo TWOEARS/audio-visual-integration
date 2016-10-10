@@ -2,10 +2,10 @@ function bool = isInFieldOfView (theta)
 	fov = getInfo('fov');
 
     if theta <= fov
-        bool = true ;
+        bool = true;
     elseif theta >= 360-fov
-        bool = true ;
+        bool = true;
     else
-        bool = false ;
+        bool = false;
     end
 end
