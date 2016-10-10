@@ -1,3 +1,7 @@
+% 'MotorOrderKS' class
+% Author: Benjamin Cohen-Lhyver
+% Date: 01.06.16
+% Rev. 1.0
 classdef MotorOrderKS < handle
 
 % ======================== %
@@ -75,7 +79,6 @@ function computeSHM (obj)
     end
 end
 
-end
 % ===================== %
 % === METHODS [END] === %
 % ===================== %
@@ -83,3 +86,4 @@ end
 % =================== %
 % === END OF FILE === %
 % =================== %
+end
