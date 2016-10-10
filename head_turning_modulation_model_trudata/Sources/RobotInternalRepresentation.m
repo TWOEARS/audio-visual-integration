@@ -16,33 +16,37 @@ classdef RobotInternalRepresentation < handle
 
 
 
-% --- Properties --- %
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (SetAccess = public, GetAccess = public)
     environments   = cell(0); % list of environments
-    focus          = 0; % current focused object by the robot
-    previous_focus = 0;
-    focus_hist     = [];
-    shm            = 0;
     nb_objects     = 0;
-    focus_origin = [];
     MFI;
-    data;
-    theta_hist;
-    dist_hist;
+    MSOM;
+    htm;
+    data = [];
+    theta_hist = [];
+    % dist_hist;
+    head_position = 0;
+    position = [0, 0];
 
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
-
-% --------------- %
-% --- METHODS --- %
-% -             - %
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
 % === Constructor === %
 function obj = RobotInternalRepresentation (htm)
+    obj.htm = htm;
     obj.MFI = htm.MFI;
-    % --- At initialization: create a new environment
+    obj.MSOM = htm.MSOM;
+    % obj.MotorOrderKS = htm.MotorOrderKS;
     obj.addEnvironment();
-
 end
 
 % === Other methods
@@ -63,110 +67,21 @@ end
 
 % === Update
 function updateObject (obj)
-    obj.getEnv().updateObjectData();
+    obj.getEnv().updateObjectData(obj.data(:, end),...
+                                  obj.theta_hist(end));
 end
 
 function updateData (obj, data, theta, d)
     obj.data(:, end+1) = data;
     obj.theta_hist(end+1) = theta;
-    obj.dist_hist(end+1) = d;
-end
-
-% % === Compute focus
-% function computeFocus (obj)
-
-%     if isempty(obj.getEnv().objects)
-%         obj.focus_hist = [obj.focus_hist, 0];
-%         return;
-%     end
-    
-%     % --- DWmod-based focus computing
-%     dwmod_focus = obj.computeDWmodFocus();
-
-%     % --- MFI-based focus computing
-%     mfi_focus = obj.computeMFIFocus();
-
-%     % --- Comparison of the two results
-%     if mfi_focus == 0
-%     	focus = dwmod_focus ;
-%     	obj.focus_origin(end+1) = 0;
-%     else
-%     	focus = mfi_focus ;
-%     	obj.focus_origin(end+1) = -1;
-%     end
-%     % focus = mfi_focus ;
-
-%     if obj.isPresent(focus)
-%         obj.focus = focus;
-%     end
-
-%     obj.computeSHM();
-
-%     % --- List the focus
-%     obj.focus_hist = [obj.focus_hist, obj.focus];
-% end
-
-% function focus = computeDWmodFocus (obj)
-% 	focus = obj.getMaxWeightObject();
-%     if getObject(obj, focus, 'weight') < 0.98
-%     	focus = 0;
-%     end
-% end
-
-% function focus = computeMFIFocus (obj)
-% 	focus = 0 ;
-% 	if getObject(obj, 0, 'presence')
-%         request = getObject(obj, 0, 'requests');
-% 		if request.check
-% 			focus = numel(obj.getEnv().objects);
-% 		end
-% 	end
-% end
-
-function computeSHM (obj)
-    if obj.focus ~= obj.previous_focus
-        obj.shm = obj.shm + 1;
-        obj.previous_focus = obj.focus;
-    end
-end
-
-% === Get Objects of Max Weight
-function request = getMaxWeightObject (obj)
-    obj_weights = getObject(obj, 'all', 'weight');
-    [val, pos] = max(obj_weights);
-    max_weight_obj = find(obj_weights == val);
-    if numel(max_weight_obj) > 1
-        tsteps = getObject(obj, max_weight_obj, 'tsteps');
-        [~, pos] = min(tsteps);
-        request = max_weight_obj(pos);
-    else
-        request = pos;
-    end
-    request = int32(request);
+    % obj.dist_hist(end+1) = d;
 end
 
 % === Update every objects
-function updateObjects (obj, tmIdx)
+function updateObjects (obj)
+    tmIdx = obj.htm.current_time;
     if obj.nb_objects > 0
         obj.getEnv().updateObjects(tmIdx);
-    end
-    % obj.nb_objects = numel(obj.getEnv().objects) ;
-    %obj.computeFocus();
-end
-
-% function bool = isPresent (obj, idx)
-%     if find(idx == obj.getEnv().present_objects)
-%         bool = true;
-%     else
-%         bool = false;
-%     end 
-% end
-
-function theta = motorOrder (obj)
-    if ~isempty(obj.getEnv().objects) && obj.focus ~= 0
-        theta = obj.getObj(obj.focus, 'theta');
-    else
-        theta = 0;
     end
 end
 
