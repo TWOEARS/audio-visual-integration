@@ -2,7 +2,9 @@ function plotSHM (htm)
 
     AVPairs = mergeLabels('all');
 
-    % angles = 1 :360/(3+1): 360;
+    % angles = getInfo('sources_position');
+
+    angles = 1 :360/(3+1): 360;
     angles = 1 :360/(getInfo('nb_AVPairs')+1): 360;
     angles = round(angles(1:end));
     cpt = zeros(numel(AVPairs), 1);
