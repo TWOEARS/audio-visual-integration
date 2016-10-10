@@ -154,6 +154,9 @@ function updateTime (obj, t)
 end
 
 function updateAngle (obj, theta)
+	if theta <= 5
+		theta = 0;
+	end
 	obj.theta = theta;
 	obj.theta_hist(end+1) = theta;
 end
