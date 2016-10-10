@@ -1,122 +1,124 @@
-% 'HeadTurningModulationKS' class
-% This knowledge source triggers head movements based on two modules:
-% 1. MultimodalFusionAndInference module;
-% (reference to come)
-% 2. Dynamic Weighing module 
-% (reference: Benjamin Cohen-Lhyver, Modulating the Auditory Turn-to Reflex on the Basis of Multimodal Feedback Loops:
-% the Dynamic Weighting Model, in IEEE-ROBIO 2015)
+% 'ObjectDetectionKS' class
+% This knowledge source aims at determining if a new object has appeared in the scene or not
 % Author: Benjamin Cohen-Lhyver
-% Date: 01.06.16
-% Rev. 2.0
+% Date: 26.09.16
+% Rev. 1.0
 
 classdef ObjectDetectionKS < AbstractKS
+
 % ======================== %
 % === PROPERTIES [BEG] === %
 % ======================== %
-properties (SetAccess = public)
-    head_position = 0;
-    nb_steps_init = 1;
-    nb_steps_final = 0;
- 
-    RIR;
-
-    bbs = [];
-
-    data = [];
- 
-    current_time = 0;
-    MSOM;
-    MFI;
-
-end
-
-
 properties (SetAccess = public, GetAccess = public)
-    %energy_thr = 0.01;
-    %smoothing_theta = 5;
-    cpt = 0;
-    last_movement = 0;
-    theta_hist = [];
+    htm; % Head_Turning_Modulation KS
+    RIR; % Robot_Internal_Representation KS
+    
+    MOKS; % Motor_Order KS
+    
+    ALKS; % Audio_Localization KS
+    VLKS; % Visual_Localization KS
+    ACKS; % Audio_Classification_Experts KS
+    VCKS; % Visual_Classification_Experts KS
 
-    statistics = [];
+    % decision = [];
 
-    simulation_status = [];
+    thr_theta;
+
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
 
-function obj = ObjectDetectionKS (bbs)
+% === CONSTRUCTOR [BEG] === %
+function obj = ObjectDetectionKS (bbs, htm)
     obj = obj@AbstractKS();
     obj.bbs = bbs;
     obj.invocationMaxFrequency_Hz = inf;
+
+    obj.htm = htm;
+    obj.RIR = htm.RIR;
+    obj.ALKS = htm.ALKS;
+    obj.VLKS = htm.VLKS;
+    obj.ACKS = htm.ACKS;
+    obj.VCKS = htm.VCKS;
+    obj.thr_theta = getInfo('thr_theta');
 end
+% === CONSTRUCTOR [END] === %
 
 
-%% execute functionality
 function [b, wait] = canExecute (obj)
     b = true;
     wait = false;
 end
 
+% function [create_new, do_nothing] = simulationStatus (obj, iStep)
 function execute (obj)
-    
-    %fprintf('\nObject Detection KS evaluation\n');
 
-    a = getInfo('nb_audio_labels');
-    audio_data = obj.retrieveLastAudioData();
-    if max(audio_data(:, end)) <= 0.2        % --- (t)   -> silence phase
-        if max(audio_data(:, end-1)) <= 0.2  % --- (t-1) -> silence phase
-            create_new = false ;             % --- don't create a new object
-            do_nothing = true ;              % --- don't update the current object
-        else                                 % --- (t-1) -> object phase
-            create_new = false ;             % --- don't create a new object
-            do_nothing = false ;             % --- update the current object
-        end
-    else                                     % --- (t)   -> object phase
-         if max(audio_data(:, end-1)) <= 0.2 % --- (t-1) -> silence phase
-            create_new = true ;              % --- create a new object
-            do_nothing = false ;             % --- update the current object
-        else                                 % --- (t-1) -> object phase
-            create_new = false ;             % --- don't create a new object
-            do_nothing = false ;             % --- update the current object
-        end
+    theta_a = obj.ALKS.getAudioLocalization();
+    if theta_a == -1
+        obj.decision(:, end+1) = [0 ; 0];
+        return;
     end
-    
+
+    theta_v = obj.VLKS.getVisualLocalization();
+
+    putative_audio_object = [];
+    % putative_visual_objects = [];
+
+    nb_objects = obj.RIR.nb_objects;
+
+    % objects_vec = 1:obj.RIR.nb_objects;
+    % if obj.htm.iSource ~= 0 %&& obj.RIR.nb_objects > 1
+    %   objects_vec(obj.htm.iSource) = [];
+    % end
+    % --- Look for an object that has already been observed
+    for iObject = 1:obj.RIR.nb_objects
+        % theta_o = getObject(obj.htm, iObject, 'theta_hist');
+        % theta_o = theta_o(end);
+        theta_o = getObject(obj.htm, iObject, 'theta');
+        theta_diff_a = abs(theta_o - theta_a);
+        % theta_diff_v = abs(theta_o - theta_v);
+
+        if theta_diff_a <= obj.thr_theta && obj.htm.sources(obj.htm.iStep) ~= 0
+            putative_audio_object(end+1, :) = [iObject, theta_o];
+            if size(putative_audio_object, 1) > 1
+                previous_theta = getObject(obj.htm, putative_audio_object(1), 'theta');
+                [tmp, pos] = min(putative_audio_object(:, 2));
+                % if pos == 2
+                    putative_audio_object = putative_audio_object(pos, :);
+                % end
+            end
+        end
+        % if theta_diff_v <= obj.htm.theta_thr
+        %   putative_visual_objects(:, end+1) = [iObject ; theta_diff_v];
+        % end
+    end
+
+    if isempty(putative_audio_object)
+        hyp = [1 ; nb_objects+1];
+    else
+        hyp = [2 ; putative_audio_object(1)];
+    end
+    % obj.decision(:, end+1) = hyp;
 
     obj.blackboard.addData('objectDetectionHypothese',...
-                           [create_new, do_nothing],...
+                           hyp,...
                            false,...
                            obj.trigger.tmIdx);
     
     notify(obj, 'KsFiredEvent');
-
 end
 
-function audio_data = retrieveLastAudioData (obj)
-    audio_data_all = obj.blackboard.getData('identityHypotheses');
-
-    if numel(audio_data_all) > 1
-        audio_data_1 = cell2mat(...
-                                arrayfun(@(x) audio_data_all(end-1).data(x).p,...
-                                         1:getInfo('nb_audio_labels'),...
-                                         'UniformOutput', false)...
-                                )';
-        audio_data_2 = cell2mat(...
-                                arrayfun(@(x) audio_data_all(end).data(x).p,...
-                                         1:getInfo('nb_audio_labels'),...
-                                         'UniformOutput', false)...
-                                )';
-        audio_data = [audio_data_1, audio_data_2] ;
-    else
-        audio_data = cell2mat(...
-                                arrayfun(@(x) audio_data_all(end).data(x).p,...
-                                         1:getInfo('nb_audio_labels'),...
-                                         'UniformOutput', false)...
-                                )' ;
-        audio_data = [zeros(getInfo('nb_audio_labels'), 1), audio_data];
-    end
+% ===================== %
+% === METHODS [END] === % 
+% ===================== %
 end
-
-end
-
+% =================== %
+% === CLASS [END] === % 
+% =================== %
 end
