@@ -14,7 +14,7 @@ classdef HeadTurningModulationKS < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-    head_position = 0;
+    % head_position = 0;
 
     data = [];
 
@@ -45,9 +45,9 @@ properties (SetAccess = public, GetAccess = public)
     VCKS;
 end
 
-properties (SetAccess = private, GetAccess = public)
-    info;
-end
+% properties (SetAccess = private, GetAccess = public)
+    % info;
+% end
 
 properties (SetAccess = private, GetAccess = public)
     nb_steps_init = 1;
@@ -117,9 +117,9 @@ function obj = HeadTurningModulationKS (varargin)
 
     end
 
-    obj.MSOM                 = MultimodalSelfOrganizingMap();
-    obj.MFI                  = MultimodalFusionAndInference(obj.MSOM);
-    obj.RIR                  = RobotInternalRepresentation(obj);
+    obj.MSOM = MultimodalSelfOrganizingMap();
+    obj.MFI = MultimodalFusionAndInference(obj.MSOM);
+    obj.RIR = RobotInternalRepresentation(obj);
     
     obj.HTMFocusKS           = HTMFocusKS(obj);
     obj.MotorOrderKS         = MotorOrderKS(obj, obj.HTMFocusKS);

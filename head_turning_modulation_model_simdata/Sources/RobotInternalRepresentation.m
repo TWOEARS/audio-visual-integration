@@ -25,7 +25,7 @@ properties (SetAccess = public, GetAccess = public)
     MSOM;
     htm;
     theta_hist = [];
-    dist_hist = [];
+    % dist_hist = [];
     data = [];
     head_position = 0;
     position = [0, 0];

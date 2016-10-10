@@ -20,17 +20,10 @@ properties (SetAccess = public, GetAccess = public)
     nb_classes = 0;
     observed_categories = cell(0);
     hyper_categories = cell(0);
-
-<<<<<<< HEAD
-    RIR;
     htm;
-    MFI;
-    MSOM;
-=======
     RIR;					% RobotInternalRepresentation class -> The representation the robot has of itself
     MFI;					% MultimodalFusion&Inference class 
     MSOM;					% MultimodalSelfOrganizingMap class
->>>>>>> origin/master
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -153,11 +146,6 @@ function checkInference (obj)
 					% --- If the category has been correctly inferred in the past
 					% --- CHECK is not needed -> we trust the inference
 					if obj.isPerformant(search)
-<<<<<<< HEAD
-						% obj.checkConnectivity(data, search);
-=======
-						%obj.checkConnectivity(data, search);
->>>>>>> origin/master
 						if numel(obj.objects{iObj}.tmIdx) >= 1
 							obj.objects{iObj}.requests.check = false;
 							obj.objects{iObj}.requests.verification = false;
