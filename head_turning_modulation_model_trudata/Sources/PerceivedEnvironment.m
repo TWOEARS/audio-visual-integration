@@ -16,7 +16,7 @@ properties (SetAccess = public, GetAccess = public)
     nb_classes = 0;
     observed_categories = cell(0);
     hyper_categories = cell(0);
-    
+
     RIR;
     htm;
     MFI;
