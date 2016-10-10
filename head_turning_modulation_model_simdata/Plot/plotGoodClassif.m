@@ -13,13 +13,13 @@ function plotGoodClassif (htm, varargin)
     p = p.Results ;
 
     if numel(p.Objects) == 1
-        p.Objects = [p.Objects, p.Objects] ;
+        p.Objects = [p.Objects, p.Objects];
     end
 
     if sum(p.Objects) == 0
-        objects = 1:htm.RIR.nb_objects ;
+        objects = 1:htm.RIR.nb_objects;
     else
-        objects = p.Objects(1):p.Objects(2) ;
+        objects = p.Objects(1):p.Objects(2);
     end
 
     RIR = htm.RIR;
@@ -48,9 +48,15 @@ function plotGoodClassif (htm, varargin)
             tmIdx = getObject(RIR, iObj, 'tmIdx');
             if ~isempty(idx_audio)
                 t = tmIdx(idx_audio);
-            elseif ~isempty(idx_vision)
+            else
+                t = tmIdx(1);
+            end
+
+            if ~isempty(idx_vision)
                 % tidx = RIR.getObj(iObj).tmIdx(idx_vision) ;
                 t = tmIdx(idx_vision);
+            else
+                t = tmIdx(1);
             end
 
             if mean(cpt21(tmIdx(1):t)) > 0.5
