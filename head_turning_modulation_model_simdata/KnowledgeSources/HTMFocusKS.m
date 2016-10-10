@@ -1,10 +1,8 @@
-% 'HeadTurningModulationKS' class
-% This knowledge source triggers head movements based on two modules:
-% 1. MultimodalFusionAndInference module;
-% (reference to come)
-% 2. Dynamic Weighing module 
-% (reference: Benjamin Cohen-Lhyver, Modulating the Auditory Turn-to Reflex on the Basis of Multimodal Feedback Loops:
-% the Dynamic Weighting Model, in IEEE-ROBIO 2015)
+% 'HTMFocusKS' class
+% This knowledge source compute the object to be focused on.
+% It is based on two distinct algorithms:
+% 1. The Dynamic Weighting module
+% 2. The Multimodal Fusion & Inference module
 % Author: Benjamin Cohen-Lhyver
 % Date: 01.06.16
 % Rev. 2.0
@@ -47,8 +45,8 @@ function computeFocus (obj)
     RIR = obj.RIR; % --- RobotInternalRepresentaion
 
     if RIR.nb_objects == 0
-        obj.focus_hist = [obj.focus_hist, 0];
-        obj.focus_origin = [obj.focus_origin, 0];
+        obj.focus_hist(end+1) = 0;
+        obj.focus_origin(end+1) = 0;
         return;
     end
     
@@ -70,7 +68,6 @@ function computeFocus (obj)
         focus = mfi_focus;
         focus_origin = -1;
     end
-    % focus = mfi_focus ;
 
     if ~obj.isPresent(focus)
         focus = 0;
