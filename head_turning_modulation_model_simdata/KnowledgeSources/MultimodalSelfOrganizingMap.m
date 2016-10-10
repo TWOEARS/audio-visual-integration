@@ -189,15 +189,15 @@ end
 
 function assignNodesToCategories (obj)
 
-	[~, max_a] = max(obj.weights_vectors{1}, [], 2) ;
-	[~, max_v] = max(obj.weights_vectors{2}, [], 2) ;
+	[~, max_a] = max(obj.weights_vectors{1}, [], 2);
+	[~, max_v] = max(obj.weights_vectors{2}, [], 2);
 
-	obj.cat = cell(size(obj.categories, 1), 1) ;
+	obj.cat = cell(size(obj.categories, 1), 1);
 	for iCat = 1:size(obj.categories, 1)
-		f1 = find(obj.categories(iCat, 1) == max_v) ;
-		f2 = find(obj.categories(iCat, 2) == max_a) ;
-		f = intersect(f1, f2) ;
-		obj.cat{iCat} = f' ;
+		f1 = find(obj.categories(iCat, 1) == max_v);
+		f2 = find(obj.categories(iCat, 2) == max_a);
+		f = intersect(f1, f2);
+		obj.cat{iCat} = f';
 	end
 end
 
@@ -212,12 +212,12 @@ function request = getDistances (obj, data)
 end
 
 
-end
 % ===================== %
 % === METHODS [END] === %
 % ===================== %
-
 end
+
 % =================== %
 % === END OF FILE === %
 % =================== %
+end
