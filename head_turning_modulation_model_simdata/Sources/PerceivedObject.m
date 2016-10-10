@@ -1,17 +1,22 @@
 % 'PerceivedObject' class
 % This class is part of the HeadTurningModulationKS
 % Author: Benjamin Cohen-Lhyver
-% Date: 01.11.15
+% Date: 01.02.16
 % Rev. 2.0
 
 classdef PerceivedObject < handle
 
-% --- Properties --- %
+
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (SetAccess = public, GetAccess = public)
 	label = 'none_none';
     audio_label = 'none';
     visual_label = 'none';
 
+    audio_theta = 0;
+    visual_theta = 0;
     theta = 0;
     theta_hist = [];
     % id 			= ''	   ; % hex
@@ -22,11 +27,13 @@ properties (SetAccess = public, GetAccess = public)
 
     weight = 0;
 
-    d = 0 ;
+    d = 0;
     dist_hist = [];
 
-    cat    = 0 ; % int
-    cat_hist = [] ;
+    cat    = 0; % int
+    cat_hist = [];
+
+    missing_hist = [];
 
 end
 properties (SetAccess = public, GetAccess = public)
@@ -40,17 +47,24 @@ properties (SetAccess = public, GetAccess = public)
     				  'check'       , false,...
     				  'verification', false,...
     				  'label' 		, ''   ,...
-    				  'missing'     , true  ...
+    				  'missing'     , true ,...
+    				  'checked'     , false ...
     				 );
     tmIdx = [];
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
-% --- Methods --- %
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
 % --- Constructor (BEG) --- %
-function obj = PerceivedObject (data, theta, d)
+function obj = PerceivedObject (data, theta)
 	obj.theta = theta;
-	obj.d = d;
+	obj.theta_hist(end+1) = theta;
+	% obj.d = d;
 	obj.tsteps = 1;
 	obj.presence = true;
 	obj.cpt = obj.cpt + 1;
@@ -63,7 +77,6 @@ function addData (obj, data)
 	% obj.data = obj.data_tmp;
 	obj.missingModality(data);
 	obj.requestInference();
-	% obj.weightData() ;
 end
 
 function missingModality (obj, data)
@@ -93,6 +106,7 @@ function requestInference (obj)
 			end
 		end
 	end
+	obj.missing_hist(end+1) = obj.requests.missing;
 end
 
 % function weightData (obj)
@@ -125,12 +139,12 @@ function updateCatHist (obj, value)
 	obj.cat_hist(end-t:end) = ones(1, t+1)*value;
 end
 
-function updateData (obj, data, theta, d)
+function updateData (obj, data, theta)
 	obj.addData(data);
 	obj.theta_hist(end+1) = theta;
 	obj.theta = theta;
-	obj.dist_hist(end+1) = d;
-	obj.d = d;
+	% obj.dist_hist(end+1) = d;
+	% obj.d = d;
 end
 
 function updateTime (obj, t)
@@ -139,8 +153,9 @@ function updateTime (obj, t)
 	end
 end
 
-function updateAngle (obj)
-
+function updateAngle (obj, theta)
+	obj.theta = theta;
+	obj.theta_hist(end+1) = theta;
 end
 
 function updateObj (obj)
