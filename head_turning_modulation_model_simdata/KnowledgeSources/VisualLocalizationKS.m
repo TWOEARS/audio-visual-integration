@@ -31,10 +31,10 @@ function obj = VisualLocalizationKS (htm)
 end
 % === CONSTRUCTOR [END] === %
 
-function hyp = getVisualLocalization (obj, iStep)
+function execute (obj, iStep)
 	obj.visual_localization_hyp = obj.MOKS.head_position;
 	obj.hyp_hist(end+1) = obj.visual_localization_hyp;
-	hyp = obj.visual_localization_hyp;
+	% hyp = obj.visual_localization_hyp;
 end
 
 % ===================== %
