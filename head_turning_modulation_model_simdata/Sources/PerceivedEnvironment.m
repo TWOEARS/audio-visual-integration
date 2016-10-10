@@ -1,5 +1,9 @@
 % 'PerceivedEnvironment' class
 % This class is part of the HeadTurningModulationKS
+% It implements the Environment the robot is currently exploring.
+% This class enables it to gather:
+% 		1. the congruence distribution of the AV categories it has created
+% 		2. the audiovisual objects it has already observed in it.
 % Author: Benjamin Cohen-Lhyver
 % Date: 01.02.16
 % Rev. 2.0
@@ -17,10 +21,16 @@ properties (SetAccess = public, GetAccess = public)
     observed_categories = cell(0);
     hyper_categories = cell(0);
 
+<<<<<<< HEAD
     RIR;
     htm;
     MFI;
     MSOM;
+=======
+    RIR;					% RobotInternalRepresentation class -> The representation the robot has of itself
+    MFI;					% MultimodalFusion&Inference class 
+    MSOM;					% MultimodalSelfOrganizingMap class
+>>>>>>> origin/master
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -33,7 +43,6 @@ methods
 
 % === Constructor [BEG] === %
 function obj = PerceivedEnvironment (RIR)
-	% obj = obj@RIR();
 	obj.RIR = RIR;
 	obj.htm = RIR.htm;
 	obj.MFI = RIR.MFI;
@@ -144,7 +153,11 @@ function checkInference (obj)
 					% --- If the category has been correctly inferred in the past
 					% --- CHECK is not needed -> we trust the inference
 					if obj.isPerformant(search)
+<<<<<<< HEAD
 						% obj.checkConnectivity(data, search);
+=======
+						%obj.checkConnectivity(data, search);
+>>>>>>> origin/master
 						if numel(obj.objects{iObj}.tmIdx) >= 1
 							obj.objects{iObj}.requests.check = false;
 							obj.objects{iObj}.requests.verification = false;
@@ -224,6 +237,7 @@ function checkConnectivity (obj, input_vector, inferred_label)
 	nodes = obj.processDistances(d);
 	labels = obj.getLabels(nodes);
 	labels_idx = obj.processLabels(labels, value, inferred_label);
+
 	c = cell(0);
 	for iLabel = labels_idx
 		tmp = [labels{iLabel}{2}, '_', labels{iLabel}{1}];
@@ -245,7 +259,23 @@ function checkConnectivity (obj, input_vector, inferred_label)
 end
 
 function createHyperCategory (obj, inferred_label, c)
-	obj.hyper_categories{end+1} = {inferred_label, c};
+	new_hyper_cat = sort([obj.labels{inferred_label}, c]);
+	if isempty(obj.hyper_categories)
+		obj.hyper_categories{end+1} = new_hyper_cat;
+	else
+		iCat = 1;
+		while iCat <= numel(obj.hyper_categories)
+			inter = intersect(obj.hyper_categories{iCat}, new_hyper_cat);
+            %disp(new_hyper_cat);
+			if isempty(inter)
+				obj.hyper_categories{end+1} = new_hyper_cat;
+			else
+				new_hyper_cat = [obj.hyper_categories{iCat}, new_hyper_cat];
+				obj.hyper_categories{iCat} = unique(new_hyper_cat);
+			end
+			iCat = iCat+1;
+		end
+	end
 end
 
 function nodes = processDistances (obj, d)
@@ -263,12 +293,29 @@ function labels = getLabels (obj, nodes)
 		[a, v] = obj.MFI.findLabels(nodes(iNode));
 		% labels{iNode} = mergeLabels(v, a);
 		labels{iNode} = {audio_labels{a}, visual_labels{v}};
-	end
+    end
+    iLabel = 1;
+    while iLabel <= numel(labels)
+        iLabel2 = iLabel+1;
+        while iLabel2 <= numel(labels)
+            if sum(strcmp(labels{iLabel}, labels{iLabel2})) == 2
+                labels(iLabel2) = [];
+            else
+                iLabel2 = iLabel2+1;
+            end
+        end
+        iLabel = iLabel+1;
+    end
 end
 
 function tmp2 = processLabels (obj, labels, modality, inferred_label)
 	%[v, a] = unmergeLabels(inferred_label);
-    [v, a] = obj.MFI.findLabels(inferred_label);
+%     [a, v] = obj.MFI.findLabels(inferred_label);
+%     info = getInfo('audio_labels', 'visual_labels');
+%     v = info.visual_labels{v};
+%     a = info.audio_labels{a};
+    inferred_label = obj.labels{inferred_label};
+    [v, a] = unmergeLabels(inferred_label);
 	if modality == 1
 		c = a;
 		d = v;
