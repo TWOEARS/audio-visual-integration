@@ -15,6 +15,8 @@ properties (SetAccess = public, GetAccess = public)
 
 	audio_localization_hyp;
 	hyp_hist = [];
+	% avpairs
+	sources_position;
 
 end
 
@@ -26,20 +28,28 @@ methods
 % === CONSTRUCTOR [BEG] === %
 function obj = AudioLocalizationKS (htm)
 	obj.htm = htm;
+	obj.sources_position = getInfo('sources_position');
+    % obj.avpairs = mergeLabels(info.AVPairs(info.scenario.scene{1}));
+    % obj.sources_position = info.sources_position;
 end
 % === CONSTRUCTOR [END] === %
 
-function audio_localization_hyp = getAudioLocalization (obj)
+function execute (obj)
 	iStep = obj.htm.iStep;
-	info = getInfo('all');
-    avpairs = mergeLabels(info.AVPairs(info.scenario.scene{1}));
-    label = obj.htm.gtruth{iStep, 1};
-    tmp = strcmp(label, avpairs);
-    audio_localization_hyp = abs(info.sources_position(tmp) - obj.htm.MotorOrderKS.head_position);
-    if isempty(audio_localization_hyp)
-    	audio_localization_hyp = -1;
-    end
+    % label = obj.htm.gtruth{iStep, 1};
+    % tmp = strcmp(label, avpairs);
+    source = obj.htm.sources(iStep);
+	if source == 0
+		audio_localization_hyp = -1;
+	else
+    	audio_localization_hyp = abs(obj.sources_position(source) - obj.htm.RIR.head_position);
+	end
+
+    % if isempty(audio_localization_hyp)
+    % 	audio_localization_hyp = -1;
+    % end
     obj.hyp_hist(end+1) = audio_localization_hyp;
+    % obj.audio_localization_hyp = audio_localization_hyp;
 end
 
 % ===================== %
