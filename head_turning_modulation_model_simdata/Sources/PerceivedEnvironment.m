@@ -6,7 +6,9 @@
 
 classdef PerceivedEnvironment < handle
 
-% === Properties (BEG) === %
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (SetAccess = public, GetAccess = public)
     present_objects = [] 	 ; % objects present in the environment
     objects 		= cell(0); % all detected objects 
@@ -16,38 +18,40 @@ properties (SetAccess = public, GetAccess = public)
     hyper_categories = cell(0);
 
     RIR;
+    htm;
     MFI;
     MSOM;
 end
-% === Properties (END) === %
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
-% === Methods (BEG) === %
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
-% --- Constructor (BEG) --- %
+
+% === Constructor [BEG] === %
 function obj = PerceivedEnvironment (RIR)
 	% obj = obj@RIR();
 	obj.RIR = RIR;
+	obj.htm = RIR.htm;
 	obj.MFI = RIR.MFI;
 	obj.MSOM = RIR.MSOM;
 
 	% --- Initialize categories
 	obj.observed_categories{1} = getInfo('obs_struct');
 end
-% --- Constructor (END) --- %
+% === Constructor [END] === %
 
 % --- Other methods --- %
-% function addObject (obj, data, theta, d)
-% 	% --- Create a new PERCEIVEDOBJECT object
-%     obj.objects{end+1} = PerceivedObject(data, theta, d);
-%     obj.addInput();
-% end
-
 function addObject (obj)
 	% --- Create a new PERCEIVEDOBJECT object
-    obj.objects{end+1} = PerceivedObject(obj.RIR.data(:, end)   ,...
-    									 obj.RIR.theta_hist(end),...
-    									 obj.RIR.dist_hist(end)  ...
-    									);
+    obj.objects{end+1} = PerceivedObject(obj.RIR.data(:, end),...
+    									 obj.RIR.theta_hist(end));
+    % obj.objects{end}.updateTime(obj.htm.iStep);
+                                    %obj.RIR.dist_hist(end)  ...
+	obj.objects{end}.updateTime(obj.htm.iStep);
     obj.addInput();
 end
 
@@ -55,35 +59,22 @@ function addInput (obj)
 	% --- No data missing
 	if ~obj.objects{end}.requests.missing
 		% --- Train nets
-		% obj.MFI.newInput(obj.objects{end}.getBestData()) ;
-        data = retrieveObservedData(obj, 0, 'best');
+        data = retrieveObservedData(obj, obj.htm.current_object, 'best');
 		obj.MFI.newInput(data);
-		% obj.MFI.newInput(obj.objects{end}.data(:, end)) ;
 	end
 end
 
-function updateLabel (obj, data)
-	% obj.noveltyDetection(data) ;
-	obj.objects{end}.addData(data) ;
-	obj.addInput() ;
-end
+% function updateLabel (obj, data)
+% 	% obj.noveltyDetection(data) ;
+% 	obj.objects{end}.addData(data) ;
+% 	obj.addInput();
+% end
 
-function updateObjectData (obj, data, theta, d)
-	obj.objects{end}.updateData(data, theta, d);
-	% obj.objects{end}.addData(data);
-	% obj.objects{end}.updateAngle(theta);
-	% obj.objects{end}.updateDistance(d);
+function updateObjectData (obj, data, theta)
+	obj.objects{obj.htm.current_object}.updateData(data, theta);
+	obj.objects{obj.htm.current_object}.updateTime(obj.htm.iStep);
 	obj.addInput();
 end
-
-% function data = getObjectData (obj, idx, str)
-% 	if idx == 0
-% 		idx = numel(obj.objects);
-% 	end
-% 	data = retrieveObservedData(obj, idx, str);
-% 	% tmIdx = obj.objects{idx}.tmIdx;
-% 	% data = obj.data
-% end
 
 % function noveltyDetection (obj, data)
 % 	if isempty(obj.preclasses)
@@ -153,7 +144,7 @@ function checkInference (obj)
 					% --- If the category has been correctly inferred in the past
 					% --- CHECK is not needed -> we trust the inference
 					if obj.isPerformant(search)
-						obj.checkConnectivity(data, search);
+						% obj.checkConnectivity(data, search);
 						if numel(obj.objects{iObj}.tmIdx) >= 1
 							obj.objects{iObj}.requests.check = false;
 							obj.objects{iObj}.requests.verification = false;
@@ -416,6 +407,10 @@ function computeWeights (obj)
 	end
 end
 
+function cpt = getCounter (obj)
+	cpt = obj.counter ;
+end
+
 function request = getCategories (obj, varargin)
 	if nargin == 1
 		request = obj.observed_categories;
@@ -441,12 +436,11 @@ end
 
 
 function updateObjects (obj, tmIdx)
-	% obj.counter = obj.counter + 1 ;
 	
-	obj.objects{end}.updateTime(tmIdx);
-
-	% obj.trainMSOM() ;
-
+	% if obj.htm.current_object ~= 0
+	% 	obj.objects{obj.htm.current_object}.updateTime(tmIdx);
+	% end
+	% obj.objects{end}.updateTime(tmIdx);
 	obj.computePresence();
 
 	% obj.labels = arrayfun(@(x) obj.observed_categories{x}.label,...
@@ -473,5 +467,10 @@ function updateObjects (obj, tmIdx)
 end
 	
 end
-
+% ===================== %
+% === METHODS [END] === %
+% ===================== %
 end
+% =================== %
+% === END OF FILE === %
+% =================== %
