@@ -60,9 +60,7 @@ end
 
 % === Update the label of the last object with a new INPUT_VECTOR
 function updateObject (obj)
-    obj.getEnv().updateObjectData(obj.data(:, end)   ,...
-                                  obj.theta_hist(end)...
-                                 );
+    obj.getEnv().updateObjectData();
                                   %obj.dist_hist(end)  ...
 end
 

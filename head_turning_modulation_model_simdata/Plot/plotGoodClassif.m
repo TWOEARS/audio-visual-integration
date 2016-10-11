@@ -60,14 +60,14 @@ function plotGoodClassif (htm, varargin)
             end
 
             if mean(cpt21(tmIdx(1):t)) > 0.5
-                correct(iObj) = 1 ;
+                correct(iObj) = 1;
             else
-                correct(iObj) = -1 ;
+                correct(iObj) = -1;
             end
             if mean(cpt11(tmIdx(1):t)) >= 0.5
-                correct2(iObj) = 1 ;
+                correct2(iObj) = 1;
             else
-                correct2(iObj) = -1 ;
+                correct2(iObj) = -1;
             end
         % end
     end

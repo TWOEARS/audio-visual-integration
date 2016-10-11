@@ -262,7 +262,7 @@ function run (obj)
 
         obj.MotorOrderKS().moveHead();
 
-        obj.updateAngles();
+        % obj.updateAngles();
 
         if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
             obj.statistics.max_shm(iStep) = 0;
@@ -309,7 +309,8 @@ function updateAngles (obj)
 
     for iObject = objects_id
         previous_theta = getObject(obj, iObject, 'theta_hist');
-        theta = abs(head_position - previous_theta(end));
+        % theta = abs(head_position - previous_theta(end));
+        theta = previous_theta(1);
         obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
     end
 end

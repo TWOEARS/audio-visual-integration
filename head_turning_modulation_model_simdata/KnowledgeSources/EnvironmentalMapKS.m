@@ -62,8 +62,8 @@ end
 % === CONSTRUCTOR [END] === %
 
 function updateMap (obj)
-	obj.drawFieldOfView('update');
 	obj.drawEmittingSource();
+	obj.drawFieldOfView('update');
 	obj.drawSeenSources();
 	obj.drawClassificationResults();
 end

@@ -59,7 +59,7 @@ end
 
 function addInput (obj)
 	% --- No data missing
-	if ~obj.objects{end}.requests.missing
+	if ~obj.objects{obj.htm.current_object}.requests.missing
 		% --- Train nets
         data = retrieveObservedData(obj, obj.htm.current_object, 'best');
 		obj.MFI.newInput(data);
@@ -72,9 +72,13 @@ end
 % 	obj.addInput();
 % end
 
-function updateObjectData (obj, data, theta)
-	obj.objects{obj.htm.current_object}.updateData(data, theta);
-	obj.objects{obj.htm.current_object}.updateTime(obj.htm.iStep);
+function updateObjectData (obj)
+	iObj = obj.htm.current_object;
+	% theta = abs(obj.RIR.head_position - theta);
+	data = obj.RIR.data(:, end);
+	theta = obj.RIR.theta_hist(end);
+	obj.objects{iObj}.updateData(data, theta);
+	obj.objects{iObj}.updateTime(obj.htm.iStep);
 	obj.addInput();
 end
 

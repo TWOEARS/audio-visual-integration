@@ -48,8 +48,8 @@ function moveHead (obj)
     else                                            % --- go back to resting position (O°)
         theta = -obj.head_position;
         original_theta = getObject(obj.htm, focus, 'theta_hist');
-        setObject(obj.RIR, focus, 'theta', original_theta(1));
-        obj.RIR.getEnv().objects{focus}.theta_hist(end+1) = original_theta(1);
+        % setObject(obj.RIR, focus, 'theta', original_theta(1));
+        % obj.RIR.getEnv().objects{focus}.theta_hist(end+1) = original_theta(1);
     end
     obj.head_position = mod(theta+obj.head_position, 360) ;
     obj.head_position_hist(end+1) = obj.head_position;

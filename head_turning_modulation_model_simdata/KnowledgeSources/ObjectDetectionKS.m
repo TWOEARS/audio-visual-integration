@@ -62,16 +62,16 @@ function execute (obj)
 		theta_diff_a = abs(theta_o - theta_a);
 
 		% --- If the robot is facing an object that has already been observed -> merge the data
-		if theta_diff_a <= obj.thr_theta && obj.htm.sources(obj.htm.iStep) ~= 0
+		if theta_diff_a <= obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
 			putative_audio_object(end+1, :) = [iObject, theta_o];
 			% --- If there is more than one object that could be at the same place
-			if size(putative_audio_object, 1) > 1
-				previous_theta = getObject(obj.htm, putative_audio_object(1), 'theta');
-				[tmp, pos] = min(putative_audio_object(:, 2));
-				if pos == 2
-					putative_audio_object = putative_audio_object(pos, :);
-				end
-			end
+			% if size(putative_audio_object, 1) > 1
+			% 	previous_theta = getObject(obj.htm, putative_audio_object(1), 'theta');
+			% 	[tmp, pos] = min(putative_audio_object(:, 2));
+			% 	if pos == 2
+			% 		putative_audio_object = putative_audio_object(pos, :);
+			% 	end
+			% end
 		end
 	end
 

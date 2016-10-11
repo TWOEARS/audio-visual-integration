@@ -20,9 +20,9 @@ properties (SetAccess = public)
     % dwFocus = 0;
 
     focused_object = 0;
-    focus_origin = 0; % to be renamed as "focus_type"
+    focus_origin = []; % to be renamed as "focus_type"
     previous_focus = 0;
-    focus_hist = 0;
+    focus_hist = [];
 
     shm = 0;
 
