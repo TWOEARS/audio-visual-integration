@@ -70,8 +70,8 @@ function updateObject (obj)
                                   obj.theta_hist(end));
 end
 
-function updateData (obj, data)
-    obj.data(:, end+1) = data;
+function updateData (obj)
+    obj.data(:, end+1) = obj.htm.data(:, end);
     theta = getLocalisationOutput();
     obj.theta_hist(end+1) = theta;
     % obj.dist_hist(end+1) = d;

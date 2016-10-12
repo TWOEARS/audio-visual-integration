@@ -56,6 +56,8 @@ function execute (obj)
 
 	nb_objects = obj.RIR.nb_objects;
 
+	
+
 	% --- Look for an object that has already been observed
 	for iObject = 1:nb_objects
 		theta_o = getObject(obj.htm, iObject, 'theta');
