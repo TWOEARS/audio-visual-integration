@@ -82,13 +82,13 @@ function computeSHM (obj)
 end
 
 function updateAngles (obj)
-    current_object = obj.htm.current_object;
-    if current_object == 0
+    focused_object = obj.HTMFocusKS.focused_object;
+    if focused_object == 0
         return;
     end
     head_position = obj.head_position;
     objects_id = 1:obj.RIR.nb_objects;
-    objects_id(current_object) = [];
+    objects_id(focused_object) = [];
     
     if isempty(objects_id)
         return;
