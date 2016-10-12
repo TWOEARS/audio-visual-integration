@@ -292,25 +292,25 @@ function run (obj)
 end
 % === 'RUN' FUNCTION [END] === %
 
-function updateAngles (obj)
-    if obj.current_object == 0
-        return;
-    end
-    head_position = obj.RIR.head_position;
-    objects_id = 1:obj.RIR.nb_objects;
-    objects_id(obj.current_object) = [];
+% function updateAngles (obj)
+%     if obj.current_object == 0
+%         return;
+%     end
+%     head_position = obj.RIR.head_position;
+%     objects_id = 1:obj.RIR.nb_objects;
+%     objects_id(obj.current_object) = [];
     
-    if isempty(objects_id)
-        return;
-    end
+%     if isempty(objects_id)
+%         return;
+%     end
 
-    for iObject = objects_id
-        previous_theta = getObject(obj, iObject, 'theta_hist');
-        % theta = abs(head_position - previous_theta(end));
-        theta = previous_theta(1);
-        obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
-    end
-end
+%     for iObject = objects_id
+%         previous_theta = getObject(obj, iObject, 'theta_hist');
+%         % theta = abs(head_position - previous_theta(end));
+%         theta = previous_theta(1);
+%         obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
+%     end
+% end
 
 function degradeData (obj)
     theta = obj.ALKS.hyp_hist(end);
