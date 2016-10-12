@@ -56,6 +56,8 @@ function moveHead (obj)
 
     obj.RIR.head_position = obj.head_position;
 
+    obj.updateAngles();
+
     obj.computeSHM();
 end
 
@@ -78,6 +80,28 @@ function computeSHM (obj)
         end
     end
 end
+
+function updateAngles (obj)
+    current_object = obj.htm.current_object;
+    if current_object == 0
+        return;
+    end
+    head_position = obj.head_position;
+    objects_id = 1:obj.RIR.nb_objects;
+    objects_id(current_object) = [];
+    
+    if isempty(objects_id)
+        return;
+    end
+
+    for iObject = objects_id
+        previous_theta = getObject(obj.htm, iObject, 'theta_hist');
+        theta = abs(head_position - previous_theta(end));
+        theta = previous_theta(1);
+        obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
+    end
+end
+
 
 % ===================== %
 % === METHODS [END] === %
