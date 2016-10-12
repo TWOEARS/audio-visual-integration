@@ -45,7 +45,6 @@ function obj = RobotInternalRepresentation (htm)
     obj.htm = htm;
     obj.MFI = htm.MFI;
     obj.MSOM = htm.MSOM;
-    % obj.MotorOrderKS = htm.MotorOrderKS;
     obj.addEnvironment();
 end
 
@@ -71,8 +70,9 @@ function updateObject (obj)
                                   obj.theta_hist(end));
 end
 
-function updateData (obj, data, theta, d)
+function updateData (obj, data)
     obj.data(:, end+1) = data;
+    theta = getLocalisationOutput();
     obj.theta_hist(end+1) = theta;
     % obj.dist_hist(end+1) = d;
 end
