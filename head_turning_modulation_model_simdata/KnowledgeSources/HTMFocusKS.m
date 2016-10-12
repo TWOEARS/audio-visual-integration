@@ -64,6 +64,9 @@ function computeFocus (obj)
         focus = obj.focus_hist(end);
         % focus = 0;
         focus_origin = 0;
+    elseif mfi_focus == 0 && dwmod_focus == -1
+        focus = obj.focus_hist(end);
+        focus_origin = -1;
     else % MFImod takes the lead over the DWmod
         focus = mfi_focus;
         focus_origin = -1;
@@ -89,7 +92,7 @@ function focus = computeDWmodFocus (obj)
     if object.weight < 0.98
         focus = 0;
     elseif ~obj.isPerformant(object.cat)
-        focus = 0;
+        focus = -1;
     end
         
 end

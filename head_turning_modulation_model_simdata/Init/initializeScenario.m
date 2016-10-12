@@ -47,7 +47,7 @@ function initializeScenario (htm, varargin)
 
 			% --- Assign a source to this object
 			pos = find(info.scenario.scene{end} == object);
-			tmp = randi(numel(info.repartition{pos}));
+			tmp = randi(numel(info.repartition{pos})); % --- if there are more than one source dedicated to a single AV pair
 			if sources(iStep-1) == 0
 				sources(iStep) = info.repartition{pos}(tmp);
 			else

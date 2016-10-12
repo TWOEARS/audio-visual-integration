@@ -1,4 +1,4 @@
-function initializeParameters (htm)
+function initializeParameters ()
 
     disp('HTM: initialization of parameters');
     pause(0.25);
@@ -12,55 +12,51 @@ function initializeParameters (htm)
 						 'AVPairs'		   , 0 ,...
 						 'nb_AVPairs'	   , 0 ,...
 						 'fov'			   , 0 ,...
-						 'distance_max'	   , 0 ,...
-						 'nb_angles'	   , 0 ,...
-						 'sources_position', [],...
 						 'obs_struct'	   , [],...
 						 'statistics'	   , [],...
+                         'thr_theta'       , 10,...
                          'duration'        , 0 ...
                          );
 
 
-    % ================ %
-    % === EDITABLE === %
-    % ================ %
-    % --- Field of view of the robot
-    information.fov = 30;
+    path_to_folder = '../../examples/attention_simulation';
 
-    information.smoothing = 1;
+    config_file = xmlread([path_to_folder, filesep, 'Config.xml']);
 
-    % --- Performance criterion
-    information.q = 0.75;
+    parameters = config_file.getElementsByTagName('pair');
 
-    information.smoothing_head_movements = 1;
+    nb_parameters = parameters.getLength();
 
-    information.notification = 'notification.wav';
+    for iPair = 0:nb_parameters-1
+        pair = parameters.item(iPair);
+
+        parameter = char(pair.getAttribute('parameter'));
+        value = char(pair.getAttribute('value'));
+        if ~strcmp(parameter, 'notification')
+            if strcmp(parameter, 'avpairs')
+                scene = str2num(value);
+            else
+                value = str2num(value);
+            end
+        end
+        information.(parameter) = value;
+    end
+
+    information = rmfield(information, 'avpairs');
 
     % =========================================================================== %
     % =========================================================================== %
     % =========================================================================== %
 
-    % =================== %
-    % === DO NOT EDIT === %
-    % =================== %
     % --- Retrieve audiovisual pairs from 'AVPairs.xml' file
     % --- 'AVPairs.xml' can be edited
     % [AVPairs, audio_labels, visual_labels] = retrieveAudioVisualLabels();
 
-    audio_labels = retrieveAudioIdentityModels(htm);
+    [audio_labels, file_names] = retrieveAudioIdentityModels();
 
     % visual_labels = retrieveVisualIdentityModels(htm);
     % visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};
     visual_labels = {'siren', 'dog', 'female', 'baby', 'engine', 'door', 'male', 'phone', 'female'};
-
-    % information.nb_angles = numel(AVPairs);
-    information.nb_angles = 3;
-    % --- Positions of the sound sources.
-    % --- They are here plaed regularly around the robot,
-    % --- outside the field of view of the robot when at resting state
-    information.sources_position = linspace(information.fov+1,...
-                                            360-information.fov-1,...
-                                            information.nb_angles);
 
     information.audio_labels    = audio_labels;
     information.nb_audio_labels = numel(information.audio_labels);

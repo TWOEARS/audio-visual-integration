@@ -1,6 +1,6 @@
 % 'HeadTurningModulationKS' class
 % This knowledge source triggers head movements based on two modules:
-% 1. MultimodalFusionAndInference module;
+% 1. MultimodalFusionAndInference module
 % (reference to come)
 % 2. Dynamic Weighing module 
 % (reference: Benjamin Cohen-Lhyver, Modulating the Auditory Turn-to Reflex on the Basis of Multimodal Feedback Loops:
@@ -38,7 +38,7 @@ properties (SetAccess = public, GetAccess = public)
     MotorOrderKS;
     HTMFocusKS; % Head_Turning_Modulation_Focus class
     EMKS; % Environmental_Map class
-    ObjectDetectionKS;
+    ODKS;
     ALKS;
     VLKS;
     ACKS;
@@ -114,29 +114,26 @@ function obj = HeadTurningModulationKS (varargin)
         obj.classif_mfi = repmat({'none_none'}, getInfo('nb_steps'), 1);
 
         initializeScenario(obj);
-
     end
 
     obj.MSOM = MultimodalSelfOrganizingMap();
     obj.MFI = MultimodalFusionAndInference(obj);
     obj.RIR = RobotInternalRepresentation(obj);
     
-    obj.HTMFocusKS           = HTMFocusKS(obj);
-    obj.MotorOrderKS         = MotorOrderKS(obj, obj.HTMFocusKS);
+    obj.HTMFocusKS = HTMFocusKS(obj);
+    obj.MotorOrderKS = MotorOrderKS(obj, obj.HTMFocusKS);
     
-    obj.EMKS                 = EnvironmentalMapKS(obj);
+    obj.EMKS = EnvironmentalMapKS(obj);
 
-    obj.ALKS  = AudioLocalizationKS(obj);
+    obj.ALKS = AudioLocalizationKS(obj);
     obj.VLKS = VisualLocalizationKS(obj);
 
     obj.ACKS = AudioClassificationExpertsKS(obj);
     obj.VCKS = VisualClassificationExpertsKS(obj);
 
-    obj.ObjectDetectionKS    = ObjectDetectionKS(obj);
-    % if p.Run
-        obj.run();
-    % end
+    obj.ODKS = ObjectDetectionKS(obj);
 
+    obj.run();
 end
 % === CONSTRUCTOR [END] === %
 
@@ -207,10 +204,10 @@ function run (obj)
         % [create_new, do_nothing] = obj.simulationStatus(iStep);
         % --- ODKS aims at providing an information about objects in the scene
         % --- In particular, it will process the incoming data to make an hypothesis about the novelty of these data.
-        obj.ObjectDetectionKS.execute();
+        obj.ODKS.execute();
         
-        object_detection = obj.ObjectDetectionKS.decision(1, end); % --- 1st value: 1(create object) or 2(update object)
-        obj.current_object = obj.ObjectDetectionKS.decision(2, end); % --- 2nd value: id of the object emitting. ≠ from focus!
+        object_detection = obj.ODKS.decision(1, end); % --- 1st value: 1(create object) or 2(update object)
+        obj.current_object = obj.ODKS.decision(2, end); % --- 2nd value: id of the object emitting. ≠ from focus!
         % if obj.current_object == obj.HTMFocusKS.focused_object
         %     object_detection == 2;
         % end

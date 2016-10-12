@@ -2,9 +2,6 @@
 % This function creates the INFO variable which will be used all along the simulations.
 % It cares all the needed information for the system to work, depending also on the user inputs.
 % The file 'Config.xml' is used to retrieve some of the user parameters.
-% Two more parameters are needed:
-% 1. NB_STEPS is the duration of the simulation
-% 2. SCENE is the indexes of the audiovisual pairs simulated in the current scenario.
 % These audiovisual pairs are listed in the 'AVPairs.xml' file and the indexes refer to the lines of this file.
 
 function initializeParameters ()
@@ -62,44 +59,10 @@ function initializeParameters ()
 
     information = rmfield(information, 'avpairs');
 
-    % % ================ %
-    % % === EDITABLE === %
-    % % ================ %
-    % % --- Field of view of the robot
-    % information.fov = 30;
-    % % --- Max distance of an object to the robot
-    % information.distance_max = 4;
-    % % --- Number of sound sources
-
-    % % --- Thresholds used for experts outputs emulation
-    % % --- Minimum
-    % information.thr_epsilon = 0.7;
-    % % --- Wrong AV Pair
-    % information.thr_wrong = 0.3;
-
-    % information.smoothing = 1;
-    % % --- ???
-    % % information.thr_both = 1;
-    
-    % % information.cpt_object = 30;
-    % % information.cpt_silence = 10;
-    % % information.cpt_simulation = 0;
-
-    % % --- Performance criterion
-    % information.q = 0.8;
-
-    % information.cpt_silence = 10;
-    % information.cpt_object = 30;
-
-    % information.notification = 'notification.wav';
-
     % =========================================================================== %
     % =========================================================================== %
     % =========================================================================== %
 
-    % =================== %
-    % === DO NOT EDIT === %
-    % =================== %
     % --- Retrieve audiovisual pairs from 'AVPairs.xml' file
     % --- 'AVPairs.xml' can be edited
     [AVPairs, audio_labels, visual_labels] = retrieveAudioVisualLabels();

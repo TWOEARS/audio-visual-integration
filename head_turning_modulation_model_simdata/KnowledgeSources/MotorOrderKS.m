@@ -36,9 +36,9 @@ end
 function moveHead (obj)
     % --- If no sound -> make the head turn to 0° (resting state)
     focus = obj.HTMFocusKS.focused_object;
+
     if focus == 0
         theta = -obj.head_position;
-
     % --- Line above to be deleted -> already handle in the MotorOrderKS
     elseif obj.isFocusedObjectPresent() %&& focus ~= 0   % --- move the head to 'theta'
         theta = getObject(obj.RIR, focus, 'theta');
@@ -51,7 +51,7 @@ function moveHead (obj)
         % setObject(obj.RIR, focus, 'theta', original_theta(1));
         % obj.RIR.getEnv().objects{focus}.theta_hist(end+1) = original_theta(1);
     end
-    obj.head_position = mod(theta+obj.head_position, 360) ;
+    obj.head_position = mod(theta+obj.head_position, 360);
     obj.head_position_hist(end+1) = obj.head_position;
 
     obj.RIR.head_position = obj.head_position;

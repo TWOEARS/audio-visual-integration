@@ -38,7 +38,7 @@ function execute (obj)
 	iStep = obj.htm.iStep;
     % label = obj.htm.gtruth{iStep, 1};
     % tmp = strcmp(label, avpairs);
-    source = obj.htm.sources(iStep);
+    source = obj.htm.sources(iStep); % --- which source is emitting now
 	if source == 0
 		audio_localization_hyp = -1;
 	else
