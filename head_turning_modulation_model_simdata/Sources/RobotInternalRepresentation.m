@@ -43,7 +43,6 @@ function obj = RobotInternalRepresentation (htm)
     obj.htm = htm;
     obj.MFI = htm.MFI;
     obj.MSOM = htm.MSOM;
-    % obj.MotorOrderKS = htm.MotorOrderKS;
     obj.addEnvironment();
 end
 
@@ -80,22 +79,6 @@ function updateObjects (obj)
         obj.getEnv().updateObjects(tmIdx);
     end
 end
-
-% function bool = isPresent (obj, idx)
-%     if find(idx == obj.getEnv().present_objects)
-%         bool = true;
-%     else
-%         bool = false;
-%     end 
-% end
-
-% function theta = motorOrder (obj)
-%     if ~isempty(obj.getEnv().objects) && obj.focus ~= 0
-%         theta = getObject(obj, obj.focus, 'theta');
-%     else
-%         theta = 0;
-%     end
-% end
 
 % =================================== %
 % ========== GET FUNCTIONS ========== %
@@ -152,18 +135,6 @@ function output = getEnv (obj, varargin)
         output
     end
 end
-
-% function request = getPresentObj (obj, varargin) 
-%     if nargin == 1
-%         request = arrayfun(@(x) obj.getEnv().objects{x},...
-%                            obj.getEnv().present_objects,...
-%                            'UniformOutput', false) ;
-%     else
-%         request = arrayfun(@(x) obj.getEnv().objects{x}.(varargin{1}),...
-%                            obj.getEnv().present_objects,...
-%                            'UniformOutput', false) ;
-%     end
-% end
 
 function request = getFocus (obj)
     request = obj.focus_hist ;

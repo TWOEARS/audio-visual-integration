@@ -14,10 +14,6 @@ classdef HTMFocusKS < handle
 properties (SetAccess = public)
     htm; 
     RIR;
- 
-    % current_time = 0;
-    % mfiFocus = 0;
-    % dwFocus = 0;
 
     focused_object = 0;
     focus_origin = []; % to be renamed as "focus_type"
@@ -95,7 +91,6 @@ function focus = computeDWmodFocus (obj)
     elseif ~obj.isPerformant(object.cat)
         focus = -1;
     end
-        
 end
 
 % === Compute focused object thanks to the MULTIMODAL FUSION and INFERENCE module (MFImod) algorithm
@@ -134,14 +129,6 @@ function bool = isPerformant (obj, idx)
         bool = false;
     end
 end
-
-% function computeSHM (obj)
-%     if obj.focused_object ~= obj.previous_focus && obj.focused_object ~= 0
-%         obj.shm = obj.shm + 1;
-%         obj.previous_focus = obj.focused_object;
-%     end
-% end
-
 % === Check if the considered object is present in the environment
 function bool = isPresent (obj, idx)
     if find(idx == obj.RIR.getEnv().present_objects)

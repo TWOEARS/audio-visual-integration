@@ -37,13 +37,7 @@ end
 
 function moveHead (obj)
     % --- If no sound -> make the head turn to 0° (resting state)
-    % focus = obj.HTMFocusKS.focused_object;
     focus = obj.HTMFocusKS.focus_hist(end);
-    
-    % if isempty(obj.head_position)
-    %     obj.head_position = 0;
-    %     return;
-    % end
 
     if focus == 0
         theta = -obj.head_position(end);
@@ -52,15 +46,9 @@ function moveHead (obj)
         theta = getObject(obj.RIR, focus, 'theta');
         % --- TO BE PLACED IN OBJECTDETECTIONKS
         % --- It's not up to this KS to set a new property to the object (-> AUDIOLOCALIZATIONKS)
-        % setObject(obj.RIR, focus, 'theta', 0);
     else                                            % --- go back to resting position (O°)
         theta = -obj.head_position(end);
-        % original_theta = getObject(obj.htm, focus, 'theta_hist');
-        % setObject(obj.RIR, focus, 'theta', original_theta(1));
-        % obj.RIR.getEnv().objects{focus}.theta_hist(end+1) = original_theta(1);
     end
-    % obj.head_position = mod(theta+obj.head_position, 360);
-    % obj.motor_order = theta;
     obj.motor_order(end+1) = theta;
 
     if numel(obj.head_position) > 1
@@ -68,8 +56,6 @@ function moveHead (obj)
     else
         obj.head_position(end+1) = theta;
     end
-    % obj.head_position_hist(end+1) = obj.head_position;
-
     obj.RIR.head_position = obj.head_position;
 
     obj.computeSHM();

@@ -67,12 +67,6 @@ function addInput (obj)
 	end
 end
 
-% function updateLabel (obj, data)
-% 	% obj.noveltyDetection(data) ;
-% 	obj.objects{end}.addData(data) ;
-% 	obj.addInput();
-% end
-
 function updateObjectData (obj)
 	iObj = obj.htm.ODKS.id_object(end);
 	% theta = abs(obj.RIR.head_position - theta);
@@ -83,35 +77,6 @@ function updateObjectData (obj)
 	obj.objects{iObj}.presence = true;
 	obj.addInput();
 end
-
-% function noveltyDetection (obj, data)
-% 	if isempty(obj.preclasses)
-% 		obj.preclasses{1} = data ;
-% 		return ;
-% 	end
-% 	for iPreclass = 1:numel(obj.preclasses)
-% 		x = corr(obj.preclasses{iPreclass}, data) ;
-% 		NEW_CLASS = true ;
-% 		if x > 0.8
-% 			obj.preclasses{iPreclass} = mean([obj.preclasses{iPreclass}, data]) ;
-% 			NEW_CLASS = false ;
-% 		end
-% 	end
-% 	obj.TRIGGER_LEARNING = false ;
-% 	if NEW_CLASS
-% 		obj.preclasses{end+1} = data ;
-% 		obj.TRIGGER_LEARNING = true ;
-% 	end
-% end
-
-% function trainMSOM (obj)
-% 	obj.MFI.trainMSOM();
-% end
-
-%%set quality threshold
-% function setQ (obj, qThreshold)
-% 	obj.q = qThreshold ;
-% end
 
 function setClasses (obj)
 	if isempty(obj.MFI.categories)
@@ -478,15 +443,8 @@ end
 
 function updateObjects (obj, tmIdx)
 	
-	% if obj.htm.current_object ~= 0
-	% 	obj.objects{obj.htm.current_object}.updateTime(tmIdx);
-	% end
-	% obj.objects{end}.updateTime(tmIdx);
 	obj.computePresence();
-
-	% obj.labels = arrayfun(@(x) obj.observed_categories{x}.label,...
-	% 				  	  1:numel(obj.observed_categories),...
-	% 				  	  'UniformOutput', false);
+	
 	obj.labels = getCategory(obj, 'all', 'label');
 
 	obj.setClasses();

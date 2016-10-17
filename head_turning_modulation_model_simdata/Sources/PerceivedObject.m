@@ -39,9 +39,6 @@ end
 properties (SetAccess = public, GetAccess = public)
     focus = 0;
     occ_thr = 5;
-    % data = [];
-    % data_tmp = [];
-    % mean_data = [];
     cpt = 0;
     requests = struct('inference'   , false,...
     				  'check'       , false,...
@@ -60,7 +57,7 @@ end
 % === METHODS [BEG] === %
 % ===================== %
 methods
-% --- Constructor (BEG) --- %
+% --- Constructor [BEG] --- %
 function obj = PerceivedObject (data, theta)
 	obj.theta = theta;
 	obj.theta_hist(end+1) = theta;
@@ -70,7 +67,7 @@ function obj = PerceivedObject (data, theta)
 	obj.cpt = obj.cpt + 1;
 	obj.addData(data);
 end
-% --- Constructor (END) --- %
+% --- Constructor [END] --- %
 
 function addData (obj, data)
 	% obj.data_tmp = [obj.data_tmp, data];
@@ -108,25 +105,6 @@ function requestInference (obj)
 	end
 	obj.missing_hist(end+1) = obj.requests.missing;
 end
-
-% function weightData (obj)
-% 	s = size(obj.data_tmp, 2) ;
-% 	obj.data = zeros(size(obj.data_tmp)) ;
-% 	ws = ones(1, s) ;
-	
-% 	m = min([s, obj.smoothing_tsteps]) ;
-
-% 	ws(1:m) = exp(1:m)/exp(obj.smoothing_tsteps) ;
-
-% 	% if s > obj.smoothing_tsteps
-% 	% 	m = min([s-obj.smoothing_tsteps, obj.smoothing_tsteps]) ;
-% 	% 	ws(end-m+1:end) = exp(m :-1: 1)/exp(obj.smoothing_tsteps) ;
-% 	% end
-
-% 	obj.data = bsxfun(@times, obj.data_tmp(1:obj.nb_alabels, :), ws) ;
-% 	obj.data = [obj.data ; obj.data_tmp(obj.nb_alabels+1:end, :)] ;
-% end
-
 
 function setLabel (obj, label)
 	obj.label = label;
@@ -201,41 +179,9 @@ function requestedData = getMeanData (obj, nb_samples)
 	% request = mean(obj.data(:, obj.smoothing_tsteps:end-obj.smoothing_tsteps)) ;
 end
 
-% function request = getBestData (obj)
-% 	s = size(obj.data, 2) ;
-% 	if s < obj.smoothing_tsteps
-% 		request = obj.data(:, end) ;
-% 	elseif s >= obj.smoothing_tsteps && s < 2*obj.smoothing_tsteps
-% 		% good_visual_data = obj.getGoodVisualData(obj.smoothing_tsteps:s) ;
-% 		good_visual_data = obj.getGoodVisualData() ;
-% 		request = mean(obj.data(1:getInfo('nb_audio_labels'), obj.smoothing_tsteps:end), 2) ;
-% 		request = [request ; mean(good_visual_data, 2)] ;
-% 	else
-% 		% good_visual_data = obj.getGoodVisualData(obj.smoothing_tsteps:s-obj.smoothing_tsteps) ;
-% 		good_visual_data = obj.getGoodVisualData() ;
-% 		request = mean(obj.data(1:getInfo('nb_audio_labels'), obj.smoothing_tsteps:end-obj.smoothing_tsteps+1), 2) ;
-% 		request = [request ; mean(good_visual_data, 2)] ;
-% 	end
-% end
-
-% function request = getGoodVisualData (obj)
-% 	na = getInfo('nb_audio_labels');
-% 	nv = getInfo('nb_visual_labels');
-	
-% 	cpt = find(sum(obj.data(na+1:end, :)) > 0.1) ;
-
-% 	if isempty(cpt)
-% 		request = zeros(nv, 1) ;
-% 	else
-% 		request = obj.data(na+1:end, cpt) ;
-% 	end
-% end
-
 function requestedData = getData (obj, nb_samples)
 	if nargin == 1
 		requestedData = obj.data ;
-	% elseif numel(nb_samples) == 2
-	% 	requestedData = obj.data(:, [nb_samples(1):nb_samples(2)]) ;
 	else
 		requestedData = obj.data(:, nb_samples) ;
 	end
@@ -263,13 +209,16 @@ function requestedData = getAudioData (obj, nb_samples)
 	end
 end
 
-% function requestedData = getInference (obj)
-% 	requestedData = obj.inference(end-1:end) ;
-% end
 % -                   - %
 % --- GET FUNCTIONS --- %
 % --------------------- %
 
-end
 
+% ===================== %
+% === METHODS [END] === % 
+% ===================== %
+end
+% =================== %
+% === CLASS [END] === % 
+% =================== %
 end
