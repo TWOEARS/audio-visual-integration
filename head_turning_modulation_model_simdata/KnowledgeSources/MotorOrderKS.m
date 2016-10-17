@@ -8,8 +8,10 @@ classdef MotorOrderKS < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
+    % head_position = 0;
     head_position = 0;
-    head_position_hist = [];
+    motor_order = 0;
+    % motor_order_hist = [];
     htm;
     RIR;
     HTMFocusKS;
@@ -35,28 +37,40 @@ end
 
 function moveHead (obj)
     % --- If no sound -> make the head turn to 0° (resting state)
-    focus = obj.HTMFocusKS.focused_object;
+    % focus = obj.HTMFocusKS.focused_object;
+    focus = obj.HTMFocusKS.focus_hist(end);
+    
+    % if isempty(obj.head_position)
+    %     obj.head_position = 0;
+    %     return;
+    % end
 
     if focus == 0
-        theta = -obj.head_position;
+        theta = -obj.head_position(end);
     % --- Line above to be deleted -> already handle in the MotorOrderKS
     elseif obj.isFocusedObjectPresent() %&& focus ~= 0   % --- move the head to 'theta'
         theta = getObject(obj.RIR, focus, 'theta');
         % --- TO BE PLACED IN OBJECTDETECTIONKS
         % --- It's not up to this KS to set a new property to the object (-> AUDIOLOCALIZATIONKS)
-        setObject(obj.RIR, focus, 'theta', 0);
+        % setObject(obj.RIR, focus, 'theta', 0);
     else                                            % --- go back to resting position (O°)
-        theta = -obj.head_position;
-        original_theta = getObject(obj.htm, focus, 'theta_hist');
+        theta = -obj.head_position(end);
+        % original_theta = getObject(obj.htm, focus, 'theta_hist');
         % setObject(obj.RIR, focus, 'theta', original_theta(1));
         % obj.RIR.getEnv().objects{focus}.theta_hist(end+1) = original_theta(1);
     end
-    obj.head_position = mod(theta+obj.head_position, 360);
-    obj.head_position_hist(end+1) = obj.head_position;
+    % obj.head_position = mod(theta+obj.head_position, 360);
+    % obj.motor_order = theta;
+    obj.motor_order(end+1) = theta;
+
+    if numel(obj.head_position) > 1
+        obj.head_position(end+1) = mod(obj.head_position(end)+theta, 360);
+    else
+        obj.head_position(end+1) = theta;
+    end
+    % obj.head_position_hist(end+1) = obj.head_position;
 
     obj.RIR.head_position = obj.head_position;
-
-    obj.updateAngles();
 
     obj.computeSHM();
 end
@@ -74,34 +88,12 @@ function bool = isFocusedObjectPresent (obj)
 end
 
 function computeSHM (obj)
-    if numel(obj.head_position_hist) > 1
-        if obj.head_position_hist(end-1) ~= obj.head_position_hist(end)
+    if numel(obj.head_position) > 1
+        if obj.head_position(end-1) ~= obj.head_position(end)
             obj.shm = obj.shm+1;
         end
     end
 end
-
-function updateAngles (obj)
-    focused_object = obj.HTMFocusKS.focused_object;
-    if focused_object == 0
-        return;
-    end
-    head_position = obj.head_position;
-    objects_id = 1:obj.RIR.nb_objects;
-    objects_id(focused_object) = [];
-    
-    if isempty(objects_id)
-        return;
-    end
-
-    for iObject = objects_id
-        previous_theta = getObject(obj.htm, iObject, 'theta_hist');
-        theta = abs(head_position - previous_theta(end));
-        theta = previous_theta(1);
-        obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
-    end
-end
-
 
 % ===================== %
 % === METHODS [END] === %
