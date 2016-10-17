@@ -199,53 +199,26 @@ function run (obj)
         % --- In particular, it will process the incoming data to make an hypothesis about the novelty of these data.
         obj.ODKS.execute();
         
-        % object_detection = obj.ODKS.decision(1, end); % --- 1st value: 1(create object) or 2(update object)
-        % obj.current_object = obj.ODKS.decision(2, end); % --- 2nd value: id of the object emitting. ≠ from focus!
-        % if obj.current_object == obj.HTMFocusKS.focused_object
-        %     object_detection == 2;
-        % end
-        % obj.current_object_hist(end+1) = obj.current_object; % --- Update history of sources
-
-        % if create_new 
         % --- Processing the ObjectDetectionKS output for time step iStep
-        % if object_detection == 1 % --- Create new object
         if obj.createNew()
-            % theta = generateAngle(obj.gtruth{iStep, 1});
-            %visual_theta = obj.VLKS.getVisualLocalization(); % --- Grab the visual localization output
-
             obj.degradeData(); % --- Remove visual components if object is NOT in field of view
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
 
             obj.RIR.updateData(); % --- Updating the RIR observed data
             obj.RIR.addObject(); % --- Add the object
             setObject(obj, obj.ODKS.id_object(end), 'presence', true); % --- The object is present but not necessarily facing the robot
-            % setObject(obj, 0, 'presence', true);
-
-        % elseif ~create_new && ~do_nothing % --- update object
-        % elseif object_detection == 2 % --- Update object
         elseif obj.updateObject()
-            % theta = getObject(obj, obj.current_object, 'theta');
-            % theta = obj.ALKS.hyp_hist(end); % --- Grab the audio localization output
-
             obj.degradeData(); % --- Remove visual components if object is NOT in field of view
             obj.MSOM.idx_data = obj.MSOM.idx_data+1;
 
             obj.RIR.updateData(); % --- Updating the RIR observed data
             obj.RIR.updateObject(); % --- Update the current object
             setObject(obj, obj.ODKS.id_object(end), 'presence', true); % --- The object is present but not necessarily facing the robot
-
-        % elseif ~create_new && do_nothing % --- silence phase
-        % elseif object_detection == 0 % --- silence phase
         else
             if obj.RIR.nb_objects > 0 
                 idx = obj.ODKS.id_object(end-1);
                 if idx ~= 0 && getObject(obj, idx, 'presence')
                     setObject(obj, idx, 'presence', false);
-                    %obj.RIR.getEnv().objects{idx}.updateAngle('init');
-                    % o = obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(1);
-                    % obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(end+1) = o;
-                    % obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta = o;
-                    % obj.RIR.getLastObj().presence = false;
                 end
             end
             obj.RIR.updateData();
@@ -282,7 +255,7 @@ function run (obj)
     obj.displayProgressBar('end');
     % --- DISPLAY --- %
 
-    % computeStatistics(obj);
+    computeStatistics(obj);
 
     % playNotification();
 
@@ -303,59 +276,11 @@ function updateAngles (obj)
         return;
     end
 
-    % focused_object = obj.HTMFocusKS.focused_object;
-    % if focused_object == 0
-    %     return;
-    % end
-
     for iObject = 1:obj.RIR.nb_objects
-        % if iObject ~= focused_object
-        % if iObject == obj.ODKS.id_object(end)
-            % tt = getObject(obj, iObject, 'theta') + obj.MotorOrderKS.head_position(end);
-            theta = mod(360 - obj.MotorOrderKS.motor_order(end) + getObject(obj, iObject, 'theta'), 360);
-        % else
-            % previous_theta = getObject(obj, iObject, 'theta_hist');
-            % previous_theta = previous_theta(end-1);
-            % theta = mod(360 - obj.MotorOrderKS.head_position(end) + getObject(obj, iObject, 'theta'), 360);
-            obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
-        % end
+        theta = mod(360 - obj.MotorOrderKS.motor_order(end) + getObject(obj, iObject, 'theta'), 360);
+        obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
     end
-
-    % % head_position = obj.head_position;
-    % objects_id = 1:obj.RIR.nb_objects;
-    % objects_id(focused_object) = [];
-    
-    % if isempty(objects_id)
-    %     return;
-    % end
-
-    % for iObject = objects_id
-    %     previous_theta = getObject(obj.htm, iObject, 'theta_hist');
-    %     theta = abs(obj.head_position - previous_theta(end));
-    %     theta = previous_theta(1);
-    %     obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
-    % end
 end
-
-% function updateAngles (obj)
-%     if obj.current_object == 0
-%         return;
-%     end
-%     head_position = obj.RIR.head_position;
-%     objects_id = 1:obj.RIR.nb_objects;
-%     objects_id(obj.current_object) = [];
-    
-%     if isempty(objects_id)
-%         return;
-%     end
-
-%     for iObject = objects_id
-%         previous_theta = getObject(obj, iObject, 'theta_hist');
-%         % theta = abs(head_position - previous_theta(end));
-%         theta = previous_theta(1);
-%         obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
-%     end
-% end
 
 function degradeData (obj)
     theta = obj.ALKS.hyp_hist(end);
@@ -379,48 +304,6 @@ function retrieveMfiCategorization (obj, iStep)
         obj.classif_mfi{iStep} = obj.MFI.inferCategory(data);
     end
 end
-
-% function [create_new, do_nothing] = simulationStatus (obj, iStep)
-%     % --- No object in the scene
-%     if sum(obj.data(:, iStep)) == 0             % --- silence phase
-%         create_new = false;
-%         do_nothing = true;
-%     % --- Create a new object
-%     elseif sum(obj.data(:, iStep-1)) == 0 &&... % --- previous iStep was silence
-%            sum(obj.data(:, iStep)) ~= 0         % --- current iStep is not anymore
-%         create_new = true;
-%         do_nothing = false;
-%     % --- Update current object
-%     else                                        % --- within an object
-%         create_new = false;
-%         do_nothing = false;
-%     end
-% end
-
-
-% function plot (obj, string)
-
-%     plot_fcn = getInfo('plot_fcn');
-    
-%     idx = find(strcmp(string, plot_fcn));
-
-%     switch idx
-%     case 1
-%         plotFocus(obj);
-%     case 2
-%         plotGoodClassif(obj);
-%     case 3
-%         plotGoodClassifObj(obj);
-%     case 4
-%         plotSHM(obj);
-%     case 5
-%         plotHits(obj);
-%     case 6
-%         plotHeadMovements(obj);
-%     case 7
-%         plotStatistics(obj);
-%     end
-% end
 
 function displayProgressBar (obj, sim_status)
     if strcmp(sim_status, 'init')
@@ -455,9 +338,7 @@ function saveData (obj)
         save(['Data/', num2str(obj.nb_AVPairs), '_', num2str(obj.nb_steps), '/', datestr(datetime('now'))], 'simuData');
         %save(['Data/simu_results/', datestr(datetime('now'))],'simuData');
     end
-
 end
-
 
 end
 % ===================== %
