@@ -58,7 +58,7 @@ function request = getObject (obj, idx, varargin)
                                idx                          ,...
                                'UniformOutput', false...
                                );
-            if isnumeric(request{1})
+            if isnumeric(request{1}) || islogical(request{1})
                 request = cell2mat(request)';
             else
                 request = request';

@@ -28,16 +28,16 @@ end
 
 % --- 
 function newInput (obj, input_vector)
-	obj.inputs = [obj.inputs, input_vector];
+	obj.inputs(:, end+1) = input_vector;
 	obj.trainMSOM();
 	obj.setCategories();
 	% obj.labels = [obj.labels ; obj.inferCategory(input_vector)] ;
 end
 
 function setCategories (obj)
-	p = getInfo('audio_labels',...
-				'visual_labels'...
-			   );
+	% p = getInfo('audio_labels',...
+	% 			'visual_labels'...
+	% 		   );
 
 	MSOM_categories = obj.MSOM.categories;
 

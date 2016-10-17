@@ -13,13 +13,7 @@ classdef MultimodalSelfOrganizingMap < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-    lrates = struct('initial', 0.5,...
-    			    'final'  , 0.1);
-
-    sigmas = struct('initial', 1.5e0,...
-    				'final'  , 1.0e-1);
-
-    % weights_vectors = 0 ;
+   
     weights_vectors = cell(0);
     connections = [];
 
@@ -31,20 +25,27 @@ properties (SetAccess = public, GetAccess = public)
     nb_nodes = 0;
     som_dimension = [0, 0];
 
-    INIT = false;
+    % INIT = false;
 
     nb_iterations = 0;
 
     categories = cell(0);
     cat = cell(0);
 
-    aleph = [];
-    mu = [];
-    sig = [];
-
     cpt = 0;
 
     idx_data;
+end
+
+properties (SetAccess = private, GetAccess = private)
+ 	lrates = struct('initial', 0.5,...
+    			    'final'  , 0.1);
+
+    sigmas = struct('initial', 1.5e0,...
+    				'final'  , 1.0e-1);
+    aleph = [];
+    mu = [];
+    sig = [];
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -122,12 +123,12 @@ function feed (obj, data)
 	ISTEP = (obj.nb_iterations - obj.idx_data) + 1;
 	ISTEP = max([ISTEP, 1]);
 	% ISTEP = min([obj.idx_data, obj.nb_iterations]);
-		idx = randperm(size(data, 2), size(data, 2));
+	idx = randperm(size(data, 2), size(data, 2));
 
-		for iStep = 1:size(data, 2)
-			bmu = obj.getCombinedBMU(data(:, idx(iStep)));
-			obj.update_weights(data(:, idx(iStep)), bmu, ISTEP);
-		end
+	for iStep = 1:size(data, 2)
+		bmu = obj.getCombinedBMU(data(:, idx(iStep)));
+		obj.update_weights(data(:, idx(iStep)), bmu, ISTEP);
+	end
 	% end
 
 	obj.clusterizeMSOM();

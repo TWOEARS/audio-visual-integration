@@ -359,40 +359,36 @@ end
 function categorizeObjects (obj)
 
 	obj.reinitializeClasses() ;
-	for iObj = 1:numel(obj.objects)
-		if obj.objects{iObj}.cat > 0
-			obj.observed_categories{obj.objects{iObj}.cat}.cpt = obj.observed_categories{obj.objects{iObj}.cat}.cpt + 1 ;
+	for iObj = 1:obj.RIR.nb_objects
+		c = getObject(obj, iObj, 'cat');
+		if c > 0
+			obj.observed_categories{c}.cpt = obj.observed_categories{c}.cpt + 1;
 		else
-			obj.observed_categories{1}.cpt = obj.observed_categories{1}.cpt + 1 ;
+			obj.observed_categories{1}.cpt = obj.observed_categories{1}.cpt + 1;
 		end
 	end
 
 	cpts = cell2mat(arrayfun(@(x) obj.observed_categories{x}.cpt > 0,...
 							 1:numel(obj.observed_categories),...
-							 'UniformOutput', false)) ;
-	obj.nb_classes = sum(cpts) ;
-
+							 'UniformOutput', false));
+	obj.nb_classes = sum(cpts);
 end
 
 function countObjects (obj)
 	for iObj = 1:numel(obj.objects)
 		if iObj ~= obj.present_objects
             data = retrieveObservedData(obj, iObj, 'best');
-			AVClass = obj.MFI.inferCategory(data) ;
-			obj.objects{iObj}.setLabel(AVClass) ;
-			search = find(strcmp(AVClass, obj.labels)) ;
-			obj.objects{iObj}.cat = search ;
+			AVClass = obj.MFI.inferCategory(data);
+			obj.objects{iObj}.setLabel(AVClass);
+			search = find(strcmp(AVClass, obj.labels));
+			obj.objects{iObj}.cat = search;
 		end
 	end
 end
 
 function computePresence (obj)
-	obj.present_objects = [] ;
-	for iObj = 1:obj.RIR.nb_objects
-		if obj.objects{iObj}.presence
-			obj.present_objects(end+1) = iObj;
-		end
-	end
+	obj.present_objects = find(getObject(obj, 'all', 'presence'));
+	if isempty(obj.present_objects), obj.present_objects = []; end
 end
 
 function computeWeights (obj)
@@ -413,9 +409,9 @@ function computeWeights (obj)
 	end
 end
 
-function cpt = getCounter (obj)
-	cpt = obj.counter ;
-end
+% function cpt = getCounter (obj)
+% 	cpt = obj.counter;
+% end
 
 function request = getCategories (obj, varargin)
 	if nargin == 1
