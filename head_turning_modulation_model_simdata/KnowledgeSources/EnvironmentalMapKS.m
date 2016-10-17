@@ -96,7 +96,7 @@ function drawClassificationResults (obj)
 end
 
 function drawSeenSources (obj)
-	head_position = obj.MotorOrderKS.head_position_hist(end);
+	head_position = obj.MotorOrderKS.head_position(end);
 	for iSource = 1:numel(obj.objects_handle)
 		source = find(head_position == getInfo('sources_position'));
 		if ~isempty(source)
@@ -174,7 +174,7 @@ function drawFieldOfView (obj, k)
 		return;
 	end
 
-	if isempty(obj.MotorOrderKS.head_position_hist)
+	if isempty(obj.MotorOrderKS.head_position)
 		return;
 	end
 
@@ -183,8 +183,8 @@ function drawFieldOfView (obj, k)
 	x0 = obj.RIR.position(1);
 	y0 = obj.RIR.position(2);
 	
-	theta1 = obj.MotorOrderKS.head_position_hist(end) - (obj.field_of_view/2);
-	theta2 = obj.MotorOrderKS.head_position_hist(end) + (obj.field_of_view/2);
+	theta1 = obj.MotorOrderKS.head_position(end) - (obj.field_of_view/2);
+	theta2 = obj.MotorOrderKS.head_position(end) + (obj.field_of_view/2);
 
 	[x1, y1] = pol2cart(deg2rad(theta1), obj.depth_of_view);
 	[x2, y2] = pol2cart(deg2rad(theta2), obj.depth_of_view);

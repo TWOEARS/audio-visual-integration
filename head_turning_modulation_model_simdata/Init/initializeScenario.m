@@ -25,7 +25,7 @@ function initializeScenario (htm, varargin)
 	scene = info.scenario.scene{end};
 
 	% objects_idx = randi(info.nb_AVPairs, 1, info.nb_objects);
-	objects_idx = randi(numel(info.scenario.scene{end}), 1, info.nb_objects);
+	objects_idx = randi(numel(info.scenario.scene{end}), 1, info.nb_events);
 	objects_idx = info.scenario.scene{end}(objects_idx);
 
 	silence_tsteps = 1 :info.cpt_silence+info.cpt_object: info.nb_steps;
