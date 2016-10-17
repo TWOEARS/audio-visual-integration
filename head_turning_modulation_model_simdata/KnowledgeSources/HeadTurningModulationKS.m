@@ -194,28 +194,22 @@ function run (obj)
         obj.displayProgressBar('update');
         % --- DISPLAY --- %
 
-        % --- Compute Audio & Visual Localization
-        obj.ALKS.execute();
-        audio_theta = obj.ALKS.hyp_hist(end); % --- Grab the audio localization output
-        
-        obj.VLKS.execute();
-
         % --- Object detection
-        % [create_new, do_nothing] = obj.simulationStatus(iStep);
         % --- ODKS aims at providing an information about objects in the scene
         % --- In particular, it will process the incoming data to make an hypothesis about the novelty of these data.
         obj.ODKS.execute();
         
-        object_detection = obj.ODKS.decision(1, end); % --- 1st value: 1(create object) or 2(update object)
-        obj.current_object = obj.ODKS.decision(2, end); % --- 2nd value: id of the object emitting. ≠ from focus!
+        % object_detection = obj.ODKS.decision(1, end); % --- 1st value: 1(create object) or 2(update object)
+        % obj.current_object = obj.ODKS.decision(2, end); % --- 2nd value: id of the object emitting. ≠ from focus!
         % if obj.current_object == obj.HTMFocusKS.focused_object
         %     object_detection == 2;
         % end
-        obj.current_object_hist(end+1) = obj.current_object; % --- Update history of sources
+        % obj.current_object_hist(end+1) = obj.current_object; % --- Update history of sources
 
         % if create_new 
         % --- Processing the ObjectDetectionKS output for time step iStep
-        if object_detection == 1 % --- Create new object
+        % if object_detection == 1 % --- Create new object
+        if obj.createNew()
             % theta = generateAngle(obj.gtruth{iStep, 1});
             %visual_theta = obj.VLKS.getVisualLocalization(); % --- Grab the visual localization output
 
@@ -224,27 +218,30 @@ function run (obj)
 
             obj.RIR.updateData(); % --- Updating the RIR observed data
             obj.RIR.addObject(); % --- Add the object
-            setObject(obj, obj.current_object, 'presence', true); % --- The object is present but not necessarily facing the robot
+            setObject(obj, obj.ODKS.id_object(end), 'presence', true); % --- The object is present but not necessarily facing the robot
             % setObject(obj, 0, 'presence', true);
 
         % elseif ~create_new && ~do_nothing % --- update object
-        elseif object_detection == 2 % --- Update object
+        % elseif object_detection == 2 % --- Update object
+        elseif obj.updateObject()
             % theta = getObject(obj, obj.current_object, 'theta');
             % theta = obj.ALKS.hyp_hist(end); % --- Grab the audio localization output
 
             obj.degradeData(); % --- Remove visual components if object is NOT in field of view
+            obj.MSOM.idx_data = obj.MSOM.idx_data+1;
+
             obj.RIR.updateData(); % --- Updating the RIR observed data
             obj.RIR.updateObject(); % --- Update the current object
-            obj.MSOM.idx_data = obj.MSOM.idx_data+1;
-            setObject(obj, obj.current_object, 'presence', true); % --- The object is present but not necessarily facing the robot
+            setObject(obj, obj.ODKS.id_object(end), 'presence', true); % --- The object is present but not necessarily facing the robot
 
         % elseif ~create_new && do_nothing % --- silence phase
-        elseif object_detection == 0 % --- silence phase
+        % elseif object_detection == 0 % --- silence phase
+        else
             if obj.RIR.nb_objects > 0 
-                idx = obj.current_object_hist(end-1);
+                idx = obj.ODKS.id_object(end-1);
                 if idx ~= 0 && getObject(obj, idx, 'presence')
                     setObject(obj, idx, 'presence', false);
-                    obj.RIR.getEnv().objects{idx}.updateAngle('init');
+                    %obj.RIR.getEnv().objects{idx}.updateAngle('init');
                     % o = obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(1);
                     % obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta_hist(end+1) = o;
                     % obj.RIR.getEnv().objects{obj.current_object_hist(end-1)}.theta = o;
@@ -259,7 +256,7 @@ function run (obj)
 
         obj.MotorOrderKS().moveHead();
 
-        % obj.updateAngles();
+        obj.updateAngles();
 
         if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
             obj.statistics.max_shm(iStep) = 0;
@@ -285,12 +282,60 @@ function run (obj)
     obj.displayProgressBar('end');
     % --- DISPLAY --- %
 
-    computeStatistics(obj);
+    % computeStatistics(obj);
 
-    playNotification();
+    % playNotification();
 
 end
 % === 'RUN' FUNCTION [END] === %
+
+function bool = createNew (obj)
+    bool = obj.ODKS.create_new(end);
+end
+
+function bool = updateObject (obj)
+    bool = obj.ODKS.update_object(end);
+end
+
+function updateAngles (obj)
+
+    if obj.RIR.nb_objects == 0
+        return;
+    end
+
+    % focused_object = obj.HTMFocusKS.focused_object;
+    % if focused_object == 0
+    %     return;
+    % end
+
+    for iObject = 1:obj.RIR.nb_objects
+        % if iObject ~= focused_object
+        % if iObject == obj.ODKS.id_object(end)
+            % tt = getObject(obj, iObject, 'theta') + obj.MotorOrderKS.head_position(end);
+            theta = mod(360 - obj.MotorOrderKS.motor_order(end) + getObject(obj, iObject, 'theta'), 360);
+        % else
+            % previous_theta = getObject(obj, iObject, 'theta_hist');
+            % previous_theta = previous_theta(end-1);
+            % theta = mod(360 - obj.MotorOrderKS.head_position(end) + getObject(obj, iObject, 'theta'), 360);
+            obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
+        % end
+    end
+
+    % % head_position = obj.head_position;
+    % objects_id = 1:obj.RIR.nb_objects;
+    % objects_id(focused_object) = [];
+    
+    % if isempty(objects_id)
+    %     return;
+    % end
+
+    % for iObject = objects_id
+    %     previous_theta = getObject(obj.htm, iObject, 'theta_hist');
+    %     theta = abs(obj.head_position - previous_theta(end));
+    %     theta = previous_theta(1);
+    %     obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
+    % end
+end
 
 % function updateAngles (obj)
 %     if obj.current_object == 0
