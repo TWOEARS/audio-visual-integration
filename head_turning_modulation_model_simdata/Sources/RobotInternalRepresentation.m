@@ -19,8 +19,8 @@ classdef RobotInternalRepresentation < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-    environments   = cell(0); % list of environments
-    nb_objects     = 0;
+    environments = cell(0); % list of environments
+    nb_objects = 0;
     MFI;
     MSOM;
     htm;

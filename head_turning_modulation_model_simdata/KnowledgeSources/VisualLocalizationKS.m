@@ -15,7 +15,7 @@ properties (SetAccess = public, GetAccess = public)
 	MOKS;
 	
 	visual_localization_hyp;
-	hyp_hist = [];
+	%hyp_hist = [];
 
 end
 
@@ -32,8 +32,12 @@ end
 % === CONSTRUCTOR [END] === %
 
 function execute (obj, iStep)
-	obj.visual_localization_hyp = obj.MOKS.head_position;
-	obj.hyp_hist(end+1) = obj.visual_localization_hyp;
+    if ~isempty(obj.MOKS.head_position)
+        obj.visual_localization_hyp(end+1) = obj.MOKS.head_position(end);
+        %obj.hyp_hist(end+1) = obj.visual_localization_hyp;
+    else
+        obj.visual_localization_hyp(end+1) = -1;
+    end
 	% hyp = obj.visual_localization_hyp;
 end
 

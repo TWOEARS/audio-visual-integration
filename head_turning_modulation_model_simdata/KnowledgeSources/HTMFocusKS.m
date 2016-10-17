@@ -57,7 +57,7 @@ function computeFocus (obj)
     mfi_focus = obj.computeMFIFocus();
 
     % --- Comparison of the two results
-    if mfi_focus == 0 && dwmod_focus ~= 0 % DWmod takes the lead
+    if mfi_focus == 0 && dwmod_focus > 0 % DWmod takes the lead
         focus = dwmod_focus;
         focus_origin = 1;
     elseif mfi_focus == 0 && dwmod_focus == 0 % No focused object
@@ -79,9 +79,10 @@ function computeFocus (obj)
     % obj.previous_focus = obj.focused_object;
     obj.focused_object = focus;
     obj.focus_origin(end+1) = focus_origin;
+    % === A MODIFIER ! ENLEVER LES 'HIST' POUR NE GARDER QUE LA FORME VECTORIELLE
     obj.focus_hist(end+1) = obj.focused_object;
 
-    obj.computeSHM();
+    % obj.computeSHM();
 
 end
 
@@ -100,7 +101,7 @@ end
 % === Compute focused object thanks to the MULTIMODAL FUSION and INFERENCE module (MFImod) algorithm
 function focus = computeMFIFocus (obj)
     focus = 0;
-    current_object = obj.htm.current_object;
+    current_object = obj.htm.ODKS.id_object(end);
     % current_object = obj.focused_object;
     if current_object == 0
         focus = 0;
@@ -134,12 +135,12 @@ function bool = isPerformant (obj, idx)
     end
 end
 
-function computeSHM (obj)
-    if obj.focused_object ~= obj.previous_focus && obj.focused_object ~= 0
-        obj.shm = obj.shm + 1;
-        obj.previous_focus = obj.focused_object;
-    end
-end
+% function computeSHM (obj)
+%     if obj.focused_object ~= obj.previous_focus && obj.focused_object ~= 0
+%         obj.shm = obj.shm + 1;
+%         obj.previous_focus = obj.focused_object;
+%     end
+% end
 
 % === Check if the considered object is present in the environment
 function bool = isPresent (obj, idx)
