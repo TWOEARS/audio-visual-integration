@@ -69,6 +69,12 @@ function execute (obj)
 
 	nb_objects = obj.RIR.nb_objects;
 
+	if numel(obj.update_object) > 2
+		if obj.update_object(end-1) == 0 && obj.update_object(end) == 1
+
+		end
+	end
+
 	% --- Look for an object that has already been observed
 	for iObject = 1:nb_objects
 		theta_o = getObject(obj.htm, iObject, 'theta');
@@ -76,7 +82,7 @@ function execute (obj)
 		theta_diff_a = theta_o - theta_a;
 
 		% --- If the robot is facing an object that has already been observed -> merge the data
-		if theta_diff_a <= obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
+		if theta_diff_a <= obj.thr_theta  && theta_diff_a >= -obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
 		% if theta_a <= obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
 			% putative_audio_object(end+1, :) = [iObject, theta_o];
 			putative_audio_object(end+1) = iObject;
