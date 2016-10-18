@@ -22,6 +22,8 @@ properties (SetAccess = public, GetAccess = public)
 	robot_handle;
 	shm_handle;
 
+	text_handle;
+
 	depth_of_view;
 	field_of_view;
 
@@ -58,6 +60,8 @@ function obj = EnvironmentalMapKS (htm)
 
 	obj.emitting_handle = zeros(2, getInfo('nb_sources'));
 
+	obj.text_handle = zeros(1, getInfo('nb_sources'));
+
 end
 % === CONSTRUCTOR [END] === %
 
@@ -66,6 +70,7 @@ function updateMap (obj)
 	obj.drawFieldOfView('update');
 	obj.drawSeenSources();
 	obj.drawClassificationResults();
+	obj.drawLocalizationResults();
 end
 
 function createFigure (obj)
@@ -85,8 +90,9 @@ function drawClassificationResults (obj)
 	iSource = obj.htm.sources(iStep);
 	if iSource == 0
 		return;
-	end
-	l = getObject(obj.htm, obj.htm.current_object, 'label');
+    end
+    current_object = obj.htm.ODKS.id_object(end);
+	l = getObject(obj.htm, current_object, 'label');
 	g = obj.htm.gtruth{iStep, 1};
 	if strcmp(l, g)
 		set(obj.objects_handle(iSource), 'FaceColor', 'blue');
@@ -104,6 +110,25 @@ function drawSeenSources (obj)
 			% if 
 		end
 	end
+
+end
+
+function drawLocalizationResults (obj)
+	current_object = obj.htm.ODKS.id_object(end);
+	if current_object ~= 0
+		iSource = obj.htm.sources(obj.htm.iStep);
+		current_theta = getObject(obj.htm, current_object, 'theta');
+		object_pos = get(obj.objects_handle(iSource), 'Position');
+		x = object_pos(1)+object_pos(3);
+		y = object_pos(2)+object_pos(4);
+		if obj.text_handle(iSource) == 0
+			obj.text_handle(iSource) = text(x+0.3, y+0.3, num2str(current_theta), 'FontSize', 12);
+		else
+			set(obj.text_handle(iSource), 'Position', [x+0.3, y+0.3, 0], 'String', num2str(current_theta));
+		end
+	end
+	% current_audio_theta = obj.htm.ALKS.hyp_hist(end);
+	% angles = getObject(obj.htm, 'all', 'theta');
 
 end
 
