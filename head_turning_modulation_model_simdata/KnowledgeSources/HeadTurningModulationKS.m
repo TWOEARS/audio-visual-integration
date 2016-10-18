@@ -28,8 +28,8 @@ properties (SetAccess = public, GetAccess = public)
 
     sources = [];
 
-    current_object = 0;
-    current_object_hist = [];
+    % current_object = 0;
+    % current_object_hist = [];
 
 
     RIR; % Robot_Internal_Representation class
@@ -235,7 +235,7 @@ function run (obj)
             obj.statistics.max_shm(iStep) = 0;
         end
 
-        obj.retrieveMfiCategorization(iStep) ; %% Data is fed into MFImod
+        obj.retrieveMfiCategorization() ; %% Data is fed into MFImod
 
         % obj.storeMsomWeights(iStep);
 
@@ -271,7 +271,6 @@ function bool = updateObject (obj)
 end
 
 function updateAngles (obj)
-
     if obj.RIR.nb_objects == 0
         return;
     end
@@ -289,7 +288,8 @@ function degradeData (obj)
     end
 end
 
-function storeMsomWeights (obj, iStep)
+function storeMsomWeights (obj)
+    iStep = obj.iStep;
     if mod(iStep, getInfo('nb_steps')/10) == 0 && iStep ~= 1
         msom_weights = getappdata(0, 'msom_weights');
         msom_weights = [msom_weights ; obj.MSOM.weights_vectors];
@@ -297,10 +297,12 @@ function storeMsomWeights (obj, iStep)
     end
 end
 
-function retrieveMfiCategorization (obj, iStep)
-    if sum(obj.data(:, iStep)) ~= 0
+function retrieveMfiCategorization (obj)
+    % if sum(obj.data(:, obj.iStep)) ~= 0
+    iStep = obj.iStep;
+    if obj.sources(iStep) ~= 0
         % data = obj.RIR.getLastObj().getBestData();
-        data = retrieveObservedData(obj, 0, 'best');
+        data = retrieveObservedData(obj, obj.ODKS.id_object(end), 'best');
         obj.classif_mfi{iStep} = obj.MFI.inferCategory(data);
     end
 end
