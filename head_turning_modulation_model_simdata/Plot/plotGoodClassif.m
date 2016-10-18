@@ -59,11 +59,13 @@ function plotGoodClassif (htm, varargin)
                 t = tmIdx(1);
             end
 
+            % --- Statistics MAX
             if mean(cpt21(tmIdx(1):t)) > 0.5
                 correct(iObj) = 1;
             else
                 correct(iObj) = -1;
             end
+            % --- Statistics MEAN(MAX)
             if mean(cpt11(tmIdx(1):t)) >= 0.5
                 correct2(iObj) = 1;
             else
