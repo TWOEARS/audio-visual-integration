@@ -206,6 +206,11 @@ function rotateHead(obj, angle, varargin)
     end
 end
 
+% === Returns true if robot is active
+function b = isActive(obj)
+    b = obj.bActive;
+end
+
 function azimuth = getCurrentHeadOrientation(obj)
     % GETCURRENTHEADORIENTATION
     
