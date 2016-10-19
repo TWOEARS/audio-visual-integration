@@ -3,7 +3,7 @@
 % Date: 19.10.16
 % Rev. 1.0
 
-classdef VisualStreamSegregation < AbstractKS
+classdef VisualStreamSegregationKS < AbstractKS
 % ======================== %
 % === PROPERTIES [BEG] === %
 % ======================== %
@@ -20,7 +20,7 @@ end
 methods
 
 % === CONSTRUCTOR [BEG] === %
-function obj = VisualStreamSegregation (robot)
+function obj = VisualStreamSegregationKS (robot)
     obj = obj@AbstractKS(); 
     % initialize class members
     obj.robot = robot;
