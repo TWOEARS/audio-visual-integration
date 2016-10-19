@@ -24,7 +24,7 @@ bbs.setDataConnect('AuditoryFrontEndKS');
 
 [models, files] = retrieveAudioClassifiers();
 
-auditoryClassifiersKS = createAuditoryIdentityKS(bbs, models, files);
+auditoryClassifiersKS = createAuditoryIdentityKS(bbs, models);
 
 signalLevelKS = bbs.createKS('SignalLevelKS');
 

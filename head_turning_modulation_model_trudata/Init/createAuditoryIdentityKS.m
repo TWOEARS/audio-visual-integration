@@ -1,7 +1,6 @@
-function KS = createAuditoryIdentityKS (bbs, models, files)
+function KS = createAuditoryIdentityKS (bbs, models)
 
-	KS = arrayfun(@(x) bbs.createKS('IdentityKS', {files{x}, 'ClassifierData'}),...
+	KS = arrayfun(@(x) bbs.createKS('IdentityKS', {models{x}, 'ClassifierData'}),...
 				  1:numel(models),...
 				  'UniformOutput', false);
-
 end
