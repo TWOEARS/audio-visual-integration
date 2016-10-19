@@ -7,8 +7,8 @@ clear all;
 
 % === TO BE CHANGED BY A OMRE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 addpath(genpath('../../../TwoEars-1.2'));
-rmpath(genpath('../../../TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simdata'));
-rmpath(genpath('../../../TwoEars-1.2/audio-visual-integration/LVTE'));
+rmpath(genpath('../head_turning_modulation_model_simdata'));
+rmpath(genpath('../LVTE'));
 % === TO BE CHANGED BY A MORE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 
 % --- OdiInterface: class making the interface between the robot and the system
