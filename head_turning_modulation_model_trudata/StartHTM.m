@@ -6,9 +6,10 @@ clear all;
 %disp( 'Initializing Two!Ears, setting up binaural simulator...' );
 
 % === TO BE CHANGED BY A OMRE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
-addpath(genpath('../../../TwoEars-1.2'));
-rmpath(genpath('../head_turning_modulation_model_simdata'));
-rmpath(genpath('../LVTE'));
+p = '/home/twoears/AuditoryModel/TwoEars-1.2/';
+addpath(genpath(p));
+rmpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_simdata']));
+rmpath(genpath([p, 'audio-visual-integration/LVTE']));
 % === TO BE CHANGED BY A MORE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 
 % --- OdiInterface: class making the interface between the robot and the system
