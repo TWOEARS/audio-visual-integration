@@ -55,7 +55,6 @@ function [b, wait] = canExecute (obj)
     wait = false;
 end
 
-% function [create_new, do_nothing] = simulationStatus (obj, iStep)
 function execute (obj)
 
     % theta_a = obj.ALKS.getAudioLocalization();
@@ -83,11 +82,9 @@ function execute (obj)
         end
     end
     hyp = setHypotheses(hyp);
-    
-    obj.blackboard.addData('objectDetectionHypothese',...
-                           hyp,...
-                           false,...
-                           obj.trigger.tmIdx);
+
+    obj.blackboard.addData('objectDetectionHypothese', hyp,...
+                           false, obj.trigger.tmIdx);
     
     notify(obj, 'KsFiredEvent');
 end

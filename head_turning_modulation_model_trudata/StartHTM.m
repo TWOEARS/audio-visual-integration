@@ -21,14 +21,19 @@ bbs = BlackboardSystem(0);
 bbs.setRobotConnect(Jido) ;
 bbs.setDataConnect('AuditoryFrontEndKS');
 
-
 [models, files] = retrieveAudioClassifiers();
 
 auditoryClassifiersKS = createAuditoryIdentityKS(bbs, models, files);
 
 signalLevelKS = bbs.createKS('SignalLevelKS');
 
-visualIdentityKS = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
+visualIdentityKS = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
+
+visualLocationKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
+
+visualStreamSegregationKS = bbs.createKS('VisualStreamSegregationKS', {bbs.robotConnect});
+
+audioVisualFusionKS = bbs.createKS('AudioVisualFusionKS', {bbs.robotConnect});
 
 headTurningModulationKS = bbs.createKS('HeadTurningModulationKS', {bbs});
 
@@ -64,12 +69,24 @@ for iClassifier = 2:numel(auditoryClassifiersKS)
 end
 
 bbs.blackboardMonitor.bind({auditoryClassifiersKS{end}},...
-                           {visualIdentityKS},...
+                           {visualStreamSegregationKS},...
                            'replaceOld' );
+
+bbs.blackboardMonitor.bind({visualStreamSegregationKS},...
+                           {visualLocationKS},...
+                           'replaceOld');
+
+bbs.blackboardMonitor.bind({visualLocationKS},...
+                           {audioVisualFusionKS},...
+                           'replaceOld');
+
+bbs.blackboardMonitor.bind({audioVisualFusionKS},...
+                           {visualIdentityKS},...
+                           'replaceOld');
 
 bbs.blackboardMonitor.bind({visualIdentityKS},...
                            {objectDetectionKS},...
-                           'replaceOld' );        
+                           'replaceOld');
 
 bbs.blackboardMonitor.bind({objectDetectionKS},...
                            {headTurningModulationKS},...

@@ -60,15 +60,12 @@ classdef AuditoryIdentityKS < AuditoryFrontEndDepKS
                     obj.modelname, int16(score(1)*100) );
             end
             
-            signalEnergy=obj.blackboard.getLastData('signalEnergy').data;
+            signalEnergy = obj.blackboard.getLastData('signalEnergy').data;
             if (signalEnergy<1e-6)
                 score(1)=0.0;
             end
             
-            
-            
-            identHyp = IdentityHypothesis( ...
-                obj.modelname, score(1), obj.featureCreator.labelBlockSize_s );
+            identHyp = IdentityHypothesis(obj.modelname, score(1), obj.featureCreator.labelBlockSize_s);
             obj.blackboard.addData( 'auditoryIdentityHypotheses', identHyp, true, obj.trigger.tmIdx );
             notify( obj, 'KsFiredEvent', BlackboardEventData( obj.trigger.tmIdx ) );
         end
