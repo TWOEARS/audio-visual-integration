@@ -22,26 +22,21 @@ properties (SetAccess = public)
  
     current_time = 0;
 
-    RIR; % Robot_Internal_Representation class
-    MSOM; % Multimodal_Self_Organizing_Map class
-    MFI; % Multimodal_Fusion_&_Inference class
+    RIR; % Robot Internal Representation
+    MSOM; % Multimodal SelfOrganizing Map
+    MFI; % Multimodal Fusion & Inference
 
-    EMKS; % Environmental_Map class
+    % EMKS; % Environmental_Map class
 
     statistics = [];
 
     sources = [];
 
-    current_object = 0;
-    current_object_hist = [];
-
-    info;
-
     iStep = 0;
 
-    save = false;
-    load = false;
-    continue_simulation = false;
+    % save = false;
+    % load = false;
+    % continue_simulation = false;
 
 end
 % ======================== %

@@ -26,22 +26,18 @@ properties (SetAccess = public, GetAccess = public)
 
     sources = [];
 
-    RIR; % Robot_Internal_Representation class
-    MSOM; % Multimodal_Self_Organizing_Map class
-    MFI; % Multimodal_Fusion_&_Inference class
+    RIR; % Robot Internal Representation
+    MSOM; % Multimodal SelfOrganizing Map
+    MFI; % Multimodal Fusion & Inference
     MotorOrderKS;
-    HTMFocusKS; % Head_Turning_Modulation_Focus class
-    EMKS; % Environmental_Map class
-    ODKS;
-    ALKS;
-    VLKS;
-    ACKS;
-    VCKS;
+    HTMFocusKS; % Head Turning Modulation Focus
+    EMKS; % Environmental Map
+    ODKS; % Object Detection
+    ALKS; % Audio Location
+    VLKS; % Visual Location
+    ACKS; % Audio Classifiers
+    VCKS; % Visual Classifiers
 end
-
-% properties (SetAccess = private, GetAccess = public)
-    % info;
-% end
 
 properties (SetAccess = private, GetAccess = public)
     nb_steps_init = 1;
