@@ -3,7 +3,7 @@
 % Date: 19.10.16
 % Rev. 1.0
 
-classdef VisualIdentityKS < AbstractKS
+classdef VisualLocationKS < AbstractKS
 % ======================== %
 % === PROPERTIES [BEG] === %
 % ======================== %
@@ -20,7 +20,7 @@ end
 methods
 
 % === CONSTRUCTOR [BEG] === %
-function obj = VisualIdentityKS(robot)
+function obj = VisualLocationKS (robot)
     obj = obj@AbstractKS(); 
     % initialize class members
     obj.robot = robot;

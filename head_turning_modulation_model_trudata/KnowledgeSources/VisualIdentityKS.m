@@ -20,7 +20,7 @@ end
 methods
 
 % === CONSTRUCTOR [BEG] === %
-function obj = VisualIdentityKS(robot)
+function obj = VisualIdentityKS (robot)
     obj = obj@AbstractKS(); 
     % initialize class members
     obj.robot = robot;
