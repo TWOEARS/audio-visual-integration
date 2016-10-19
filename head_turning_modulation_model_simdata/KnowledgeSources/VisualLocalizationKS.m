@@ -14,10 +14,11 @@ properties (SetAccess = public, GetAccess = public)
 	htm;
 	MOKS;
 	
-	visual_localization_hyp;
-	%hyp_hist = [];
-
+	hypotheses;
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
 % ===================== %
 % === METHODS [BEG] === %
@@ -31,14 +32,13 @@ function obj = VisualLocalizationKS (htm)
 end
 % === CONSTRUCTOR [END] === %
 
-function execute (obj, iStep)
+function execute (obj)
+	head_position = obj.MOKS.head_position;
     if ~isempty(obj.MOKS.head_position)
-        obj.visual_localization_hyp(end+1) = obj.MOKS.head_position(end);
-        %obj.hyp_hist(end+1) = obj.visual_localization_hyp;
+        obj.hypotheses(end+1) = head_position(end);
     else
-        obj.visual_localization_hyp(end+1) = -1;
+        obj.hypotheses(end+1) = -1;
     end
-	% hyp = obj.visual_localization_hyp;
 end
 
 % ===================== %
@@ -46,6 +46,6 @@ end
 % ===================== %
 end
 % =================== %
-% === CLASS [END] === % 
+% === END OF FILE === % 
 % =================== %
 end

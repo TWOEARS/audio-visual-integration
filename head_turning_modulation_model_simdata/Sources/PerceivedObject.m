@@ -6,7 +6,6 @@
 
 classdef PerceivedObject < handle
 
-
 % ======================== %
 % === PROPERTIES [BEG] === %
 % ======================== %
@@ -15,10 +14,11 @@ properties (SetAccess = public, GetAccess = public)
     audio_label = 'none';
     visual_label = 'none';
 
-    audio_theta = 0;
-    visual_theta = 0;
-    theta = 0;
-    theta_hist = [];
+    % audio_theta = 0;
+    % visual_theta = 0;
+    
+    theta = [];
+    theta_v = [];
     % id 			= ''	   ; % hex
 
     presence = true;
@@ -30,7 +30,7 @@ properties (SetAccess = public, GetAccess = public)
     d = 0;
     dist_hist = [];
 
-    cat    = 0; % int
+    audiovisual_category = 0; % int
     cat_hist = [];
 
     missing_hist = [];
@@ -57,25 +57,24 @@ end
 % === METHODS [BEG] === %
 % ===================== %
 methods
-% --- Constructor [BEG] --- %
-function obj = PerceivedObject (data, theta)
-	obj.theta = theta;
-	obj.theta_hist(end+1) = theta;
+% === Constructor [BEG] === %
+function obj = PerceivedObject (data, theta, theta_v)
+	obj.theta(end+1) = theta;
+	obj.theta_v(end+1) = theta_v;
 	% obj.d = d;
 	obj.tsteps = 1;
 	obj.presence = true;
 	obj.cpt = obj.cpt + 1;
 	obj.addData(data);
 end
-% --- Constructor [END] --- %
+% === Constructor [END] === %
 
 function addData (obj, data)
-	% obj.data_tmp = [obj.data_tmp, data];
-	% obj.data = obj.data_tmp;
 	obj.missingModality(data);
 	obj.requestInference();
 end
 
+% === TO BE CHANGED: take into account visual information instead of classification output! === %
 function missingModality (obj, data)
 	if sum(data(1:getInfo('nb_audio_labels'), end)) < 0.2 ||...
 	   sum(data(getInfo('nb_audio_labels')+1:end, end)) < 0.2
@@ -84,17 +83,16 @@ function missingModality (obj, data)
 		obj.requests.missing = false;
 	end
 end
+% === TO BE CHANGED: take into account visual information instead of classification output! === %
 
 function requestInference (obj)
 	% --- If not enough data
 	if obj.cpt <= getInfo('smoothing')
 		obj.requests.inference = false;
 	else
-		% --- If missing modality
-		if obj.requests.missing
+		if obj.requests.missing % --- If missing modality
 			obj.requests.inference = true;
-		% --- If every modality
-		else
+		else 					% --- If every modality
 			obj.requests.inference = false;
 			if obj.requests.check
 				obj.requests.verification = true;
@@ -117,12 +115,11 @@ function updateCatHist (obj, value)
 	obj.cat_hist(end-t:end) = ones(1, t+1)*value;
 end
 
-function updateData (obj, data, theta)
+function updateData (obj, data, theta, theta_v)
 	obj.addData(data);
-	obj.theta_hist(end+1) = theta;
-	obj.theta = theta;
-	% obj.dist_hist(end+1) = d;
-	% obj.d = d;
+	obj.theta(end+1) = theta;
+	obj.theta_v(end+1) = theta_v;
+	% obj.theta = theta;
 end
 
 function updateTime (obj, t)
@@ -133,33 +130,36 @@ end
 
 function updateAngle (obj, theta)
 	if isstr(theta)
+		% === TO BE CHANGED: the first results of locationKS are not good === %
 		if strcmp(theta, 'init')
-			theta = obj.theta_hist(1);
+			theta = obj.theta(1);
 		end
+		% === TO BE CHANGED: the first results of locationKS are not good === %
 	else
 		if theta <= 5
 			theta = 0;
+		else
+			theta = theta;
 		end
 	end
-	obj.theta = theta;
-	obj.theta_hist(end+1) = theta;
+	obj.theta(end+1) = theta;
 end
 
 function updateObj (obj)
 	obj.cpt = obj.cpt + 1;
 	if isempty(obj.cat_hist)
-		obj.cat_hist = obj.cat;
+		obj.cat_hist = obj.audiovisual_category;
 		obj.tsteps = 1;
 		return;
 	end
 
-	if obj.cat == obj.cat_hist(end)
+	if obj.audiovisual_category == obj.cat_hist(end)
 		obj.tsteps = obj.tsteps + 1;
 	else
 		obj.tsteps = 1;
 	end
-	% --- Concatenation of the last value of category
-	obj.cat_hist(end+1) = obj.cat;
+	% --- Concatenation of the last value of audiovisual_category
+	obj.cat_hist(end+1) = obj.audiovisual_category;
 end
 
 % --------------------- %

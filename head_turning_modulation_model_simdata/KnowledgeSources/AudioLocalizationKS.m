@@ -14,7 +14,7 @@ properties (SetAccess = public, GetAccess = public)
 	htm;
 
 	% audio_localization_hyp;
-	hyp_hist = [];
+	hypotheses = [];
 	% avpairs
 	sources_position;
 
@@ -50,7 +50,7 @@ function execute (obj)
     % if isempty(audio_localization_hyp)
     % 	audio_localization_hyp = -1;
     % end
-    obj.hyp_hist(end+1) = audio_localization_hyp;
+    obj.hypotheses(end+1) = audio_localization_hyp;
     % obj.audio_localization_hyp = audio_localization_hyp;
 end
 

@@ -8,10 +8,8 @@ classdef MotorOrderKS < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-    % head_position = 0;
-    head_position = 0;
-    motor_order = 0;
-    % motor_order_hist = [];
+    head_position = [];
+    motor_order = [];
     htm;
     RIR;
     HTMFocusKS;
@@ -35,19 +33,17 @@ function obj = MotorOrderKS (htm, htmFocusKS)
 end
 % === CONSTRUCTOR [END] === %
 
-function moveHead (obj)
+function execute (obj)
     % --- If no sound -> make the head turn to 0° (resting state)
-    focus = obj.HTMFocusKS.focus_hist(end);
+    focus = obj.HTMFocusKS.focus(end);
 
-    if focus == 0
-        theta = -obj.head_position(end);
-    % --- Line above to be deleted -> already handle in the MotorOrderKS
-    elseif obj.isFocusedObjectPresent() %&& focus ~= 0   % --- move the head to 'theta'
+    if obj.isFocusedObjectPresent(focus) % --- move the head to 'theta'
         theta = getObject(obj.RIR, focus, 'theta');
-        % --- TO BE PLACED IN OBJECTDETECTIONKS
-        % --- It's not up to this KS to set a new property to the object (-> AUDIOLOCALIZATIONKS)
-    else                                            % --- go back to resting position (O°)
+        theta = theta(end);
+    elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
         theta = -obj.head_position(end);
+    else
+        theta = 0;
     end
     obj.motor_order(end+1) = theta;
 
@@ -56,15 +52,15 @@ function moveHead (obj)
     else
         obj.head_position(end+1) = theta;
     end
+    
     obj.RIR.head_position = obj.head_position;
 
     obj.computeSHM();
 end
 
-function bool = isFocusedObjectPresent (obj)
-    focus = obj.HTMFocusKS.focused_object;
-
-    if obj.RIR.nb_objects == 0
+function bool = isFocusedObjectPresent (obj, focus)
+    
+    if obj.RIR.nb_objects == 0 && focus ~= 0
         bool = false;
     elseif getObject(obj.RIR, focus, 'presence')
         bool = true;
@@ -75,7 +71,7 @@ end
 
 function computeSHM (obj)
     if numel(obj.head_position) > 1
-        if obj.head_position(end-1) ~= obj.head_position(end)
+        if obj.head_position(end-1) ~= obj.head_position(end) && obj.head_position(end) ~= 0
             obj.shm = obj.shm+1;
         end
     end

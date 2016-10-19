@@ -15,13 +15,10 @@ properties (SetAccess = public)
     htm; 
     RIR;
 
-    focused_object = 0;
+    % focused_object = 0;
     focus_origin = []; % to be renamed as "focus_type"
-    previous_focus = 0;
-    focus_hist = [];
-
-    shm = 0;
-
+    % previous_focus = 0;
+    focus = [];
 end
 
 % ===================== %
@@ -37,11 +34,11 @@ end
 
 
 % === Other Methods === %
-function computeFocus (obj)
+function execute (obj)
     RIR = obj.RIR; % --- RobotInternalRepresentaion
 
     if RIR.nb_objects == 0
-        obj.focus_hist(end+1) = 0;
+        obj.focus(end+1) = 0;
         obj.focus_origin(end+1) = 0;
         return;
     end
@@ -57,29 +54,24 @@ function computeFocus (obj)
         focus = dwmod_focus;
         focus_origin = 1;
     elseif mfi_focus == 0 && dwmod_focus == 0 % No focused object
-        focus = obj.focus_hist(end);
-        % focus = 0;
+        focus = obj.focus(end);
         focus_origin = 0;
     elseif mfi_focus == 0 && dwmod_focus == -1
-        focus = obj.focus_hist(end);
-        focus_origin = -1;
+        focus = obj.focus(end);
+        focus_origin = 0;
     else % MFImod takes the lead over the DWmod
         focus = mfi_focus;
         focus_origin = -1;
     end
 
+    % === USEFUL??? === %
     if ~obj.isPresent(focus)
         focus = 0;
     end
+    % === USEFUL??? === %
 
-    % obj.previous_focus = obj.focused_object;
-    obj.focused_object = focus;
     obj.focus_origin(end+1) = focus_origin;
-    % === A MODIFIER ! ENLEVER LES 'HIST' POUR NE GARDER QUE LA FORME VECTORIELLE
-    obj.focus_hist(end+1) = obj.focused_object;
-
-    % obj.computeSHM();
-
+    obj.focus(end+1) = focus;
 end
 
 % === Compute focused object thanks to the DYNAMIC WEIGHTING module (DWmod) algorithm
@@ -88,7 +80,7 @@ function focus = computeDWmodFocus (obj)
     object = getObject(obj.RIR, focus);
     if object.weight < 0.98
         focus = 0;
-    elseif ~obj.isPerformant(object.cat)
+    elseif ~isPerformant(obj.htm.RIR.getEnv(), object.audiovisual_category)
         focus = -1;
     end
 end
@@ -97,38 +89,24 @@ end
 function focus = computeMFIFocus (obj)
     focus = 0;
     current_object = obj.htm.ODKS.id_object(end);
-    % current_object = obj.focused_object;
     if current_object == 0
         focus = 0;
         return;
     end
 
     if getObject(obj.RIR, current_object, 'presence')
-        request = getObject(obj.RIR, current_object, 'requests');
-        if request.check 
-            % focus = numel(obj.RIR.getEnv().objects);
+        requests = getObject(obj.RIR, current_object, 'requests');
+        if requests.check 
             focus = current_object;
+            % === TO BE CHENGED === %
             obj.RIR.getEnv().objects{current_object}.requests.checked = true;
-        elseif request.checked
-            % focus = numel(obj.RIR.getEnv().objects);
+            % === TO BE CHENGED === %
+        elseif requests.checked
             focus = current_object;
         end
     end
 end
 
-function bool = isPerformant (obj, idx)
-    env = obj.RIR.getEnv();
-    perf = cell2mat(getCategory(env, idx, 'perf'));
-    if perf >= getInfo('q') && perf < 1
-    % if obj.observed_categories{idx}.perf >= getInfo('q') && obj.observed_categories{idx}.perf < 1
-        bool = true;
-        % if obj.observed_categories{idx}.perf == 1 && obj.observed_categories{idx}.nb_inf < 7
-        %   bool = false;
-        % end
-    else
-        bool = false;
-    end
-end
 % === Check if the considered object is present in the environment
 function bool = isPresent (obj, idx)
     if find(idx == obj.RIR.getEnv().present_objects)
@@ -155,13 +133,11 @@ function request = getMaxWeightObject (obj)
     request = int32(request);
 end
 
-
+% ===================== %
+% === METHODS [END] === %
+% ===================== %
 end
-
-% ===================== %
-% === Methods (END) === %
-% ===================== %
-
-
-
+% =================== %
+% === END OF FILE === %
+% =================== %
 end

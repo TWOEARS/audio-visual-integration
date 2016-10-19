@@ -16,37 +16,31 @@ properties (SetAccess = public)
     RIR;
 
     bbs;
- 
-    % current_time = 0;
-    % mfiFocus = 0;
-    % dwFocus = 0;
 
-    focused_object = 0;
     focus_origin = 0; % to be renamed as "focus_type"
-    previous_focus = 0;
-    focus_hist = 0;
+    focus = 0;
 
     shm = 0;
-
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
 % ===================== %
 % === METHODS (BEG) === %
 % ===================== %
 methods
 
-% === Constructor === %
+% === Constructor [BEG] === %
 function obj = HTMFocusKS (bbs, htm)
     obj = obj@AbstractKS();
     obj.bbs = bbs;
     obj.invocationMaxFrequency_Hz = inf;
 
     obj.htm = htm;
-    
     obj.RIR = htm.RIR;
-
 end
-
+% === Constructor [END] === %
 
 % === Other Methods === %
 % --- Execute functionality
@@ -72,25 +66,28 @@ function execute (obj)
     mfi_focus = obj.computeMFIFocus();
 
     % --- Comparison of the two results
-    if mfi_focus == 0 && dwmod_focus ~= 0 % DWmod takes the lead
+    if mfi_focus == 0 && dwmod_focus > 0 % DWmod takes the lead
         focus = dwmod_focus;
         focus_origin = 1;
     elseif mfi_focus == 0 && dwmod_focus == 0 % No focused object
-        focus = obj.focus_hist(end);
-        % focus = 0;
+        focus = obj.focus(end);
+        focus_origin = 0;
+    elseif mfi_focus == 0 && dwmod_focus == -1
+        focus = obj.focus(end);
         focus_origin = 0;
     else % MFImod takes the lead over the DWmod
         focus = mfi_focus;
         focus_origin = -1;
     end
 
+    % === USEFUL??? === %
     if ~obj.isPresent(focus)
         focus = 0;
     end
+    % === USEFUL??? === %
 
-    obj.focused_object = focus;
     obj.focus_origin(end+1) = focus_origin;
-    obj.focus_hist(end+1) = obj.focused_object;
+    obj.focus(end+1) = focus;
 
     % --- List the focus
     focusedObject = containers.Map({'focus', 'focus_origin'},...
@@ -99,7 +96,6 @@ function execute (obj)
     obj.blackboard.addData('FocusedObject', focusedObject,...
                             false, obj.trigger.tmIdx);
     notify(obj, 'KsFiredEvent');
-
 end
 
 % === Compute focused object thanks to the DYNAMIC WEIGHTING module (DWmod) algorithm
@@ -108,29 +104,28 @@ function focus = computeDWmodFocus (obj)
     object = getObject(obj.RIR, focus);
     if object.weight < 0.98
         focus = 0;
-    elseif ~obj.isPerformant(object.cat)
-        focus = 0;
+    elseif ~isPerformant(obj.htm.RIR.getEnv(), object.cat)
+        focus = -1;
     end
 end
 
 % === Compute focused object thanks to the MULTIMODAL FUSION and INFERENCE module (MFImod) algorithm
 function focus = computeMFIFocus (obj)
     focus = 0;
-    current_object = obj.htm.current_object;
-    % current_object = obj.focused_object;
+    current_object = obj.blackboard.getLastData('CurrentObject');
     if current_object == 0
         focus = 0;
         return;
     end
 
     if getObject(obj.RIR, current_object, 'presence')
-        request = getObject(obj.RIR, current_object, 'requests');
-        if request.check 
-            % focus = numel(obj.RIR.getEnv().objects);
+        requests = getObject(obj.RIR, current_object, 'requests');
+        if requests.check 
             focus = current_object;
+            % === TO BE CHENGED === %
             obj.RIR.getEnv().objects{current_object}.requests.checked = true;
-        elseif request.checked
-            % focus = numel(obj.RIR.getEnv().objects);
+            % === TO BE CHENGED === %
+        elseif requests.checked
             focus = current_object;
         end
     end
@@ -143,27 +138,6 @@ function bool = isPresent (obj, idx)
     else
         bool = false;
     end 
-end
-
-function bool = isPerformant (obj, idx)
-    env = obj.RIR.getEnv();
-    perf = cell2mat(getCategory(env, idx, 'perf'));
-    if perf >= getInfo('q') && perf < 1
-    % if obj.observed_categories{idx}.perf >= getInfo('q') && obj.observed_categories{idx}.perf < 1
-        bool = true;
-        % if obj.observed_categories{idx}.perf == 1 && obj.observed_categories{idx}.nb_inf < 7
-        %   bool = false;
-        % end
-    else
-        bool = false;
-    end
-end
-
-function computeSHM (obj)
-    if obj.focused_object ~= obj.previous_focus && obj.focused_object ~= 0
-        obj.shm = obj.shm + 1;
-        obj.previous_focus = obj.focused_object;
-    end
 end
 
 
@@ -183,13 +157,11 @@ function request = getMaxWeightObject (obj)
     request = int32(request);
 end
 
-
+% ===================== %
+% === METHODS [END] === %
+% ===================== %
 end
-
-% ===================== %
-% === Methods (END) === %
-% ===================== %
-
-
-
+% =================== %
+% === END OF FILE === %
+% =================== %
 end

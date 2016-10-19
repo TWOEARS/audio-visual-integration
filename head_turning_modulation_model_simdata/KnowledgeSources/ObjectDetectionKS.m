@@ -13,20 +13,11 @@ properties (SetAccess = public, GetAccess = public)
 	htm; % Head_Turning_Modulation KS
 	RIR; % Robot_Internal_Representation KS
 	
-	% MOKS; % Motor_Order KS
-	
-	ALKS; % Audio_Localization KS
-	VLKS; % Visual_Localization KS
-	ACKS; % Audio_Classification_Experts KS
-	VCKS; % Visual_Classification_Experts KS
-
-	% decision = [];
-
 	create_new = [];
 	update_object = [];
 	id_object = [];
-
 end
+
 properties (SetAccess = private, GetAccess = private)
 	thr_theta;
 end
@@ -43,79 +34,43 @@ methods
 function obj = ObjectDetectionKS (htm)
 	obj.htm = htm;
 	obj.RIR = htm.RIR;
-	obj.ALKS = htm.ALKS;
-	obj.VLKS = htm.VLKS;
-	obj.ACKS = htm.ACKS;
-	obj.VCKS = htm.VCKS;
 	obj.thr_theta = getInfo('thr_theta');
 end
 % === CONSTRUCTOR [END] === %
 
-% function [create_new, do_nothing] = simulationStatus (obj, iStep)
 function execute (obj)
 
-	obj.getLocalization();
-
-	theta_a = obj.ALKS.hyp_hist(end);
+	theta_a = getLastHypothesis(obj.htm, 'ALKS');
 	if theta_a == -1
-		% obj.decision(:, end+1) = [0 ; 0];
-		obj.create_new(end+1) = 0;
-		obj.update_object(end+1) = 0;
-		obj.id_object(end+1) = 0;
-		return;
-	end
-
-	putative_audio_object = [];
-
-	nb_objects = obj.RIR.nb_objects;
-
-	if numel(obj.update_object) > 2
-		if obj.update_object(end-1) == 0 && obj.update_object(end) == 1
-
-		end
-	end
-
-	% --- Look for an object that has already been observed
-	for iObject = 1:nb_objects
-		theta_o = getObject(obj.htm, iObject, 'theta');
-		% theta_diff_a = abs(theta_o - theta_a);
-		theta_diff_a = theta_o - theta_a;
-
-		% --- If the robot is facing an object that has already been observed -> merge the data
-		if theta_diff_a <= obj.thr_theta  && theta_diff_a >= -obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
-		% if theta_a <= obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
-			% putative_audio_object(end+1, :) = [iObject, theta_o];
-			putative_audio_object(end+1) = iObject;
-			% --- If there is more than one object that could be at the same place
-			% if size(putative_audio_object, 1) > 1
-			% 	previous_theta = getObject(obj.htm, putative_audio_object(1), 'theta');
-			% 	[tmp, pos] = min(putative_audio_object(:, 2));
-			% 	if pos == 2
-			% 		putative_audio_object = putative_audio_object(pos, :);
-			% 	end
-			% end
-		end
-	end
-
-	if isempty(putative_audio_object)
-		% --- Create a new object
-		obj.create_new(end+1) = 1;
-		obj.update_object(end+1) = 0;
-		obj.id_object(end+1) = nb_objects+1;
-		% hyp = [1 ; nb_objects+1]; 
+		hyp = [0, 0, 0];
 	else
-		obj.create_new(end+1) = 0;
-		obj.update_object(end+1) = 1;
-		obj.id_object(end+1) = putative_audio_object(1);
-		% obj.RIR.getEnv().objects{obj.id_object(end)}.presence = true;
-		% hyp = [2 ; putative_audio_object(1)]; % --- The object has already been observed
+		putative_audio_object = [];
+		nb_objects = obj.RIR.nb_objects;
+		% --- Look for an object that has already been observed
+		for iObject = 1:nb_objects
+			theta_o = getObject(obj.htm, iObject, 'theta');
+			theta_o = theta_o(end);
+			% theta_diff_a = abs(theta_o - theta_a);
+			theta_diff_a = theta_o - theta_a;
+			if theta_diff_a <= obj.thr_theta  && theta_diff_a >= -obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
+				putative_audio_object(end+1) = iObject;
+			end
+		end
+
+		if isempty(putative_audio_object) % --- Create a new object
+			hyp = [1, 0, nb_objects+1];
+		else % --- Update already existing object
+			hyp = [0, 1, putative_audio_object(1)];
+			
+		end
 	end
-	% obj.decision(:, end+1) = hyp;
+	obj.setHypotheses(hyp);
 end
 
-function getLocalization (obj)
-	obj.ALKS.execute();
-	obj.VLKS.execute();
+function setHypotheses (obj, hyp)
+	obj.create_new = hyp(1);
+	obj.update_object = hyp(2);
+	obj.id_object = hyp(3);
 end
 
 function plotDecisions (obj)

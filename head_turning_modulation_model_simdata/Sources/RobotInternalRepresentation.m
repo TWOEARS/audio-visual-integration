@@ -25,7 +25,7 @@ properties (SetAccess = public, GetAccess = public)
     MSOM;
     htm;
     theta_hist = [];
-    % dist_hist = [];
+    theta_v_hist;
     data = [];
     head_position = 0;
     position = [0, 0];
@@ -67,8 +67,10 @@ function updateData (obj)
     iStep = obj.htm.iStep;
     obj.data(:, end+1) = obj.htm.data(:, iStep);
     
-    theta = obj.htm.ALKS.hyp_hist(end);
+    theta = getLastHypothesis(obj, 'ALKS');
+    theta_v = getLastHypothesis(obj, 'VLKS');
     obj.theta_hist(end+1) = theta;
+    obj.theta_v_hist(end+1) = theta_v;
     %obj.dist_hist(end+1) = d;
 end
 
@@ -76,7 +78,7 @@ end
 function updateObjects (obj)
     tmIdx = obj.htm.iStep;
     if obj.nb_objects > 0
-        obj.getEnv().updateObjects(tmIdx);
+        obj.getEnv().updateEnvironment(tmIdx);
     end
 end
 
