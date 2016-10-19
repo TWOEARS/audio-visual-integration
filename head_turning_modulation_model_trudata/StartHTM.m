@@ -11,6 +11,7 @@ addpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_trud
 addpath(genpath([p, 'blackboard-system']));
 addpath(genpath([p, 'main']));
 addpath(genpath([p, 'auditory-front-end']));
+addpath(genpath([p, 'examples']));
 
 % rmpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_simdata']));
 % rmpath(genpath([p, 'audio-visual-integration/LVTE']));
