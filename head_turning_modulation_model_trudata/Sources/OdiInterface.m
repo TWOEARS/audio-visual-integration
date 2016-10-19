@@ -12,6 +12,10 @@ properties (GetAccess = public, SetAccess = private)
     AzimuthMin              % Minimum azimuthal look direction of the
                             % KEMAR head in degrees.
     LengthOfSimulation      % TODO: How to integrate this?
+
+    bActive = true;
+
+    bIsFinished = false;
     
 end
 
@@ -247,11 +251,14 @@ function delete(obj)
 end
 
 function result = isFinished(obj)
-    % Just live with this...
-    %result = false;
     result = obj.finished;
 end
 
 end
-
+% ===================== %
+% === METHODS [END] === % 
+% ===================== %
 end
+% =================== %
+% === END OF FILE === %
+% =================== %
