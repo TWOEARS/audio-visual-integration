@@ -7,9 +7,14 @@ clear all;
 
 % === TO BE CHANGED BY A OMRE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 p = '/home/twoears/AuditoryModel/TwoEars-1.2/';
-addpath(genpath(p));
-rmpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_simdata']));
-rmpath(genpath([p, 'audio-visual-integration/LVTE']));
+addpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_trudata']));
+addpath(genpath([p, 'blackboard-system']));
+addpath(genpath([p, 'main']));
+addpath(genpath([p, 'auditory-front-end']));
+
+% rmpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_simdata']));
+% rmpath(genpath([p, 'audio-visual-integration/LVTE']));
+% addpath(genpath(p));
 % === TO BE CHANGED BY A MORE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 
 % --- OdiInterface: class making the interface between the robot and the system
