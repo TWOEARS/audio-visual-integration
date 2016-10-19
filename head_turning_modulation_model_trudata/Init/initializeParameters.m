@@ -46,7 +46,7 @@ function initializeParameters ()
     % --- 'AVPairs.xml' can be edited
     % [AVPairs, audio_labels, visual_labels] = retrieveAudioVisualLabels();
 
-    [audio_labels, file_names] = retrieveAudioIdentityModels();
+    audio_labels = retrieveAudioIdentityModels();
 
     % visual_labels = retrieveVisualIdentityModels(htm);
     % visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};
