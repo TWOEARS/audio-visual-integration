@@ -32,6 +32,7 @@ function obj = MotorOrderKS (bbs, robot)
     obj = obj@AbstractKS();
     obj.invocationMaxFrequency_Hz = inf;
     obj.robot = robot;
+    obj.bbs = bbs;
     
     obj.htm = findKS(obj.bbs, 'HeadTurningModulationKS');
     obj.RIR = htm.RIR;
