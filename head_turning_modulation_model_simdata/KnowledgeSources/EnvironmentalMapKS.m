@@ -12,7 +12,7 @@ classdef EnvironmentalMapKS < handle
 properties (SetAccess = public, GetAccess = public)
 	htm;
 	RIR; % Robot_Internal_Representation class
-	MotorOrderKS;
+	MOKS;
 	
 	figure_handle;
 	fov_handle;
@@ -31,6 +31,8 @@ properties (SetAccess = public, GetAccess = public)
 
 	sources = [];
 
+	dmax = 1;
+
 end
 
 % ===================== %
@@ -42,7 +44,7 @@ methods
 function obj = EnvironmentalMapKS (htm)
 	obj.htm = htm;
 	obj.RIR = htm.RIR;
-	obj.MotorOrderKS = htm.MotorOrderKS;
+	obj.MOKS = htm.MotorOrderKS;
 
 	obj.depth_of_view = 9;
 	obj.field_of_view = 30;
@@ -62,6 +64,8 @@ function obj = EnvironmentalMapKS (htm)
 
 	obj.text_handle = zeros(1, getInfo('nb_sources'));
 
+	obj.shm_handle = zeros(1, getInfo('nb_sources'));
+
 end
 % === CONSTRUCTOR [END] === %
 
@@ -71,6 +75,7 @@ function updateMap (obj)
 	obj.drawSeenSources();
 	obj.drawClassificationResults();
 	obj.drawLocalizationResults();
+	% obj.drawSHM('update');
 end
 
 function createFigure (obj)
@@ -102,7 +107,7 @@ function drawClassificationResults (obj)
 end
 
 function drawSeenSources (obj)
-	head_position = obj.MotorOrderKS.head_position(end);
+	head_position = obj.MOKS.head_position(end);
 	for iSource = 1:numel(obj.objects_handle)
 		source = find(head_position == getInfo('sources_position'));
 		if ~isempty(source)
@@ -118,6 +123,7 @@ function drawLocalizationResults (obj)
 	if current_object ~= 0
 		iSource = obj.htm.sources(obj.htm.iStep);
 		current_theta = getObject(obj.htm, current_object, 'theta');
+		current_theta = current_theta(end);
 		object_pos = get(obj.objects_handle(iSource), 'Position');
 		x = object_pos(1)+object_pos(3);
 		y = object_pos(2)+object_pos(4);
@@ -199,7 +205,7 @@ function drawFieldOfView (obj, k)
 		return;
 	end
 
-	if isempty(obj.MotorOrderKS.head_position)
+	if isempty(obj.MOKS.head_position)
 		return;
 	end
 
@@ -208,8 +214,8 @@ function drawFieldOfView (obj, k)
 	x0 = obj.RIR.position(1);
 	y0 = obj.RIR.position(2);
 	
-	theta1 = obj.MotorOrderKS.head_position(end) - (obj.field_of_view/2);
-	theta2 = obj.MotorOrderKS.head_position(end) + (obj.field_of_view/2);
+	theta1 = obj.MOKS.head_position(end) - (obj.field_of_view/2);
+	theta2 = obj.MOKS.head_position(end) + (obj.field_of_view/2);
 
 	[x1, y1] = pol2cart(deg2rad(theta1), obj.depth_of_view);
 	[x2, y2] = pol2cart(deg2rad(theta2), obj.depth_of_view);
@@ -293,10 +299,55 @@ function drawSHM (obj, k)
 		x0 = obj.RIR.position(1);
 		y0 = obj.RIR.position(2);
 		sources_position = getInfo('sources_position');
-		for iSource = 1:getInfo('nb_sources')
-			theta = sources_position(iSource);
-			[x1, y1] = pol2cart(deg2rad(theta), 2);
-			line([x0, x1], [y0, y1], 'Color', 'b', 'LineStyle', '-', 'LineWidth', 1, 'Parent', obj.figure_handle);
+		% for iSource = 1:getInfo('nb_sources')
+			% theta = sources_position(iSource);
+			% [x1, y1] = pol2cart(deg2rad(theta), 2);
+			% line([x0, x1], [y0, y1], 'Color', 'b', 'LineStyle', '-', 'LineWidth', 1, 'Parent', obj.figure_handle);
+		% end
+	elseif strcmp(k, 'update')
+		iStep = obj.htm.iStep;
+		iSource = obj.htm.sources(iStep);
+		if iStep > 1
+			motor_order = obj.MOKS.motor_order(iStep-1:iStep);
+			focus_hist = obj.htm.HTMFocusKS.focus_hist(iStep-1:iStep);
+			if focus_hist(1) == 0 && focus_hist(2) > 0
+				if motor_order(1) == 0 && motor_order(2) > 1
+					x0 = obj.RIR.position(1);
+					y0 = obj.RIR.position(2);
+					theta = motor_order(2);
+					if obj.shm_handle(iSource) == 0
+						d = 1/obj.dmax;
+						[x1, y1] = pol2cart(deg2rad(theta), d);
+						obj.shm_handle(iSource) = line([x0, x1], [y0, y1],...
+													   'Color', 'g',...
+													   'LineStyle', '-',...
+													   'LineWidth', 1,...
+													   'UserData', 1,...
+													   'Parent', obj.figure_handle);
+					else
+						previous_d = get(obj.shm_handle(iSource), 'UserData');
+						d = previous_d + 1;
+						set(obj.shm_handle(iSource), 'UserData', d);
+						if d > obj.dmax
+							obj.dmax = d;
+						end
+						d = d/obj.dmax;
+						[x1, y1] = pol2cart(deg2rad(theta), d);
+						set(obj.shm_handle(iSource), 'XData', [x0, x1], 'YData', [y0, y1]);
+
+						sources_position = getInfo('sources_position');
+						for iHandle = 1:numel(obj.shm_handle)
+							if iHandle ~= iSource
+								theta = sources_position(iHandle);
+								d = get(obj.shm_handle(iHandle), 'UserData')/obj.dmax;
+								set(obj.shm_handle(iHandle), 'UserData', d);
+								[x1, y1] = pol2cart(deg2rad(theta), d);
+								set(obj.shm_handle(iSource), 'XData', [x0, x1], 'YData', [y0, y1]);
+							end
+						end
+					end
+				end
+			end
 		end
 	end
 end
