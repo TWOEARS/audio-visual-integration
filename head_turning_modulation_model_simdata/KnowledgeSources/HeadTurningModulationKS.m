@@ -14,8 +14,6 @@ classdef HeadTurningModulationKS < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-    % head_position = 0;
-
     data = [];
 
     gtruth_data = [];
@@ -27,10 +25,6 @@ properties (SetAccess = public, GetAccess = public)
     statistics = [];
 
     sources = [];
-
-    % current_object = 0;
-    % current_object_hist = [];
-
 
     RIR; % Robot_Internal_Representation class
     MSOM; % Multimodal_Self_Organizing_Map class
@@ -194,40 +188,35 @@ function run (obj)
         obj.displayProgressBar('update');
         % --- DISPLAY --- %
 
+        % --- Audio Localization
+        obj.ALKS.execute();
+        % --- Visual Localization
+        obj.VLKS.execute();
         % --- Object detection
-        % --- ODKS aims at providing an information about objects in the scene
-        % --- In particular, it will process the incoming data to make an hypothesis about the novelty of these data.
         obj.ODKS.execute();
-        
+
         % --- Processing the ObjectDetectionKS output for time step iStep
-        if obj.createNew()
-            obj.degradeData(); % --- Remove visual components if object is NOT in field of view
-            obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
-
-            obj.RIR.updateData(); % --- Updating the RIR observed data
-            obj.RIR.addObject(); % --- Add the object
-            setObject(obj, obj.ODKS.id_object(end), 'presence', true); % --- The object is present but not necessarily facing the robot
-        elseif obj.updateObject()
-            obj.degradeData(); % --- Remove visual components if object is NOT in field of view
-            obj.MSOM.idx_data = obj.MSOM.idx_data+1;
-
-            obj.RIR.updateData(); % --- Updating the RIR observed data
-            obj.RIR.updateObject(); % --- Update the current object
-            setObject(obj, obj.ODKS.id_object(end), 'presence', true); % --- The object is present but not necessarily facing the robot
-        else
-            if obj.RIR.nb_objects > 0 
-                idx = obj.ODKS.id_object(end-1);
-                if idx ~= 0 && getObject(obj, idx, 'presence')
-                    setObject(obj, idx, 'presence', false);
-                end
-            end
+        if ~obj.createNew() && ~obj.updateObject()
+            obj.setPresence(false);
             obj.RIR.updateData();
+        else
+            obj.degradeData(); % --- Remove visual components if object is NOT in field of view
+            obj.RIR.updateData(); % --- Updating the RIR observed data
+            if obj.createNew()
+                obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
+                obj.RIR.addObject(); % --- Add the object
+            elseif obj.updateObject()
+                obj.MSOM.idx_data = obj.MSOM.idx_data+1;
+                obj.RIR.updateObject(); % --- Update the current object
+            end
+            obj.setPresence(true);
         end
+
         obj.RIR.updateObjects();
 
-        obj.HTMFocusKS.computeFocus();
+        obj.HTMFocusKS.execute();
 
-        obj.MotorOrderKS().moveHead();
+        obj.MotorOrderKS().execute();
 
         obj.updateAngles();
 
@@ -235,11 +224,9 @@ function run (obj)
             obj.statistics.max_shm(iStep) = 0;
         end
 
-        obj.retrieveMfiCategorization() ; %% Data is fed into MFImod
+        obj.retrieveMfiCategorization();
 
         % obj.storeMsomWeights(iStep);
-
-        % obj.info = getInfo('all');
 
         obj.EMKS.updateMap();
 
@@ -262,27 +249,46 @@ function run (obj)
 end
 % === 'RUN' FUNCTION [END] === %
 
+function setPresence (obj, bool)
+    if ~bool 
+        if obj.RIR.nb_objects > 0 
+            % idx = obj.ODKS.id_object(end-1);
+            idx = getHypothesis(obj, 'ODKS', 'id_object');
+            idx = idx(end-1);
+            if idx ~= 0 && getObject(obj, idx, 'presence')
+                setObject(obj, idx, 'presence', false);
+            end
+        end
+    else
+        idx = getLastHypothesis(obj, 'ODKS', 'id_object');
+        setObject(obj, idx, 'presence', true); % --- The object is present but not necessarily facing the robot
+    end
+end
+
 function bool = createNew (obj)
-    bool = obj.ODKS.create_new(end);
+    bool = getLastHypothesis(obj, 'ODKS', 'create_new');
 end
 
 function bool = updateObject (obj)
-    bool = obj.ODKS.update_object(end);
+    bool = getLastHypothesis(obj, 'ODKS', 'update_object');
 end
 
+% === Given the position of the head, updates the position of all the sources observed so far
 function updateAngles (obj)
     if obj.RIR.nb_objects == 0
         return;
     end
 
     for iObject = 1:obj.RIR.nb_objects
-        theta = mod(360 - obj.MotorOrderKS.motor_order(end) + getObject(obj, iObject, 'theta'), 360);
+        theta_object = getObject(obj, iObject, 'theta');
+        theta = mod(360 - obj.MotorOrderKS.motor_order(end) + theta_object(end), 360);
         obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
     end
 end
 
+% === If the robot is not facing the audio source, visual data perceived should not be taken into account
 function degradeData (obj)
-    theta = obj.ALKS.hyp_hist(end);
+    theta = getLastHypothesis(obj, 'ALKS');
     if ~isInFieldOfView(theta)
         obj.data(getInfo('nb_audio_labels')+1:end, obj.iStep) = 0;
     end
@@ -301,8 +307,9 @@ function retrieveMfiCategorization (obj)
     % if sum(obj.data(:, obj.iStep)) ~= 0
     iStep = obj.iStep;
     if obj.sources(iStep) ~= 0
-        % data = obj.RIR.getLastObj().getBestData();
-        data = retrieveObservedData(obj, obj.ODKS.id_object(end), 'best');
+        % data = retrieveObservedData(obj, obj.ODKS.id_object(end), 'best');
+        id_object = getLastHypothesis(obj, 'ODKS', 'id_object');
+        data = retrieveObservedData(obj, id_object, 'best');
         obj.classif_mfi{iStep} = obj.MFI.inferCategory(data);
     end
 end

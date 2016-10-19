@@ -20,17 +20,16 @@ classdef RobotInternalRepresentation < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-    environments   = cell(0); % list of environments
-    nb_objects     = 0;
+    environments = cell(0); % list of environments
+    nb_objects = 0;
     MFI;
     MSOM;
     htm;
     data = [];
     theta_hist = [];
-    % dist_hist;
+    theta_v_hist = [];
     head_position = 0;
     position = [0, 0];
-
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -52,7 +51,6 @@ end
 function finished = isFinished (obj)
     finished = obj.finished;
 end
-
 
 function addEnvironment (obj)
     obj.environments{end+1} = PerceivedEnvironment(obj) ;
