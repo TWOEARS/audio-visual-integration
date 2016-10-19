@@ -35,7 +35,7 @@ function obj = MotorOrderKS (bbs, robot)
     obj.bbs = bbs;
     
     obj.htm = findKS(obj.bbs, 'HeadTurningModulationKS');
-    obj.RIR = htm.RIR;
+    obj.RIR = obj.htm.RIR;
     % obj.RIR = htm.RIR;
 end
 % === CONSTRUCTOR [END] === %
