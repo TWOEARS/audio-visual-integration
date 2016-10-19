@@ -1,4 +1,4 @@
-function initializeParameters ()
+function initializeParameters (htm)
 
     disp('HTM: initialization of parameters');
     pause(0.25);
@@ -44,7 +44,7 @@ function initializeParameters ()
     % --- 'AVPairs.xml' can be edited
     % [AVPairs, audio_labels, visual_labels] = retrieveAudioVisualLabels();
 
-    audio_labels = retrieveAudioIdentityModels();
+    audio_labels = retrieveAudioIdentityModels(htm);
 
     % visual_labels = retrieveVisualIdentityModels(htm);
     % visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};

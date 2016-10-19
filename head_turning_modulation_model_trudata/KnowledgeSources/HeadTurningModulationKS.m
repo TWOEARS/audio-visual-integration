@@ -58,7 +58,7 @@ function obj = HeadTurningModulationKS (bbs)
     obj.bbs = bbs;
     obj.invocationMaxFrequency_Hz = inf;
     
-    initializeParameters();
+    initializeParameters(obj);
 
     obj.MSOM = MultimodalSelfOrganizingMap();
     obj.MFI = MultimodalFusionAndInference(obj);
