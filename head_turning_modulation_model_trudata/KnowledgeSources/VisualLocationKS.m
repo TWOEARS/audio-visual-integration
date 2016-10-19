@@ -42,6 +42,12 @@ function execute (obj)
     present_objects = obj.blackboard.getLastData('visualStreamsHypotheses').present_objects;
 
     theta = arrayfun(@(x) data.triangulation{present_objects}.coordinates.azimuth, present_objects);
+
+    head_orientation = obj.robot.getCurrentHeadOrientation();
+    for iTheta = 1:numel(theta)
+    	theta = theta - head_orientation;
+    end
+
     d = arrayfun(@(x) data.triangulation{present_objects}.coordinates.z*(-1), present_objects);
 
     visualLocationHypotheses = containers.Map(present_objects, theta, d);
