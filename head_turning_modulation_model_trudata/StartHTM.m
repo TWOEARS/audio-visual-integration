@@ -16,6 +16,7 @@ addpath(genpath(p));
 
 rmpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_simdata']));
 rmpath(genpath([p, 'audio-visual-integration/LVTE']));
+rmpath(genpath([p, 'TwoEars']));
 % addpath(genpath(p));
 % === TO BE CHANGED BY A MORE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 
