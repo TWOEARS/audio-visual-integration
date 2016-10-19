@@ -10,15 +10,10 @@ classdef ObjectDetectionKS < AbstractKS
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-    htm; % Head_Turning_Modulation KS
-    RIR; % Robot_Internal_Representation KS
-    
-    % MOKS; % Motor_Order KS
-    
-    % ALKS; % Audio_Localization KS
-    % VLKS; % Visual_Localization KS
-    % ACKS; % Audio_Classification_Experts KS
-    % VCKS; % Visual_Classification_Experts KS
+    htm; % Head Turning Modulation
+    RIR; % Robot Internal Representation
+
+    bbs % --- Black Board System
 end
 
 properties (SetAccess = private, GetAccess = private)
