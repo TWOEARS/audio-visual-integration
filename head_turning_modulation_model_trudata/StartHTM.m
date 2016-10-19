@@ -41,7 +41,7 @@ htmFocusKS = bbs.createKS('HTMFocusKS', {bbs, headTurningModulationKS});
 
 objectDetectionKS = bbs.createKS('ObjectDetectionKS', {bbs, headTurningModulationKS});
 
-localizerKS = bbs.createKS('GmmLocationKS');
+localizerKS = bbs.createKS('DNNLocationKS');
 
 motorOrderKS = bbs.createKS('MotorOrderKS', {bbs, bbs.robotConnect});
 
