@@ -39,13 +39,14 @@ end
 % === METHODS [BEG] === %
 % ===================== %
 methods
-% === Constructor === %
+% === Constructor [BEG] === %
 function obj = RobotInternalRepresentation (htm)
     obj.htm = htm;
     obj.MFI = htm.MFI;
     obj.MSOM = htm.MSOM;
     obj.addEnvironment();
 end
+% === Constructor [END] === %
 
 % === Other methods
 function finished = isFinished (obj)
