@@ -30,30 +30,22 @@ end
 % === METHODS [BEG] === %
 % ===================== %
 methods
-% --- Constructor (BEG) --- %
+% === Constructor [BEG] === %
 function obj = PerceivedEnvironment (RIR)
-	
-	obj.RIR = RIR;
-	obj.htm = RIR.htm;
-	obj.MFI = RIR.MFI;
-	obj.MSOM = RIR.MSOM;
-
+	obj.RIR = RIR; 		 % --- Robot Internal Representation
+	obj.htm = RIR.htm;   % --- Head Turning Modulation
+	obj.MFI = RIR.MFI;   % --- Multimodal Fusion & Inference module
+	obj.MSOM = RIR.MSOM; % --- Multimodal SelfOrganizing Maps
 	% --- Initialize categories
 	obj.observed_categories{1} = getInfo('obs_struct');
 end
-% --- Constructor (END) --- %
-
-% --- Other methods --- %
-% function addObject (obj, data, theta, d)
-% 	% --- Create a new PERCEIVEDOBJECT object
-%     obj.objects{end+1} = PerceivedObject(data, theta, d) ;
-%     obj.addInput() ;
-% end
+% === Constructor [END] === %
 
 function addObject (obj)
 	% --- Create a new PERCEIVEDOBJECT object
     obj.objects{end+1} = PerceivedObject(obj.RIR.data(:,end)    ,...
-    									 obj.RIR.theta_hist(end));
+    									 obj.RIR.theta_hist(end),...
+    									 obj.RIR.theta_v_hist(end));
     									 % obj.RIR.dist_hist(end)  ...
     obj.objects{end}.updateTime(obj.htm.current_time);
     obj.addInput();
@@ -110,189 +102,180 @@ end
 
 
 function checkInference (obj)
-	labels = obj.labels ;
+	labels = obj.labels;
 	for iObj = obj.present_objects
-		% --- If an inference has been requested
-		if obj.objects{iObj}.requests.inference
-			% --- If visual data is still not available
-			if obj.objects{iObj}.requests.missing
-				% --- If a CHECK has been requested (-> motor order)
-				if obj.objects{iObj}.requests.check
-					% --- Continue to turn the head to the object
-				% --- If a CHECK has not been yet requested -> trigger the motor order
-				else
-					% --- Simulate an AV inference
-                    data = retrieveObservedData(obj, iObj, 'best');
-					AVClass = obj.MFI.inferCategory(data);
-					search = find(strcmp(AVClass, labels));
-					% --- If the category has been correctly inferred in the past
-					% --- CHECK is not needed -> we trust the inference
-					if obj.isPerformant(search)
-						% obj.checkConnectivity(data, search);
-						if numel(obj.objects{iObj}.tmIdx) >= 1
-							obj.objects{iObj}.requests.check = false;
-							obj.objects{iObj}.requests.verification = false;
-							obj.objects{iObj}.setLabel(AVClass);
-							obj.objects{iObj}.cat = search;
-						end
-					% --- If the category has not been well infered in the past
-					% --- CHECK is needed -> we don't trust the inference
-					else
-						% --- Request a CHECK of infered AV vs observed AV
-						obj.objects{iObj}.requests.check = true;
-						obj.objects{iObj}.requests.label = AVClass;
-						obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
-					end
+		[inference, missing, check, verification, label] = obj.getObjectRequests(iObj);
+
+		if inference && missing % --- If an inference has been requested & data is missing
+			if check % --- If a CHECK has been requested (-> motor order)
+				% --- Continue to turn the head to the object
+			else % --- If a CHECK has not been yet requested: trigger the motor order 
+				[AVClass, search] = obj.simulateAVInference(iObj);
+				if isPerformant(obj, search) % --- If the category has been correctly inferred in the past: CHECK not needed
+					obj.preventVerification(iObj, search, AVClass);
+				else % --- If the cat. hasn't been well infered in the past -> CHECK needed
+					obj.requestVerification(iObj, AVClass);
+					obj.updateInferenceCpt(search);
+					obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
 				end
 			end
-		% --- If no inference requested (AV data available)
-		% --- But a verification is requested
+		% --- If no inference requested (AV data available) but a verification is requested
 		% --- ADD A VERIFICATION WITH NO CHECK in order to verify the inference in the case we have AV thanks to DWmod
-		elseif obj.objects{iObj}.requests.verification
-			% --- We now have the full AV data
-            data = retrieveObservedData(obj, iObj, 'best');
-			AVClass = obj.MFI.inferCategory(data);
-			search = find(strcmp(AVClass, labels));
-			% --- If infered AV is the same as observed AV
-			if strcmp(AVClass, obj.objects{iObj}.requests.label)
-				obj.objects{iObj}.requests.verification = false;
-				obj.objects{iObj}.requests.check = false;
-
-				obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf+1;
-
-				obj.objects{iObj}.setLabel(AVClass);
-				obj.objects{iObj}.cat = search;
-			% --- If infered AV is NOT the same as observed AV
-			else
+		elseif verification
+			[AVClass, search] = obj.simulateAVInference(iObj);
+			if strcmp(AVClass, label) % --- If inferred AV is the same as observed AV
+				obj.preventVerification(iObj, search, AVClass);
+				obj.updateGoodInferenceCpt(search);
+			else % --- If infered AV is NOT the same as observed AV
 				% --- Make the network learn with n more iterations
 				obj.highTrainingPhase();
 			end
-		% Else if all data available
-		elseif ~obj.objects{iObj}.requests.missing
-			% --- Infer AV class
-            data = retrieveObservedData(obj, iObj, 'best');
-			AVClass = obj.MFI.inferCategory(data);
-			search = find(strcmp(AVClass, labels));
-
+		elseif ~missing % All data available
+			[AVClass, search] = obj.simulateAVInference(iObj);
 			obj.objects{iObj}.setLabel(AVClass);
-			obj.objects{iObj}.cat = search;
+			obj.objects{iObj}.audiovisual_category = search;
 			obj.objects{iObj}.requests.check = false;
 		end
 	end
 end
 
-function checkConnectivity (obj, input_vector, inferred_label)
-	[data, value] = obj.MFI.checkMissingModality(input_vector);
-
-	switch value
-	case 0    % ---------------------------- no data
-		AVCategory = 'none_none';
-	   	return;
-	case 3    % ---------------------------- full data
-		% bmu = obj.MSOM.getCombinedBMU(data);
-		return;
-		na = getInfo('nb_audio_labels');
-		% --- Euclidian distance
-		audio_distance = obj.MSOM.euclidianDistance(data(1:na), 1);
-		visual_distance = obj.MSOM.euclidianDistance(data(na+1:end), 2);
-		d = audio_distance.*visual_distance;
-    case 1 % ---------------------------- vision missing
-        % bmu = obj.MSOM.getBMU(data, value);
-        % vector = input_vector(1:getInfo('nb_audio_labels'));
-        d = obj.MSOM.euclidianDistance(data, value);
-    case 2 % ---------------------------- audio missing
-        % vector = input_vector(getInfo('nb_audio_labels')+1:end);
-        d = obj.MSOM.euclidianDistance(data, value);
-	end
-
-	nodes = obj.processDistances(d);
-	labels = obj.getLabels(nodes);
-	labels_idx = obj.processLabels(labels, value, inferred_label);
-	c = cell(0);
-	for iLabel = labels_idx
-		tmp = [labels{iLabel}{2}, '_', labels{iLabel}{1}];
-		BOOL = true;
-		for ii = 1:numel(c)
-			if strcmp(c{ii}, tmp)
-				BOOL = false;
-			end
-		end
-		if BOOL
-			c{end+1} = tmp;
-		end
-	end
-
-	if ~isempty(c)
-		obj.createHyperCategory(inferred_label, c);
-	end
-
+function updateGoodInferenceCpt (obj, search)
+	obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf+1;
 end
 
-
-function createHyperCategory (obj, inferred_label, c)
-	obj.hyper_categories{end+1} = {inferred_label, c};
+function updateInferenceCpt (obj, search)
+	obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
 end
 
-function nodes = processDistances (obj, d)
-	m = mean(d);
-	s = std(d);
-	thr = m - 1*s;
-	nodes = find(d <= thr);
+% === Request a CHECK of infered AV vs observed AV
+function requestVerification (obj, iObj, AVClass)
+	obj.objects{iObj}.requests.check = true;
+	obj.objects{iObj}.requests.label = AVClass;
 end
 
-function labels = getLabels (obj, nodes)
-	audio_labels = getInfo('audio_labels');
-	visual_labels = getInfo('visual_labels');
-	labels = cell(numel(nodes), 1);
-	for iNode = 1:numel(nodes)
-		[a, v] = obj.MFI.findLabels(nodes(iNode));
-		% labels{iNode} = mergeLabels(v, a);
-		labels{iNode} = {audio_labels{a}, visual_labels{v}};
+function [AVClass, search] = simulateAVInference (obj, iObj)
+    data = retrieveObservedData(obj, iObj, 'best');
+	AVClass = obj.MFI.inferCategory(data);
+	search = find(strcmp(AVClass, labels));
+end
+
+function preventVerification (obj, iObj, search, AVClass)
+	if numel(obj.objects{iObj}.tmIdx) >= 1
+		obj.objects{iObj}.requests.check = false;
+		obj.objects{iObj}.requests.verification = false;
+		obj.objects{iObj}.setLabel(AVClass);
+		obj.objects{iObj}.audiovisual_category = search;
 	end
 end
 
-function tmp2 = processLabels (obj, labels, modality, inferred_label)
-	%[v, a] = unmergeLabels(inferred_label);
-    [v, a] = obj.MFI.findLabels(inferred_label);
-	if modality == 1
-		c = a;
-		d = v;
-		other_modality = 2;
-	else
-		c = v;
-		d = a;
-		other_modality = 1;
-	end
+function [inference, missing, check, verification, label] = getObjectRequests(obj, iObj)
+	requests = getObject(obj, iObj, 'requests');
+	inference = requests.inference;
+	missing = requests.missing;
+	check = requests.check;
+	verification = requests.verification;
+	label = requests.label;
+end
+
+% function checkConnectivity (obj, input_vector, inferred_label)
+% 	[data, value] = obj.MFI.checkMissingModality(input_vector);
+
+% 	switch value
+% 	case 0    % ---------------------------- no data
+% 		AVCategory = 'none_none';
+% 	   	return;
+% 	case 3    % ---------------------------- full data
+% 		% bmu = obj.MSOM.getCombinedBMU(data);
+% 		return;
+% 		na = getInfo('nb_audio_labels');
+% 		% --- Euclidian distance
+% 		audio_distance = obj.MSOM.euclidianDistance(data(1:na), 1);
+% 		visual_distance = obj.MSOM.euclidianDistance(data(na+1:end), 2);
+% 		d = audio_distance.*visual_distance;
+%     case 1 % ---------------------------- vision missing
+%         % bmu = obj.MSOM.getBMU(data, value);
+%         % vector = input_vector(1:getInfo('nb_audio_labels'));
+%         d = obj.MSOM.euclidianDistance(data, value);
+%     case 2 % ---------------------------- audio missing
+%         % vector = input_vector(getInfo('nb_audio_labels')+1:end);
+%         d = obj.MSOM.euclidianDistance(data, value);
+% 	end
+
+% 	nodes = obj.processDistances(d);
+% 	labels = obj.getLabels(nodes);
+% 	labels_idx = obj.processLabels(labels, value, inferred_label);
+% 	c = cell(0);
+% 	for iLabel = labels_idx
+% 		tmp = [labels{iLabel}{2}, '_', labels{iLabel}{1}];
+% 		BOOL = true;
+% 		for ii = 1:numel(c)
+% 			if strcmp(c{ii}, tmp)
+% 				BOOL = false;
+% 			end
+% 		end
+% 		if BOOL
+% 			c{end+1} = tmp;
+% 		end
+% 	end
+
+% 	if ~isempty(c)
+% 		obj.createHyperCategory(inferred_label, c);
+% 	end
+
+% end
+
+
+% function createHyperCategory (obj, inferred_label, c)
+% 	obj.hyper_categories{end+1} = {inferred_label, c};
+% end
+
+% function nodes = processDistances (obj, d)
+% 	m = mean(d);
+% 	s = std(d);
+% 	thr = m - 1*s;
+% 	nodes = find(d <= thr);
+% end
+
+% function labels = getLabels (obj, nodes)
+% 	audio_labels = getInfo('audio_labels');
+% 	visual_labels = getInfo('visual_labels');
+% 	labels = cell(numel(nodes), 1);
+% 	for iNode = 1:numel(nodes)
+% 		[a, v] = obj.MFI.findLabels(nodes(iNode));
+% 		% labels{iNode} = mergeLabels(v, a);
+% 		labels{iNode} = {audio_labels{a}, visual_labels{v}};
+% 	end
+% end
+
+% function tmp2 = processLabels (obj, labels, modality, inferred_label)
+% 	%[v, a] = unmergeLabels(inferred_label);
+%     [v, a] = obj.MFI.findLabels(inferred_label);
+% 	if modality == 1
+% 		c = a;
+% 		d = v;
+% 		other_modality = 2;
+% 	else
+% 		c = v;
+% 		d = a;
+% 		other_modality = 1;
+% 	end
 	
-	tmp = [];
-	for iLabel = 1:numel(labels)
-		if strcmp(labels{iLabel}{modality}, c)
-			tmp(end+1) = iLabel;
-		end
-	end
+% 	tmp = [];
+% 	for iLabel = 1:numel(labels)
+% 		if strcmp(labels{iLabel}{modality}, c)
+% 			tmp(end+1) = iLabel;
+% 		end
+% 	end
 
-	tmp2 = [];
-	for iLabel = tmp
-		if ~strcmp(labels{iLabel}{other_modality}, d)
-			tmp2(end+1) = iLabel;
-		end
-	end
-end
+% 	tmp2 = [];
+% 	for iLabel = tmp
+% 		if ~strcmp(labels{iLabel}{other_modality}, d)
+% 			tmp2(end+1) = iLabel;
+% 		end
+% 	end
+% end
 
-function bool = isPerformant (obj, idx)
-	perf = cell2mat(getCategory(obj, idx, 'perf'));
-	if perf >= getInfo('q') && perf < 1
-	% if obj.observed_categories{idx}.perf >= getInfo('q') && obj.observed_categories{idx}.perf < 1
-		bool = true;
-		% if obj.observed_categories{idx}.perf == 1 && obj.observed_categories{idx}.nb_inf < 7
-		% 	bool = false;
-		% end
-	else
-		bool = false;
-	end
-end
-
-
+% === Compute the level of correct inferences by category
 function computeCategoryPerformance (obj)
 	for iClass = 1:numel(obj.observed_categories)
 		obj.observed_categories{iClass}.perf = obj.observed_categories{iClass}.nb_goodInf/...
@@ -336,9 +319,9 @@ end
 function categorizeObjects (obj)
 	obj.reinitializeClasses();
 	for iObj = 1:numel(obj.objects)
-		if obj.objects{iObj}.cat > 0
-			% incrementVariable(obj, 'observed_categories{obj.objects{iObj}.cat}.cpt');
-			obj.observed_categories{obj.objects{iObj}.cat}.cpt = obj.observed_categories{obj.objects{iObj}.cat}.cpt + 1;
+		if obj.objects{iObj}.audiovisual_category > 0
+			% incrementVariable(obj, 'observed_categories{obj.objects{iObj}.audiovisual_category}.cpt');
+			obj.observed_categories{obj.objects{iObj}.audiovisual_category}.cpt = obj.observed_categories{obj.objects{iObj}.audiovisual_category}.cpt + 1;
 		else
 			% obj.incrementVariable(obj.observed_categories{1}.cpt);
 			% incrementVariable(obj, 'obj.observed_categories{1}.cpt');
@@ -356,11 +339,8 @@ end
 function countObjects (obj)
 	for iObj = 1:numel(obj.objects)
 		if iObj ~= obj.present_objects
-            data = retrieveObservedData(obj, iObj, 'best');
-			AVClass = obj.MFI.inferCategory(data) ;
-			obj.objects{iObj}.setLabel(AVClass) ;
-			search = find(strcmp(AVClass, obj.labels)) ;
-			obj.objects{iObj}.cat = search ;
+			[AVClass, search] = obj.simulateAVInference(iObj);
+            obj.objects{iObj}.audiovisual_category = search ;
 		end
 	end
 end
@@ -377,7 +357,7 @@ end
 function computeWeights (obj)
 	% for iObj = 1:numel(obj.objects)
 	for iObj = obj.present_objects
-		obj_cat = obj.objects{iObj}.cat ;
+		obj_cat = obj.objects{iObj}.audiovisual_category ;
 		if obj_cat ~= 0
 		% --- Compute weights thanks to weighting functions
 			% --- Incongruent
