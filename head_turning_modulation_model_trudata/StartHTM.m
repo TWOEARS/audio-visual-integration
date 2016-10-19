@@ -9,7 +9,7 @@ clear all;
 addpath(genpath('~/Dev/TwoEars-1.2'));
 rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
 rmpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/LVTE'));
-% === TO BE CHANGED BY A OMRE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
+% === TO BE CHANGED BY A MORE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 
 % --- OdiInterface: class making the interface between the robot and the system
 Jido = OdiInterface();
@@ -38,7 +38,7 @@ objectDetectionKS = bbs.createKS('ObjectDetectionKS', {bbs, headTurningModulatio
 
 localizerKS = bbs.createKS('GmmLocationKS');
 
-motorOrderKS = bbs.createKS('MotorOrderKS', {bbs.robotConnect});
+motorOrderKS = bbs.createKS('MotorOrderKS', {bbs, bbs.robotConnect});
 
 
 bbs.blackboardMonitor.bind({bbs.scheduler},...
