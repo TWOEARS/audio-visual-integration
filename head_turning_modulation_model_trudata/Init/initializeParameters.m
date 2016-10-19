@@ -19,7 +19,7 @@ function initializeParameters ()
                          );
 
 
-    path_to_folder = '../../examples/attention_simulation';
+    path_to_folder = '../../examples/attention_jido';
 
     config_file = xmlread([path_to_folder, filesep, 'Config.xml']);
 
