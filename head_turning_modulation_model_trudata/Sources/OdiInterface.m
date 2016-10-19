@@ -1,7 +1,10 @@
 classdef OdiInterface < handle
     %JIDOINTERFACE Summary of this class goes here
     %   Detailed explanation goes here
-    
+
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (GetAccess = public, SetAccess = private)
     BlockSize               % Block size used by the audio stream 
                             % server in samples.
@@ -29,9 +32,18 @@ properties (Access = public)
     finished  %% added to stop bbs.run()
     object_detection;
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods (Access = public)
+
+% === CONSTRUCTOR [BEG] === %
 function obj = OdiInterface()
+
     pathToGenomix = '~/openrobots/lib/matlab';
     addpath(genpath(pathToGenomix));
     
@@ -40,42 +52,42 @@ function obj = OdiInterface()
     % obj.client = genomix.client(odi_base);
     obj.client = genomix.client('jido-base:8080');
     obj.client_vision = genomix.client('cochlee:8080');
-    
-    % Load KEMAR module
+
+    % --- Load KEMAR module
     obj.kemar = obj.client.load('kemar');
-    
-    % Load JIDO module
-    obj.jido = obj.client.load('sendPosition'); % Il faut lier les ports
-    
-    % Load BASS module
+    % --- Load JIDO module
+    obj.jido = obj.client.load('sendPosition');
+    % --- Load BASS module
     obj.bass = obj.client.load('bass');
-    
+    % --- Load OBJECTDETECTION module
     obj.object_detection = obj.client_vision.load('objectdetection');
-    
+    % --- Connect ports for jido
     currentPositionPort = obj.jido.connect_port('currentPosition', 'currentPosition');
     goalStatusArray = obj.jido.connect_port('GoalStatus', 'move_base/status');
 
+    % --- Used for QRcode recognition
     % obj.qr_vision.connect_port('messageIn', '/visp_auto_tracker/code_message' );
     % obj.qr_vision.connect_port('poseIn', '/visp_auto_tracker/object_position' );
        
     hardware        = 'hw:2,0';
-    obj.SampleRate  = 44100;
+    obj.SampleRate  = 16000;
     nFramesPerChunk = 2205;
     nChunksOnPort   = 20*0.5;
     obj.bass.Acquire('-a', hardware, obj.SampleRate, nFramesPerChunk, nChunksOnPort);
     
     % QR2 = obj.object_detection.Publish('-a');
     
-    % Get BASS status info
-    % audioObj = obj.bass.Audio(); % A voir
+    % --- Get BASS status info
     obj.BlockSize = nFramesPerChunk * nChunksOnPort;
     
     % Get KEMAR properties
-    % kemarState = obj.kemar.currentState();
-    % obj.AzimuthMax = kemarState.currentState.maxLeft;
-    % obj.AzimuthMin = kemarState.currentState.maxRight;
-    obj.finished = false; %% init a false
+    kemarState = obj.kemar.currentState();
+    obj.AzimuthMax = kemarState.currentState.maxLeft;
+    obj.AzimuthMin = kemarState.currentState.maxRight;
+
+    obj.finished = false;
 end
+% === CONSTRUCTOR [END] === %
 
 %         function configureAudioStreamServer(obj, sampleRate, frameSize, ...
 %                 bufferSizeSec)
