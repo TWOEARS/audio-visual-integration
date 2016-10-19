@@ -32,13 +32,7 @@ function initializeParameters ()
 
         parameter = char(pair.getAttribute('parameter'));
         value = char(pair.getAttribute('value'));
-        if ~strcmp(parameter, 'notification')
-            if strcmp(parameter, 'avpairs')
-                scene = str2num(value);
-            else
-                value = str2num(value);
-            end
-        end
+        value = str2num(value);
         information.(parameter) = value;
     end
 
