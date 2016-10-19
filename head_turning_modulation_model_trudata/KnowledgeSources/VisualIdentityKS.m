@@ -1,9 +1,9 @@
 % 'VisualIdentityKS' class
 % Author: Benjamin Cohen-Lhyver
-% Date: 01.06.16
+% Date: 19.10.16
 % Rev. 1.0
 
-classdef VisualIdentityQRKS < AbstractKS
+classdef VisualIdentityKS < AbstractKS
 % ======================== %
 % === PROPERTIES [BEG] === %
 % ======================== %
@@ -23,9 +23,9 @@ methods
 function obj = VisualIdentityKS(robot)
     obj = obj@AbstractKS(); 
     % initialize class members
-    obj.robot=robot;
+    obj.robot = robot;
     % run continuously
-    obj.invocationMaxFrequency_Hz=inf;
+    obj.invocationMaxFrequency_Hz = inf;
 end
 % === CONSTRUCTOR [END] === %
 
@@ -40,17 +40,16 @@ function execute (obj)
     visual_vec = zeros(getInfo('nb_visual_labels'), 1);
 
     visual_labels = getInfo('visual_labels');
-    perceived_data = obj.robot.getQR();
+    data = obj.robot.getData();
 
-    tmp = find(strcmp(perceived_data, visual_labels));
-    if ~isempty(tmp)
-        visual_vec(tmp) == 1;
-    end
-    % push the visual identity hypothesis to the blackboard
-    visualIdentityHypotheses = containers.Map(visual_labels,...
-                                              visual_vec);
-    obj.blackboard.addData( 'visualIdentityHypotheses',...
-        visualIdentityHypotheses, false, obj.trigger.tmIdx);
+    present_objects = obj.blackboard.getLastData('visualStreamsHypotheses').present_objects;
+
+    visual_vec(present_objects) = 1;
+
+    visualIdentityHypotheses = containers.Map(present_objects, visual_labels(present_objects));
+
+    obj.blackboard.addData('visualIdentityHypotheses', visualIdentityHypotheses,...
+                           false, obj.trigger.tmIdx);
     notify(obj, 'KsFiredEvent');
 end
 
