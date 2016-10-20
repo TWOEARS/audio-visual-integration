@@ -41,9 +41,11 @@ function execute (obj)
 
     data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
     present_objects = data('present_objects');
-    v = obj.blackboard.getLastData('visualLocationHypotheses');
-    visual_angles = v.theta;
-    d = v.d;
+
+    v = obj.blackboard.getLastData('visualLocationHypotheses').data;
+    visual_angles = v('theta');
+
+    d = v('d');
     audio_angles = getLocalisationOutput();
 
     [~, p] = min(visual_angles - audio_angles);
