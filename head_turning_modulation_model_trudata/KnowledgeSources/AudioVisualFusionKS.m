@@ -46,7 +46,7 @@ function execute (obj)
     visual_angles = v('theta');
 
     d = v('d');
-    audio_angles = getLocalisationOutput();
+    audio_angles = getLocalisationOutput(obj.blackboard);
 
     [~, p] = min(visual_angles - audio_angles);
     present_objects = present_objects(p);
