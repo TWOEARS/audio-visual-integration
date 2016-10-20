@@ -42,7 +42,7 @@ function execute (obj)
     data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
     present_objects = data('present_objects');
 
-    theta = arrayfun(@(x) data.triangulation{present_objects}.coordinates.azimuth, present_objects);
+    theta = arrayfun(@(x) data.triangulation{x}.coordinates.azimuth, present_objects);
 
     head_orientation = obj.robot.getCurrentHeadOrientation();
     for iTheta = 1:numel(theta)
