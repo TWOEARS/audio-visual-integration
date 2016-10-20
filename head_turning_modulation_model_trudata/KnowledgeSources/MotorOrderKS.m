@@ -36,7 +36,6 @@ function obj = MotorOrderKS (bbs, robot)
     
     obj.htm = findKS(obj.bbs, 'HeadTurningModulationKS');
     obj.RIR = obj.htm.RIR;
-    % obj.RIR = htm.RIR;
 end
 % === CONSTRUCTOR [END] === %
 
@@ -54,6 +53,7 @@ function execute (obj)
     
     if obj.isFocusedObjectPresent(focus)  % --- move the head to 'theta'
         theta = getObject(obj.RIR, focus, 'theta');
+        theta = theta(end);
     elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
         theta = -obj.head_position(end);
     else
@@ -72,10 +72,16 @@ function execute (obj)
 
     obj.computeSHM();
 
-    obj.robot.moveRobot(0, 0, theta);
+    obj.robot.rotateHead(theta, 'relative');
+    disp(['motorOrder: ', num2str(theta)]);
     
-    obj.blackboard.addData('motorOrder', [currentHeadOrientation, theta],...
-                           true, obj.trigger.tmIdx);
+    keySet = {'currentHeadOrientation', 'theta'};
+    valueSet = {currentHeadOrientation, theta};
+    
+    motorOrder = containers.Map(keySet, valueSet);
+    
+    obj.blackboard.addData('motorOrder', motorOrder,...
+                           false, obj.trigger.tmIdx);
     notify(obj, 'KsFiredEvent', BlackboardEventData(obj.trigger.tmIdx));
 end
 

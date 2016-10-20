@@ -23,6 +23,8 @@ properties (SetAccess = public)
     theta_v = [];
  
     current_time = 0;
+    
+    current_object = 0;
 
     RIR; % Robot Internal Representation
     MSOM; % Multimodal SelfOrganizing Map
@@ -83,6 +85,9 @@ function execute (obj)
     obj.theta(end+1) = getLocalisationOutput(obj);
     tmp = obj.blackboard.getLastData('audiovisualHypotheses').data;
     obj.theta_v(end+1) = tmp('theta');
+    
+    object_detection = obj.blackboard.getData('objectDetectionHypotheses').data;
+    obj.current_object = object_detection.id_object;
 
     if ~obj.createNew() && ~obj.updateObject()
         obj.setPresence(false);
@@ -104,10 +109,10 @@ function execute (obj)
     obj.RIR.updateObjects();
 
     obj.updateAngles();
-
-    if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
-        obj.statistics.max_shm(iStep) = 0;
-    end
+% 
+%     if sum(obj.data(getInfo('nb_audio_labels')+1:end, obj.iStep)) == 0
+%         obj.statistics.max_shm(iStep) = 0;
+%     end
 
     % obj.retrieveMfiCategorization();
 
@@ -134,7 +139,7 @@ end
 function setPresence (obj, bool)
     if ~bool 
         if obj.RIR.nb_objects > 0 
-            object_detection = obj.blackboard.getData('objectDetectionHypothese').data;
+            object_detection = obj.blackboard.getData('objectDetectionHypotheses').data;
             idx = object_detection.id_object;
             idx = idx(end-1);
             if idx ~= 0 && getObject(obj, idx, 'presence')
@@ -142,19 +147,19 @@ function setPresence (obj, bool)
             end
         end
     else
-        object_detection = obj.blackboard.getLastData('objectDetectionHypothese').data;
+        object_detection = obj.blackboard.getLastData('objectDetectionHypotheses').data;
         idx = object_detection.id_object;
         setObject(obj, idx, 'presence', true); % --- The object is present but not necessarily facing the robot
     end
 end
 
 function bool = createNew (obj)
-    object_detection = obj.blackboard.getLastData('objectDetectionHypothese').data;
+    object_detection = obj.blackboard.getLastData('objectDetectionHypotheses').data;
     bool = object_detection.create_new;
 end
 
 function bool = updateObject (obj)
-    object_detection = obj.blackboard.getLastData('objectDetectionHypothese').data;
+    object_detection = obj.blackboard.getLastData('objectDetectionHypotheses').data;
     bool = object_detection.update_object;
 end
 
@@ -167,10 +172,16 @@ function updateAngles (obj)
     if obj.RIR.nb_objects == 0
         return;
     end
-
+    motor_order = obj.blackboard.getLastData('motorOrder');
+    if isempty(motor_order)
+        return;
+    end
+    motor_order = motor_order.data('theta');
     for iObject = 1:obj.RIR.nb_objects
         theta_object = getObject(obj, iObject, 'theta');
-        theta = mod(360 - obj.MotorOrderKS.motor_order(end) + theta_object(end), 360);
+        
+        
+        theta = mod(360 - motor_order + theta_object(end), 360);
         obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
     end
 end

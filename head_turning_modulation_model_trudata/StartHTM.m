@@ -1,7 +1,7 @@
 
-clear all;
-pause(1);
-clear all;
+% clear all;
+% pause(1);
+% clear all;
 
 %disp( 'Initializing Two!Ears, setting up binaural simulator...' );
 

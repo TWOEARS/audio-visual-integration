@@ -32,8 +32,8 @@ end
 methods
 % === Constructor [BEG] === %
 function obj = PerceivedEnvironment (RIR)
-	obj.RIR = RIR; 		 % --- Robot Internal Representation
-	obj.htm = RIR.htm;   % --- Head Turning Modulation
+	obj.RIR = RIR;       % --- Head Turning Modulation
+    obj.htm= RIR.htm;    % --- Robot Internal Representation
 	obj.MFI = RIR.MFI;   % --- Multimodal Fusion & Inference module
 	obj.MSOM = RIR.MSOM; % --- Multimodal SelfOrganizing Maps
 	% --- Initialize categories
@@ -45,7 +45,7 @@ function addObject (obj)
 	% --- Create a new PERCEIVEDOBJECT object
     obj.objects{end+1} = PerceivedObject(obj.RIR.data(:,end)    ,...
     									 obj.RIR.theta_hist(end),...
-    									 obj.RIR.theta_v_hist(end));
+    									 obj.RIR.theta_hist_v(end));
     									 % obj.RIR.dist_hist(end)  ...
     obj.objects{end}.updateTime(obj.htm.current_time);
     obj.addInput();
@@ -65,8 +65,8 @@ end
 % 	obj.addInput();
 % end
 
-function updateObjectData (obj, data, theta)
-	obj.objects{obj.htm.current_object}.updateData(data, theta);
+function updateObjectData (obj, data, theta, theta_v)
+	obj.objects{obj.htm.current_object}.updateData(data, theta, theta_v);
 	obj.objects{obj.htm.current_object}.updateTime(obj.htm.iStep);
 	obj.addInput();
 end
@@ -156,7 +156,7 @@ end
 function [AVClass, search] = simulateAVInference (obj, iObj)
     data = retrieveObservedData(obj, iObj, 'best');
 	AVClass = obj.MFI.inferCategory(data);
-	search = find(strcmp(AVClass, labels));
+	search = find(strcmp(AVClass, obj.labels));
 end
 
 function preventVerification (obj, iObj, search, AVClass)
@@ -402,12 +402,6 @@ end
 
 
 function updateObjects (obj, tmIdx)
-	% obj.counter = obj.counter + 1;
-	% obj.incrementVariable(obj, 'counter');
-	if obj.htm.current_object ~= 0
-		obj.objects{obj.htm.current_object}.updateTime(tmIdx);
-	end
-	% obj.trainMSOM() ;
 
 	obj.computePresence();
 

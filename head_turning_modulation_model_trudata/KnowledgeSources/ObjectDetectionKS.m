@@ -79,7 +79,7 @@ function execute (obj)
     end
     hyp = obj.setHypotheses(hyp);
 
-    obj.blackboard.addData('objectDetectionHypothese', hyp,...
+    obj.blackboard.addData('objectDetectionHypotheses', hyp,...
                            false, obj.trigger.tmIdx);
     
     notify(obj, 'KsFiredEvent');

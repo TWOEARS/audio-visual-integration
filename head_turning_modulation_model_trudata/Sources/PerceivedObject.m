@@ -113,13 +113,16 @@ function updateCatHist (obj, value)
 	obj.cat_hist(end-t:end) = ones(1, t+1)*value;
 end
 
-function updateData (obj, data, theta, d)
+function updateData (obj, data, theta, theta_v)
 	obj.addData(data);
-	obj.theta_hist(end+1) = theta;
-	obj.theta = theta;
+	obj.theta(end+1) = theta;
+    obj.theta_v(end+1) = theta_v;
 end
 
 function updateTime (obj, t)
+    if t == 0
+        return;
+    end
 	if obj.presence
 		obj.tmIdx(end+1) = t;
 	end

@@ -27,7 +27,7 @@ properties (SetAccess = public, GetAccess = public)
     htm;
     data = [];
     theta_hist = [];
-    theta_v_hist = [];
+    theta_hist_v = [];
     head_position = 0;
     position = [0, 0];
 end
@@ -66,7 +66,8 @@ end
 % === Update
 function updateObject (obj)
     obj.getEnv().updateObjectData(obj.data(:, end),...
-                                  obj.theta_hist(end));
+                                  obj.theta_hist(end),...
+                                  obj.theta_hist_v(end));
 end
 
 function updateData (obj)

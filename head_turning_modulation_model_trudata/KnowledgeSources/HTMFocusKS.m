@@ -112,7 +112,8 @@ end
 % === Compute focused object thanks to the MULTIMODAL FUSION and INFERENCE module (MFImod) algorithm
 function focus = computeMFIFocus (obj)
     focus = 0;
-    current_object = obj.blackboard.getLastData('CurrentObject');
+    current_object = obj.blackboard.getLastData('objectDetectionHypotheses').data;
+    current_object = current_object.id_object;
     if current_object == 0
         focus = 0;
         return;

@@ -52,6 +52,9 @@ function execute (obj)
     present_objects = present_objects(p);
     theta = visual_angles(p);
     d = d(p);
+    if isempty(theta)
+        theta = 0;
+    end
 
     keySet = {'present_objects', 'theta', 'd'};
     valueSet = {present_objects, theta, d};
