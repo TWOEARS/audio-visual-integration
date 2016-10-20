@@ -40,7 +40,7 @@ function execute (obj)
 	data = obj.robot.getData();
 
     data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
-    present_objects = data(present_objects);
+    present_objects = data('present_objects');
     v = obj.blackboard.getLastData('visualLocationHypotheses');
     visual_angles = v.theta;
     d = v.d;

@@ -43,7 +43,7 @@ function execute (obj)
     data = obj.robot.getData();
 
     data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
-    present_objects = data(present_objects);
+    present_objects = data('present_objects');
 
     visual_vec(present_objects) = 1;
 
