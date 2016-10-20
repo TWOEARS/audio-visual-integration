@@ -50,7 +50,10 @@ function execute (obj)
     theta = theta(p);
     d = d(p);
 
-    audiovisualHypotheses = containers.Map(present_objects, theta, d);
+    keySet = {'present_objects', 'theta', 'd'};
+    valueSet = {present_objects, theta, d};
+
+    audiovisualHypotheses = containers.Map(keySet, valueSet);
 
     obj.blackboard.addData('audiovisualHypotheses', audiovisualHypotheses,...
                            false, obj.trigger.tmIdx);
