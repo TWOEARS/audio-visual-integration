@@ -53,8 +53,9 @@ end
 function execute (obj)
 
     % theta_a = obj.ALKS.getAudioLocalization();
-    theta_a = obj.blackboard.getLastData('sourcesAzimuthsDistributionHypotheses').data;
-    theta_a = data.prob_AFN_F;
+    %theta_a = obj.blackboard.getLastData('sourcesAzimuthsDistributionHypotheses').data;
+    %theta_a = data.prob_AFN_F;
+    theta_a = getLocalisationOutput(obj.blackboard);
     if theta_a == -1
         hyp = [0, 0, 0];
     else
@@ -76,7 +77,7 @@ function execute (obj)
             hyp = [0, 1, putative_audio_object(1)];
         end
     end
-    hyp = setHypotheses(hyp);
+    hyp = obj.setHypotheses(hyp);
 
     obj.blackboard.addData('objectDetectionHypothese', hyp,...
                            false, obj.trigger.tmIdx);
@@ -84,10 +85,10 @@ function execute (obj)
     notify(obj, 'KsFiredEvent');
 end
 
-function hyp = setHypotheses (obj, hyp)
-    hyp.create_new = hyp(1);
-    hyp.update_object = hyp(2);
-    hyp.id_object = hyp(3);
+function hypotheses = setHypotheses (obj, hyp)
+    hypotheses.create_new = hyp(1);
+    hypotheses.update_object = hyp(2);
+    hypotheses.id_object = hyp(3);
 end
 
 % ===================== %

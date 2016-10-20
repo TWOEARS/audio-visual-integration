@@ -75,10 +75,10 @@ function execute (obj)
     
     fprintf('\nHead Turning Modulation KS evaluation\n');
 
-    obj.cpt = obj.cpt + 1;
+    obj.iStep = obj.iStep + 1;
 
     data = getClassifiersOutput(obj);
-    audio_theta = getLocalisationOutput();
+    audio_theta = getLocalisationOutput(obj);
 
     if ~obj.createNew() && ~obj.updateObject()
         obj.setPresence(false);

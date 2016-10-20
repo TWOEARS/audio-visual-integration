@@ -50,7 +50,7 @@ function execute (obj)
 
     [~, p] = min(visual_angles - audio_angles);
     present_objects = present_objects(p);
-    theta = theta(p);
+    theta = visual_angles(p);
     d = d(p);
 
     keySet = {'present_objects', 'theta', 'd'};

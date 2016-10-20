@@ -6,8 +6,12 @@ function request = getLocalisationOutput (obj)
     end
     if ~isempty(loc_KS)
         hyp_loc = loc_KS.sourcesDistribution;
-        [~, idx] = max(hyp_loc);
-        request = loc_KS.azimuths(idx);
+        [value, idx] = max(hyp_loc);
+        if value > 0.5
+            request = loc_KS.azimuths(idx);
+        else
+            request = 0;
+        end
     else
         request = 0;
     end
