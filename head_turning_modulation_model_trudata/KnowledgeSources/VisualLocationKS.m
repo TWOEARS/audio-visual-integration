@@ -39,7 +39,8 @@ end
 function execute (obj)
 	data = obj.robot.getData();
 
-    present_objects = obj.blackboard.getLastData('visualStreamsHypotheses').present_objects;
+    data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
+    present_objects = data(present_objects);
 
     theta = arrayfun(@(x) data.triangulation{present_objects}.coordinates.azimuth, present_objects);
 
