@@ -19,6 +19,8 @@ properties (SetAccess = public)
     bbs = [];
 
     data = [];
+    theta = [];
+    theta_v = [];
  
     current_time = 0;
 
@@ -77,14 +79,16 @@ function execute (obj)
 
     obj.iStep = obj.iStep + 1;
 
-    data = getClassifiersOutput(obj);
-    audio_theta = getLocalisationOutput(obj);
+    obj.data(:, end+1) = getClassifiersOutput(obj);
+    obj.theta(end+1) = getLocalisationOutput(obj);
+    tmp = obj.getLastData('audiovisualHypotheses').data;
+    obj.theta_v(end+1) = tmp('theta');
 
     if ~obj.createNew() && ~obj.updateObject()
         obj.setPresence(false);
         obj.RIR.updateData();
     else
-        obj.degradeData(); % --- Remove visual components if object is NOT in field of view
+        obj.degradeData(obj.theta); % --- Remove visual components if object is NOT in field of view
         obj.RIR.updateData(); % --- Updating the RIR observed data
         if obj.createNew()
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
@@ -199,6 +203,12 @@ end
 
 % end
 % === TO BE MODIFIED === %
+
+function degradeData (obj, theta)
+    if ~isInFieldOfView(theta)
+        obj.data(getInfo('nb_audio_labels')+1:end, obj.iStep) = 0;
+    end
+end
 
 end
 % ===================== %

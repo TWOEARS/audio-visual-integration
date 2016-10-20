@@ -71,8 +71,8 @@ end
 
 function updateData (obj)
     obj.data(:, end+1) = obj.htm.data(:, end);
-    theta = getLocalisationOutput();
-    obj.theta_hist(end+1) = theta;
+    %theta = getLocalisationOutput(obj.htm);
+    obj.theta_hist(end+1) = obj.htm.theta;
     % obj.dist_hist(end+1) = d;
 end
 
