@@ -81,7 +81,7 @@ function execute (obj)
 
     obj.data(:, end+1) = getClassifiersOutput(obj);
     obj.theta(end+1) = getLocalisationOutput(obj);
-    tmp = obj.getLastData('audiovisualHypotheses').data;
+    tmp = obj.blackboard.getLastData('audiovisualHypotheses').data;
     obj.theta_v(end+1) = tmp('theta');
 
     if ~obj.createNew() && ~obj.updateObject()
