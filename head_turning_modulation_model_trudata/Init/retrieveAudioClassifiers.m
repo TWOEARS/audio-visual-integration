@@ -1,7 +1,7 @@
 function [model_names, file_names] = retrieveAudioClassifiers ()
 
 	% folder = '/home/twoears/AuditoryModel/TwoEars-1.2/examples/identification_jido/Training.2016.01.31.21.11.16.074';
-    folder = '/home/twoears/AuditoryModel/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_trudata/Dataset';
+    folder = '/home/twoears/AuditoryModel/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_trudata/Dataset/mc2_models_dataset_1';
     % folder = '/home/twoears/AuditoryModel/TwoEars-1.2/twoears-demos/identification_distractor_NIGENS/models.0db';
 
     d = dir(folder);
