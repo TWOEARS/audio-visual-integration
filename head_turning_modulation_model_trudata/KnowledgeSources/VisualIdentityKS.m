@@ -46,7 +46,10 @@ function execute (obj)
 
     visual_vec(present_objects) = 1;
 
-    visualIdentityHypotheses = containers.Map(present_objects, visual_labels(present_objects));
+    keySet = {'present_objects', 'visual_labels'};
+    valueSet = {present_objects, visual_labels(present_objects)};
+
+    visualIdentityHypotheses = containers.Map(keySet, valueSet);
 
     obj.blackboard.addData('visualIdentityHypotheses', visualIdentityHypotheses,...
                            false, obj.trigger.tmIdx);

@@ -50,7 +50,10 @@ function execute (obj)
 
     d = arrayfun(@(x) data.triangulation{present_objects}.coordinates.z*(-1), present_objects);
 
-    visualLocationHypotheses = containers.Map(present_objects, theta, d);
+    keySet = {'present_objects', 'theta', 'd'};
+    valueSet = {present_objects, theta, d};
+
+    visualLocationHypotheses = containers.Map(keySet, valueSet);
 
     obj.blackboard.addData('visualLocationHypotheses', visualLocationHypotheses,...
                            false, obj.trigger.tmIdx);
