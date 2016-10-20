@@ -37,19 +37,19 @@ function [b, wait] = canExecute( obj )
 end
 
 function execute (obj)
-	data = obj.robot.getData();
+	visual_data = obj.robot.getData();
 
     data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
     present_objects = data('present_objects');
 
-    theta = arrayfun(@(x) data.triangulation{x}.coordinates.azimuth, present_objects);
+    theta = arrayfun(@(x) visual_data.triangulation{x}.coordinates.azimuth, present_objects);
 
     head_orientation = obj.robot.getCurrentHeadOrientation();
     for iTheta = 1:numel(theta)
     	theta = theta - head_orientation;
     end
 
-    d = arrayfun(@(x) data.triangulation{present_objects}.coordinates.z*(-1), present_objects);
+    d = arrayfun(@(x) visual_data.triangulation{present_objects}.coordinates.z*(-1), present_objects);
 
     keySet = {'present_objects', 'theta', 'd'};
     valueSet = {present_objects, theta, d};
