@@ -49,7 +49,7 @@ function execute (obj)
     	theta = theta - head_orientation;
     end
 
-    d = arrayfun(@(x) visual_data.triangulation{present_objects}.coordinates.z*(-1), present_objects);
+    d = arrayfun(@(x) visual_data.triangulation{x}.coordinates.z*(-1), present_objects);
 
     keySet = {'present_objects', 'theta', 'd'};
     valueSet = {present_objects, theta, d};
