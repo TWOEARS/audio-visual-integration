@@ -45,7 +45,8 @@ function execute (obj)
     present_objects = find(arrayfun(@(x) data.triangulation{x}.triangulated, 1:getInfo('nb_visual_labels')));
 
     % push the visual identity hypothesis to the blackboard
-    visualStreamsHypotheses = containers.Map(present_objects, numel(present_objects));
+    % visualStreamsHypotheses = containers.Map(present_objects, numel(present_objects));
+    visualStreamsHypotheses = containers.Map(present_objects, present_objects);
     
     obj.blackboard.addData('visualStreamsHypotheses', visualStreamsHypotheses,...
                             false, obj.trigger.tmIdx);
