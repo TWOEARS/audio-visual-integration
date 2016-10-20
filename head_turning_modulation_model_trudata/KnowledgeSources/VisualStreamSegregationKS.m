@@ -46,10 +46,10 @@ function execute (obj)
 
     % push the visual identity hypothesis to the blackboard
     % visualStreamsHypotheses = containers.Map(present_objects, numel(present_objects));
-    keyType = {'present_objects', 'nb_objects'};
+    keySet = {'present_objects', 'nb_objects'};
     valueSet = {present_objects, numel(present_objects)};
 
-    visualStreamsHypotheses = containers.Map(keyType, valueType);
+    visualStreamsHypotheses = containers.Map(keySet, valueSet);
     
     obj.blackboard.addData('visualStreamsHypotheses', visualStreamsHypotheses,...
                             false, obj.trigger.tmIdx);
