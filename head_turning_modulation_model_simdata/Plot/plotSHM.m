@@ -1,19 +1,25 @@
 function plotSHM (htm)
 
     AVPairs = mergeLabels('all');
-
+    
+    info = getInfo('all');
+    
     % angles = getInfo('sources_position');
 
-    angles = 1 :360/(3+1): 360;
-    angles = 1 :360/(getInfo('nb_AVPairs')+1): 360;
-    angles = round(angles(1:end));
-    cpt = zeros(numel(AVPairs), 1);
+    %angles = 1 :360/(3+1): 360;
+    %angles = 1 :360/(info.nb_sources+1): 360;
+    %angles = round(angles(1:end));
+    angles = info.sources_position;
+    
+    cpt = zeros(info.nb_sources, 1);
     positions = [];
     positions_naive = [];
 
     for iObj = 1:htm.RIR.nb_objects
         idx = find(strcmp(getObject(htm, iObj, 'label'), AVPairs));
-        if ~isempty(idx) && getObject(htm, iObj, 'theta') == 0
+        theta = getObject(htm, iObj, 'theta');
+        theta = theta(end);
+        if ~isempty(idx) && theta == 0
         % --- Object focused
         % if htm.RIR.getObj(iObj).theta == 0
             % ff = [ff, htm.RIR.getObj(iObj).theta_hist(1)] ;
@@ -35,7 +41,7 @@ function plotSHM (htm)
 
     figure;
 
-    h1 = rose(positions_naive, angles); 
+    h1 = rose(positions_naive, angles);
     hold on;
     h2 = rose(positions, angles);
 
