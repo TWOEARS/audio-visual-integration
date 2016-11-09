@@ -1,4 +1,4 @@
-% 'VisualIdentityKS' class
+% 'AudioVisualFusionKS' class
 % Author: Benjamin Cohen-Lhyver
 % Date: 19.10.16
 % Rev. 1.0
