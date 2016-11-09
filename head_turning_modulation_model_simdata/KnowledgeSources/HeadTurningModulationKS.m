@@ -29,8 +29,9 @@ properties (SetAccess = public, GetAccess = public)
     RIR; % Robot Internal Representation
     MSOM; % Multimodal SelfOrganizing Map
     MFI; % Multimodal Fusion & Inference
-    MotorOrderKS;
-    HTMFocusKS; % Head Turning Modulation Focus
+    
+    MOKS;
+    FCKS; % Head Turning Modulation Focus
     EMKS; % Environmental Map
     ODKS; % Object Detection
     ALKS; % Audio Location
@@ -82,21 +83,27 @@ function obj = HeadTurningModulationKS (varargin)
     obj.save = p.Save;
     obj.load = p.Load;
 
+    initializeParameters();
     if p.Load
-       if retrieveData(getInfo('nb_AVPairs'), getInfo('nb_steps'))
+        disp('HTM: loading simulation');
+        [filename, pathname] = uigetfile('~/SciWork/Dat/HTM');
+        data = load([pathname, filename]);
+        data = data.data;
+        q = getInfo('q');
+        data.info.q = q;
+        setInfo('load', true);
+        setappdata(0, 'information', data.info);
+        obj.nb_steps_final = getInfo('nb_steps');
 
-           obj.AVPairs = getappdata(0, 'AVPairs');
-           obj.gtruth = getappdata(0, 'gtruth');
-           obj.audio_labels = getappdata(0, 'audioLabels');
-           obj.visual_labels = getappdata(0, 'visualLabels');
-           obj.data = getappdata(0, 'data');
-           obj.theta_obj = getappdata(0, 'thetaObj');
-           obj.dist_hist = getappdata(0, 'distHist');
-       end
+        obj.gtruth = data.htm.gtruth;
+        obj.gtruth_data = data.htm.gtruth_data;
+        obj.data = obj.gtruth_data;
+        obj.sources = data.htm.sources;
+        obj.statistics = data.htm.statistics;
+        obj.classif_mfi = repmat({'none_none'}, getInfo('nb_steps'), 1);
     else
         disp('HTM: creating simulation');
-
-        initializeParameters();
+        % initializeParameters();
 
         obj.nb_steps_final = getInfo('nb_steps');
 
@@ -110,10 +117,12 @@ function obj = HeadTurningModulationKS (varargin)
     obj.MFI = MultimodalFusionAndInference(obj);
     obj.RIR = RobotInternalRepresentation(obj);
     
-    obj.HTMFocusKS = HTMFocusKS(obj);
-    obj.MotorOrderKS = MotorOrderKS(obj, obj.HTMFocusKS);
+    obj.FCKS = FocusComputationKS(obj);
+    obj.MOKS = MotorOrderKS(obj, obj.FCKS);
     
-    obj.EMKS = EnvironmentalMapKS(obj);
+    % if EMKS
+        obj.EMKS = EnvironmentalMapKS(obj);
+    % end
 
     obj.ALKS = AudioLocalizationKS(obj);
     obj.VLKS = VisualLocalizationKS(obj);
@@ -128,44 +137,44 @@ end
 % === CONSTRUCTOR [END] === %
 
 % === Alternative to the constructor === %
-function continueSimulation (obj, varargin)
-    p = inputParser();
-      p.addOptional('Scene', [],...
-                    @(x) validateattributes(x, {'numeric'},{'vector', 'integer', 'positive'}));
-      p.addOptional('Steps', 1000,...
-                    @(x) validateattributes(x, {'numeric'}, {'integer', 'positive'}));
-      p.addOptional('Run', true,...
-                    @islogical);
-    p.parse(varargin{:});
-    p = p.Results;
+% function continueSimulation (obj, varargin)
+%     p = inputParser();
+%       p.addOptional('Scene', [],...
+%                     @(x) validateattributes(x, {'numeric'},{'vector', 'integer', 'positive'}));
+%       p.addOptional('Steps', 1000,...
+%                     @(x) validateattributes(x, {'numeric'}, {'integer', 'positive'}));
+%       p.addOptional('Run', true,...
+%                     @islogical);
+%     p.parse(varargin{:});
+%     p = p.Results;
 
-    obj.nb_steps_init = obj.nb_steps_init + getInfo('nb_steps');
+%     obj.nb_steps_init = obj.nb_steps_init + getInfo('nb_steps');
 
-    s = getInfo('scenario');
+%     s = getInfo('scenario');
 
-    s.idx = [s.idx, obj.nb_steps_init];
+%     s.idx = [s.idx, obj.nb_steps_init];
     
-    if (~isempty(p.Scene))
-        s.scene = [s.scene, {p.Scene}];
-        s.unique_idx = unique([s.scene{:}]);
-    else
-        s.scene = [s.scene, {s.scene{end}}];
-    end
+%     if (~isempty(p.Scene))
+%         s.scene = [s.scene, {p.Scene}];
+%         s.unique_idx = unique([s.scene{:}]);
+%     else
+%         s.scene = [s.scene, {s.scene{end}}];
+%     end
 
-    adjustLength(p.Steps, true);
+%     adjustLength(p.Steps, true);
     
-    setInfo('scenario', s);
+%     setInfo('scenario', s);
 
-    obj.nb_steps_final = obj.nb_steps_final + getInfo('nb_steps');
-    obj.classif_mfi = [obj.classif_mfi ; repmat({'none_none'}, getInfo('nb_steps'), 1)];
+%     obj.nb_steps_final = obj.nb_steps_final + getInfo('nb_steps');
+%     obj.classif_mfi = [obj.classif_mfi ; repmat({'none_none'}, getInfo('nb_steps'), 1)];
 
-    initializeScenario(obj, 'Initialize', false);
+%     initializeScenario(obj, 'Initialize', false);
 
-    if p.Run
-        obj.run();
-    end
+%     if p.Run
+%         obj.run();
+%     end
 
-end
+% end
 
 
 % === 'RUN' FUNCTION [BEG] === %
@@ -210,9 +219,9 @@ function run (obj)
 
         obj.RIR.updateObjects();
 
-        obj.HTMFocusKS.execute();
+        obj.FCKS.execute();
 
-        obj.MotorOrderKS().execute();
+        obj.MOKS().execute();
 
         obj.updateAngles();
 
@@ -224,19 +233,20 @@ function run (obj)
 
         % obj.storeMsomWeights(iStep);
 
-        obj.EMKS.updateMap();
+        %obj.EMKS.updateMap();
 
     end
 
-    obj.EMKS.endSimulation();
-
-    obj.saveData();
-
-    obj.MSOM.assignNodesToCategories();
+    %obj.EMKS.endSimulation();
 
     % --- DISPLAY --- %
     obj.displayProgressBar('end');
     % --- DISPLAY --- %
+    
+    obj.saveData();
+
+    obj.MSOM.assignNodesToCategories();
+
 
     computeStatistics(obj);
 
@@ -277,7 +287,7 @@ function updateAngles (obj)
 
     for iObject = 1:obj.RIR.nb_objects
         theta_object = getObject(obj, iObject, 'theta');
-        theta = mod(360 - obj.MotorOrderKS.motor_order(end) + theta_object(end), 360);
+        theta = mod(360 - obj.MOKS.motor_order(end) + theta_object(end), 360);
         obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
     end
 end
@@ -325,23 +335,13 @@ function displayProgressBar (obj, sim_status)
 end
 
 function saveData (obj)
-
     if obj.save
-        disp('HTM: Saving data');
-        simuData = struct('gtruth',{obj.gtruth}, ...
-                          'AVPairs', {obj.AVPairs}, ...
-                          'audioLabels', {obj.audio_labels}, ...
-                          'visualLabels', {obj.visual_labels}, ...
-                          'data', {obj.data}, ... 
-                          'thetaObj', {obj.theta_obj}, ...
-                          'distHist', {obj.dist_hist} ) ;
-        
-         if (~exist(['Data/', num2str(obj.nb_AVPairs), '_', num2str(obj.nb_steps)]) )
-              mkdir('Data', [num2str(obj.nb_AVPairs), '_', num2str(obj.nb_steps)]);
-         end
-
-        save(['Data/', num2str(obj.nb_AVPairs), '_', num2str(obj.nb_steps), '/', datestr(datetime('now'))], 'simuData');
-        %save(['Data/simu_results/', datestr(datetime('now'))],'simuData');
+        fname = '~/SciWork/Dat/HTM/';
+        data = struct();
+        data.info = getInfo('all');
+        data.htm = obj;
+        data.weights_vectors = obj.MSOM.weights_vectors;
+        save([fname, datestr(datetime('now'))], 'data');
     end
 end
 

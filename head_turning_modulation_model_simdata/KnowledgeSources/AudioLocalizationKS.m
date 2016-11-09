@@ -43,7 +43,7 @@ function execute (obj)
 		audio_localization_hyp = -1;
 	else
     	% audio_localization_hyp = abs(obj.sources_position(source) - obj.htm.RIR.head_position);
-    	audio_localization_hyp = mod(obj.sources_position(source)-obj.htm.MotorOrderKS.head_position(end), 360);
+    	audio_localization_hyp = mod(obj.sources_position(source)-obj.htm.MOKS.head_position(end), 360);
     	% audio_localization_hyp = mod(360 - obj.htm.MotorOrderKS.head_position + obj.sources_position(source), 360);
 	end
 
