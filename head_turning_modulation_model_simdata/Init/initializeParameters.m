@@ -6,6 +6,17 @@
 
 function initializeParameters ()
 
+    clear persistent strCR;
+
+    figs = get(0, 'Children');
+    if ~isempty(figs)
+        for iFig = 1:numel(figs)
+            if strcmp(get(figs(iFig), 'Tag'), 'EMKS')
+                close(figs(iFig));
+            end
+        end
+    end
+
     disp('HTM: initialization of parameters');
     pause(0.25);
     disp('..................................................');
@@ -28,6 +39,7 @@ function initializeParameters ()
                          'nb_steps'        , 0 ,...
                          'cpt_silence'     , 0 ,...
                          'cpt_object'      , 0 ,...
+                         'load'            , false,...
                          'scenario'        , []...
                          );
 						 % 'nb_angles'	   , 0 ,...
@@ -77,9 +89,10 @@ function initializeParameters ()
     %                                         information.nb_angles);
 
     % --- Determining the sources position in a 2D environment
-    tmp_sources_angular_pos = linspace(0,...
-                                       360,...
+    tmp_sources_angular_pos = linspace(20,...
+                                       340,...
                                        information.nb_sources+1);
+    tmp_sources_angular_pos = round(tmp_sources_angular_pos);
     information.sources_position = tmp_sources_angular_pos(1:end-1);
 
     information.distances = rand(1, information.nb_sources) + randi([3, 7], 1, information.nb_sources);
