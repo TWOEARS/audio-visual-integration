@@ -28,7 +28,7 @@ methods
 % === CONSTRUCTOR [BEG] === %
 function obj = VisualLocalizationKS (htm)
 	obj.htm = htm;
-	obj.MOKS = htm.MotorOrderKS;
+	obj.MOKS = htm.MOKS;
 end
 % === CONSTRUCTOR [END] === %
 
