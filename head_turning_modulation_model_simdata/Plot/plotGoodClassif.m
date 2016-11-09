@@ -1,16 +1,16 @@
 function plotGoodClassif (htm, varargin)
 
-    p = inputParser ;
-      p.addOptional('MinLim', 0) ;
-      p.addOptional('MaxLim', 0) ;
-      p.addOptional('Lim', [0, 0]) ;
-      p.addOptional('Objects', [0, 0]) ;
-      p.addOptional('MFI', true) ;
-      p.addOptional('Max', true) ;
-      p.addOptional('Rect', true) ;
-      p.addOptional('Curv', true) ;
-    p.parse(varargin{:}) ;
-    p = p.Results ;
+    p = inputParser;
+      p.addOptional('MinLim', 0);
+      p.addOptional('MaxLim', 0);
+      p.addOptional('Lim', [0, 0]);
+      p.addOptional('Objects', [0, 0]);
+      p.addOptional('MFI', true);
+      p.addOptional('Max', true);
+      p.addOptional('Rect', true);
+      p.addOptional('Curv', true);
+    p.parse(varargin{:});
+    p = p.Results;
 
     if numel(p.Objects) == 1
         p.Objects = [p.Objects, p.Objects];
@@ -24,7 +24,6 @@ function plotGoodClassif (htm, varargin)
 
     RIR = htm.RIR;
 
-    % statistics = getappdata(0, 'statistics');
     statistics = htm.statistics;
     
     cpt21 = statistics.mfi;
@@ -76,71 +75,107 @@ function plotGoodClassif (htm, varargin)
 
     % correct(p.Objects(1):p.Objects(end))
 
-    C_0 = [0.2, 0.2, 0.2] ;
-    C_1 = [0.4, 0.4, 0.4] ;
-    C_2 = [0.75, 0.75, 0.75] ;
-    C_3 = [1, 1, 1] ;
+    C_0 = [0.2, 0.2, 0.2];
+    C_1 = [0.4, 0.4, 0.4];
+    C_2 = [0.75, 0.75, 0.75];
+    C_3 = [1, 1, 1];
 
-    figure ;
-    hold on ;
+    figure;
+    hold on;
+
+    colors_vec = [0  , 255, 255;...
+                  0  , 0  , 255;...
+                  204, 0  , 102;...
+                  0  , 153, 0  ;...
+                  255, 255, 0  ;...
+                  102, 255, 102;...
+                  0  , 153, 153;...
+                  102, 0  , 102];
+
+    detected_objects = unique(getObject(htm, 'all', 'label'));
+    nb_detected_objects = numel(detected_objects);
 
     if p.Rect
         for iObj = 1:RIR.nb_objects
             tmIdx = getObject(RIR, iObj, 'tmIdx');
-            x = tmIdx(1);
-            X = [x, x, x+getInfo('cpt_object'), x+getInfo('cpt_object')];
-            if p.Max
-                Y1 = [0.5, 1, 1, 0.5];
-            else
-                Y1 = [0, 1, 1, 0];
-            end
-            Y2 = [0, 0.5, 0.5, 0];
-
-            if correct(iObj) == -1
-                C1 = C_0;
-            elseif correct(iObj) == 1
-                data = getData(htm, iObj);
-                if sum(data(getInfo('nb_audio_labels')+1:end, 3)) > 0
-                    C1 = C_2;
+            idx = tmIdx(1:getInfo('cpt_object'):end);
+            idx(end+1) = tmIdx(end)+1;
+            nb_occurences = numel(idx);
+            for iOcc = 1:(nb_occurences-1)
+                x_beg = idx(iOcc);
+                % x_end = idx(iOcc+1)-1;
+                x_end = idx(iOcc)+getInfo('cpt_object')-1;
+                % x = tmIdx(1);
+                % X = [x, x, x+getInfo('cpt_object'), x+getInfo('cpt_object')];
+                X = [x_beg, x_beg, x_end, x_end];
+                if p.Max
+                    Y1 = [0.5, 1, 1, 0.5];
                 else
-                    C1 = C_3;
+                    Y1 = [0, 1, 1, 0];
                 end
-            end
+                Y2 = [0, 0.5, 0.5, 0];
 
-            if correct2(iObj) == -1
-                C2 = C_0;
-            elseif correct2(iObj) == 1
-                C2 = C_2;
-            else
-                C2 = C_3;
-            end
+                if correct(iObj) == -1
+                    C1 = C_0;
+                elseif correct(iObj) == 1
+                    data = getData(htm, iObj);
+                    if sum(data(getInfo('nb_audio_labels')+1:end, 3)) > 0
+                        C1 = C_2;
+                    else
+                        C1 = C_3;
+                    end
+                end
 
-            if p.MFI
-                h1 = patch(X, Y1, C1);%, 'FaceAlpha', 0.6) ;
-            end
-            if p.Max
-                h2 = patch(X, Y2, C2);%, 'FaceAlpha', 0.6) ;
-            end
-            if all(C1 == C_3)
-                % hp = findobj(h,'type','patch');
-                % hatch(h1, 45, [0.5, 0.5, 0.5], '-', 12, 2) ;
+                if correct2(iObj) == -1
+                    C2 = C_0;
+                elseif correct2(iObj) == 1
+                    C2 = C_2;
+                else
+                    C2 = C_3;
+                end
+
+                if p.MFI
+                    h1 = patch(X, Y1, C1);%, 'FaceAlpha', 0.6);
+                end
+                if p.Max
+                    h2 = patch(X, Y2, C2);%, 'FaceAlpha', 0.6);
+                end
+                if all(C1 == C_3)
+                    % hp = findobj(h,'type','patch');
+                    % hatch(h1, 45, [0.5, 0.5, 0.5], '-', 12, 2);
+                end
+
+                posx = find(strcmp(getObject(htm, iObj, 'label'), detected_objects));
+                % h1 = patch(X, Y1, colors_vec(pos));%, 'FaceAlpha', 0.6);
+                circle_size = 0.045;
+                % --- Centering the center around [0, 0]
+                % --- 'pos' is: [x, y, width, height]
+                pos = [x_beg+1.5, 0.85,...
+                       getInfo('cpt_object')-4, circle_size];
+                % --- The 'Curvature' is allowing to draw a circle from the 'rectangle' function
+                rectangle('Position' , pos  ,...
+                          'Curvature', [1 1],...
+                          'LineWidth', 2,...
+                          'FaceColor', colors_vec(posx, :)/255,...
+                          'EdgeColor', 'none');
             end
         end
     end
 
     if p.Curv
         plot(cpt22(1:end)                  ,...
-                'LineWidth', 4             ,...
+                'LineWidth', 5             ,...
                 'LineStyle', '-'           ,...
-                'Color'    , [0.1, 0.1, 0.1]...
+                'Color'    , [51, 153, 255]/255 ...
             );
+                % 'Color'    , [0.1, 0.1, 0.1]...
         plot(cpt12(1:end)                  ,...
-                'LineWidth', 4             ,...
+                'LineWidth', 5             ,...
                 'LineStyle', '-'           ,...
                 'Color'    , [0.6, 0.6, 0.6]...
             );
         plot(htm.statistics.max_mean_shm,...
-             'LineWidth', 4,...
+             'LineWidth', 5,...
              'LineStyle', '-',...
              'Color', [0.8, 0.8, 0.8]);
     end
