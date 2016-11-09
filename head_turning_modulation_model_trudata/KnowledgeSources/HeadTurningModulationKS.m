@@ -132,6 +132,14 @@ function execute (obj)
     %     playNotification();
     % end
 
+    keySet = {'detectedObjects'};
+    valueSet = {getObject(obj, 'all')};
+
+    observedObjectsHypotheses = containers.Map(keySet, valueSet);
+
+    obj.blackboard.addData('ObservedObjectsHypotheses', observedObjectsHypotheses,...
+                           false, obj.trigger.tmIdx);
+
     notify(obj, 'KsFiredEvent');
 % end
 end
