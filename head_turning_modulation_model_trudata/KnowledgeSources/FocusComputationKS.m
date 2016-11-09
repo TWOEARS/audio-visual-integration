@@ -1,4 +1,4 @@
-% 'HTMFocusKS' class
+% 'FocusComputationKS' class
 % This knowledge source compute the object to be focused on.
 % It is based on two distinct algorithms:
 % 1. The Dynamic Weighting module
@@ -7,7 +7,7 @@
 % Date: 01.06.16
 % Rev. 2.0
 
-classdef HTMFocusKS < AbstractKS
+classdef FocusComputationKS < AbstractKS
 % ======================== %
 % === PROPERTIES [BEG] === %
 % ======================== %
@@ -32,7 +32,7 @@ end
 methods
 
 % === Constructor [BEG] === %
-function obj = HTMFocusKS (bbs, htm)
+function obj = FocusComputationKS (bbs, htm)
     obj = obj@AbstractKS();
     obj.bbs = bbs;
     obj.invocationMaxFrequency_Hz = inf;
