@@ -6,7 +6,7 @@
 
 function statistics = computeStatistics (htm)
     
-    textprogressbar('HTM: computing statistics -- ');
+    % textprogressbar('HTM: computing statistics -- ');
     
     p = getInfo('audio_labels'    ,...
                 'visual_labels'   ,...
@@ -28,7 +28,7 @@ function statistics = computeStatistics (htm)
 
     htm.statistics.max_mean_shm = cumsum(htm.statistics.max_shm) ./ (1:htm.nb_steps_final)';
 
-    % return;
+    return;
 
     % =====================
 
