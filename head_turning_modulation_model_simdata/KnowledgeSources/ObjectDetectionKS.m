@@ -68,9 +68,9 @@ function execute (obj)
 end
 
 function setHypotheses (obj, hyp)
-	obj.create_new = hyp(1);
-	obj.update_object = hyp(2);
-	obj.id_object = hyp(3);
+	obj.create_new(end+1) = hyp(1);
+	obj.update_object(end+1) = hyp(2);
+	obj.id_object(end+1) = hyp(3);
 end
 
 function plotDecisions (obj)
