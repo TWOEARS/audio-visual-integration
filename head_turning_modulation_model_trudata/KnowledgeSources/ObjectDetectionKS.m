@@ -36,10 +36,6 @@ function obj = ObjectDetectionKS (bbs, htm)
 
     obj.htm = htm;
     obj.RIR = htm.RIR;
-    % obj.ALKS = htm.ALKS;
-    % obj.VLKS = htm.VLKS;
-    % obj.ACKS = htm.ACKS;
-    % obj.VCKS = htm.VCKS;
     obj.thr_theta = getInfo('thr_theta');
 end
 % === CONSTRUCTOR [END] === %
