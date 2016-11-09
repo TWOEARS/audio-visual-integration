@@ -88,8 +88,13 @@ function obj = MultimodalSelfOrganizingMap (varargin)
 	obj.connections = zeros(obj.nb_nodes, 2);
 	[obj.connections(:, 1), obj.connections(:, 2)] = ind2sub(obj.som_dimension, 1:obj.nb_nodes);
 	
-	for iMod = 1:obj.nb_modalities
-		obj.weights_vectors{iMod} = rand(obj.nb_nodes, obj.modalities(iMod));
+	if getInfo('load')
+		obj.weights_vectors = getappdata(0, 'weights_vectors');
+	else
+		for iMod = 1:obj.nb_modalities
+			obj.weights_vectors{iMod} = rand(obj.nb_nodes, obj.modalities(iMod));
+		end
+		setappdata(0, 'weights_vectors', obj.weights_vectors);
 	end
 
 	obj.setParameters(obj.nb_iterations);
