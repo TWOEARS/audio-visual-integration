@@ -37,7 +37,7 @@ properties (SetAccess = public, GetAccess = public)
     idx_data;
 end
 
-properties (SetAccess = private, GetAccess = private)
+properties (SetAccess = private, GetAccess = public)
  	lrates = struct('initial', 0.5,...
     			    'final'  , 0.1);
 
@@ -59,7 +59,7 @@ methods
 % === CONSTRUCTOR [BEG] === %
 function obj = MultimodalSelfOrganizingMap (varargin)
 	p = inputParser ;
-	  p.addOptional('Iterations', 10);
+	  p.addOptional('Iterations', 1);
 	  p.addOptional('Leading', 1);
 	p.parse(varargin{:});
 	p = p.Results;

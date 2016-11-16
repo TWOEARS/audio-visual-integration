@@ -6,32 +6,40 @@
 
 classdef MultimodalFusionAndInference < handle
 
-% --- Properties --- %
+% ======================== %
+% === PROPERTIES [BEG] === %
+% ======================== %
 properties (SetAccess = public, GetAccess = public)
     categories = {};
     inputs = [];
     htm;
-    MSOM; % Multimodal Self-Organizing Map
+    MSOM; % --- Multimodal Self-Organizing Map
     nb_categories = 0;
     labels = {};
 end
-% === Methods === %
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
+
+% ===================== %
+% === METHODS [BEG] === %
+% ===================== %
 methods
 
-% --- Constructor (BEG) --- %
+% === CONSTRUCTOR [BEG] === %
 function obj = MultimodalFusionAndInference (htm)
 	% --- Initialize MSOM
 	obj.htm = htm;
 	obj.MSOM = htm.MSOM;
 end
-% --- Constructor (END) --- %
+% === CONSTRUCTOR [END] === %
 
 % --- 
 function newInput (obj, input_vector)
 	obj.inputs(:, end+1) = input_vector;
 	obj.trainMSOM();
 	obj.setCategories();
-	% obj.labels = [obj.labels ; obj.inferCategory(input_vector)] ;
+	% obj.labels = [obj.labels ; obj.inferCategory(input_vector)];
 end
 
 function setCategories (obj)
@@ -48,12 +56,11 @@ function setCategories (obj)
 							 );
 
 	obj.nb_categories = numel(obj.categories) ;
-	% obj.assignNodesToCategories() ;
-	% obj.contributions_of_nodes = obj.MSOM.cat ;
+	% obj.assignNodesToCategories();
+	% obj.contributions_of_nodes = obj.MSOM.cat;
 end
 
 function trainMSOM (obj)
-	% obj.MSOM.feed(obj.inputs);
 	obj.MSOM.feed(obj.inputs(:, end));
 end
 
@@ -121,7 +128,11 @@ function request = getCategories (obj)
 	request = obj.categories ;
 end
 
-% --- END PROPERTIES
 end
-% --- END OBJECT
+% ===================== %
+% === METHODS [END] === % 
+% ===================== %
 end
+% =================== %
+% === END OF FILE === %
+% =================== %
