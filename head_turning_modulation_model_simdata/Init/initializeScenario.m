@@ -110,6 +110,8 @@ function initializeScenario (htm, varargin)
 		htm.statistics.max_mean = groundTruth_stats(:, 2);
 		htm.statistics.max_shm = htm.statistics.max;
 		htm.statistics.max_mean_shm = htm.statistics.max_mean;
+		htm.statistics.mfi = zeros(info.nb_steps, 1);
+		htm.statistics.mfi_mean = zeros(info.nb_steps, 1);
 		htm.sources = sources;
 	else
 		htm.data = [htm.data, simulatedData];
