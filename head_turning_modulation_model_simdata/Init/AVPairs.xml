@@ -31,7 +31,7 @@
         <pair A="cat" B="scratching"> </pair> 
 
         <pair A="door" B="knock"> </pair>
-        <pair A="door" B="closed"> </pair>
+        <pair A="door" B="closing"> </pair>
 
         <pair A="siren" B="beeping"> </pair>
         <pair A="siren" B="alert"> </pair>
