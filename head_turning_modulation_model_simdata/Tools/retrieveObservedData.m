@@ -4,10 +4,12 @@ function data = retrieveObservedData (obj, idx, str)
 		objects = obj.objects;
 		RIR = obj.RIR;
 	elseif isa(obj, 'HeadTurningModulationKS')
-		objects = obj.RIR.getEnv().objects;
+        env = getEnvironment(obj, 0);
+		objects = env.objects;
 		RIR = obj.RIR;
 	elseif isa(obj, 'RobotInternalRepresentation')
-		objects = obj.getEnv().objects;
+        env = getEnvironment(obj, 0);
+		objects = env.objects;
 		RIR = obj;
 	end
 	if idx == 0

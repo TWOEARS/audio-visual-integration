@@ -12,7 +12,7 @@ properties (SetAccess = public, GetAccess = public)
     motor_order = [];
     htm;
     RIR;
-    HTMFocusKS;
+    FCKS;
 
     shm = 0;
 end
@@ -26,18 +26,20 @@ end
 methods
 
 % === CONSTRUCTOR [BEG] === %
-function obj = MotorOrderKS (htm, htmFocusKS)
+function obj = MotorOrderKS (htm, FCKS)
 	obj.htm = htm;
     obj.RIR = htm.RIR;
-    obj.HTMFocusKS = htmFocusKS;
+    obj.FCKS = FCKS;
+    obj.head_position = 0;
 end
 % === CONSTRUCTOR [END] === %
 
 function execute (obj)
     % --- If no sound -> make the head turn to 0° (resting state)
-    focus = obj.HTMFocusKS.focus(end);
+    focus = obj.FCKS.focus(end);
 
-    if obj.isFocusedObjectPresent(focus) % --- move the head to 'theta'
+    % if obj.isFocusedObjectPresent(focus) % --- move the head to 'theta'
+    if focus > 0
         theta = getObject(obj.RIR, focus, 'theta');
         theta = theta(end);
     elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
@@ -45,6 +47,11 @@ function execute (obj)
     else
         theta = 0;
     end
+
+    if ~obj.isFocusedObjectPresent(focus)
+        theta = -obj.head_position(end);
+    end
+
     obj.motor_order(end+1) = theta;
 
     if numel(obj.head_position) > 1
@@ -59,7 +66,6 @@ function execute (obj)
 end
 
 function bool = isFocusedObjectPresent (obj, focus)
-    
     if obj.RIR.nb_objects == 0 && focus ~= 0
         bool = false;
     elseif getObject(obj.RIR, focus, 'presence')
@@ -70,8 +76,13 @@ function bool = isFocusedObjectPresent (obj, focus)
 end
 
 function computeSHM (obj)
-    if numel(obj.head_position) > 1
-        if obj.head_position(end-1) ~= obj.head_position(end) && obj.head_position(end) ~= 0
+    % if numel(obj.head_position) > 1
+    %     if obj.head_position(end-1) ~= obj.head_position(end) && obj.head_position(end) ~= 0
+    %         obj.shm = obj.shm+1;
+    %     end
+    % end
+    if numel(obj.motor_order) > 1
+        if obj.motor_order(end-1) ~= obj.motor_order(end) && obj.motor_order(end) > 0
             obj.shm = obj.shm+1;
         end
     end

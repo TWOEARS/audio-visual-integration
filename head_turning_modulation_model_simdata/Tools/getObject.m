@@ -17,7 +17,14 @@ function request = getObject (obj, idx, varargin)
     elseif isa(obj, 'PerceivedEnvironment')
         objects = obj.objects;
     elseif isa(obj, 'HeadTurningModulationKS')
-        objects = obj.RIR.getEnv().objects;
+        env = getEnvironment(obj, 0);
+        objects = env.objects;
+    elseif isa(obj, 'FocusComputationKS')
+        env = getEnvironment(obj, 0);
+        objects = env.objects;
+    elseif isa(obj, 'DynamicWeighting')
+        env = getEnvironment(obj, 0);
+        objects = env.objects;
     else
         disp('provide good arguments please.');
         return;

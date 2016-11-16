@@ -26,12 +26,13 @@ properties (SetAccess = public, GetAccess = public)
 
     sources = [];
 
-    RIR; % Robot Internal Representation
+    RIR;  % Robot Internal Representation
     MSOM; % Multimodal SelfOrganizing Map
-    MFI; % Multimodal Fusion & Inference
+    MFI;  % Multimodal Fusion & Inference
+    DW;   % Dynamic Weighting
     
-    MOKS;
-    FCKS; % Head Turning Modulation Focus
+    MOKS; % Motor Order 
+    FCKS; % Focus Computation Focus
     EMKS; % Environmental Map
     ODKS; % Object Detection
     ALKS; % Audio Location
@@ -78,8 +79,6 @@ function obj = HeadTurningModulationKS (varargin)
     p.parse(varargin{:});
     p = p.Results;
 
-    % addpath(genpath('~/Dev/TwoEars-1.2/audio-visual-integration/head_turning_modulation_model_simulated_data'));
-
     obj.save = p.Save;
     obj.load = p.Load;
 
@@ -115,6 +114,7 @@ function obj = HeadTurningModulationKS (varargin)
 
     obj.MSOM = MultimodalSelfOrganizingMap();
     obj.MFI = MultimodalFusionAndInference(obj);
+    obj.DW = DynamicWeighting(obj);
     obj.RIR = RobotInternalRepresentation(obj);
     
     obj.FCKS = FocusComputationKS(obj);
@@ -221,7 +221,7 @@ function run (obj)
 
         obj.FCKS.execute();
 
-        obj.MOKS().execute();
+        obj.MOKS.execute();
 
         obj.updateAngles();
 
@@ -233,22 +233,21 @@ function run (obj)
 
         % obj.storeMsomWeights(iStep);
 
-        %obj.EMKS.updateMap();
+        obj.EMKS.updateMap();
 
     end
 
-    %obj.EMKS.endSimulation();
+    obj.EMKS.endSimulation();
 
     % --- DISPLAY --- %
     obj.displayProgressBar('end');
     % --- DISPLAY --- %
     
-    obj.saveData();
-
     obj.MSOM.assignNodesToCategories();
 
+    % computeStatistics(obj);
 
-    computeStatistics(obj);
+    obj.saveData();
 
     % playNotification();
 
@@ -263,6 +262,7 @@ function setPresence (obj, bool)
             idx = idx(end-1);
             if idx ~= 0 && getObject(obj, idx, 'presence')
                 setObject(obj, idx, 'presence', false);
+                setObject(obj, idx, 'requests', 'init');
             end
         end
     else
@@ -284,7 +284,6 @@ function updateAngles (obj)
     if obj.RIR.nb_objects == 0
         return;
     end
-
     for iObject = 1:obj.RIR.nb_objects
         theta_object = getObject(obj, iObject, 'theta');
         theta = mod(360 - obj.MOKS.motor_order(end) + theta_object(end), 360);
@@ -313,11 +312,13 @@ function retrieveMfiCategorization (obj)
     % if sum(obj.data(:, obj.iStep)) ~= 0
     iStep = obj.iStep;
     if obj.sources(iStep) ~= 0
-        % data = retrieveObservedData(obj, obj.ODKS.id_object(end), 'best');
         id_object = getLastHypothesis(obj, 'ODKS', 'id_object');
         data = retrieveObservedData(obj, id_object, 'best');
         obj.classif_mfi{iStep} = obj.MFI.inferCategory(data);
     end
+    obj.statistics.mfi(iStep) = strcmp(obj.classif_mfi{iStep}, obj.gtruth(iStep, 1));
+    obj.statistics.mfi_mean(1:iStep) = cumsum(obj.statistics.mfi(1:iStep)) ./ (1:iStep)';
+    obj.statistics.max_mean_shm(1:iStep) = cumsum(obj.statistics.max_shm(1:iStep)) ./ (1:iStep)';
 end
 
 function displayProgressBar (obj, sim_status)

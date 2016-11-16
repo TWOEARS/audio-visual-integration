@@ -11,7 +11,7 @@ function hypothesis = getLastHypothesis (obj, KS, varargin)
         return;
     end
 
-	if strcmp(KS, 'ALKS') || strcmp(KS, 'VLKS')
+	if strcmp(KS, 'ALKS') || strcmp(KS, 'VLKS') || strcmp(KS, 'FCKS')
 		hypothesis = htm.(KS).hypotheses(end);
 	elseif strcmp(KS, 'ODKS')
 		hypothesis = htm.(KS).(varargin{1})(end);

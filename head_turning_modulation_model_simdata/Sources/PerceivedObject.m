@@ -11,7 +11,7 @@ classdef PerceivedObject < handle
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
 	label = 'none_none';
-    audio_label = 'none';
+	audio_label = 'none';
     visual_label = 'none';
 
     % audio_theta = 0;
@@ -30,7 +30,7 @@ properties (SetAccess = public, GetAccess = public)
     d = 0;
     dist_hist = [];
 
-    audiovisual_category = 0; % int
+    audiovisual_category = 1; % int
     cat_hist = [];
 
     missing_hist = [];
@@ -65,61 +65,66 @@ function obj = PerceivedObject (data, theta, theta_v)
 	obj.tsteps = 1;
 	obj.presence = true;
 	obj.cpt = obj.cpt + 1;
-	obj.addData(data);
+	obj.isDataMissing(data);
 end
 % === Constructor [END] === %
 
-function addData (obj, data)
-	obj.missingModality(data);
-	obj.requestInference();
-end
-
 % === TO BE CHANGED: take into account visual information instead of classification output! === %
-function missingModality (obj, data)
+% function missingModality (obj, data)
+% 	if sum(data(1:getInfo('nb_audio_labels'), end)) < 0.2 ||...
+% 	   sum(data(getInfo('nb_audio_labels')+1:end, end)) < 0.2
+% 		obj.requests.missing = true;
+% 	else
+% 		obj.requests.missing = false;
+% 	end
+% end
+% === TO BE CHANGED: take into account visual information instead of classification output! === %
+
+function isDataMissing (obj, data)
 	if sum(data(1:getInfo('nb_audio_labels'), end)) < 0.2 ||...
 	   sum(data(getInfo('nb_audio_labels')+1:end, end)) < 0.2
 		obj.requests.missing = true;
 	else
 		obj.requests.missing = false;
 	end
-end
-% === TO BE CHANGED: take into account visual information instead of classification output! === %
-
-function requestInference (obj)
 	% --- If not enough data
-	if obj.cpt <= getInfo('smoothing')
+	if obj.cpt < getInfo('smoothing')
 		obj.requests.inference = false;
 	else
 		if obj.requests.missing % --- If missing modality
 			obj.requests.inference = true;
+			obj.requests.checked = false;
 		else 					% --- If every modality
 			obj.requests.inference = false;
 			if obj.requests.check
 				obj.requests.verification = true;
+				obj.requests.checked = false;
 			else
 				obj.requests.verification = false;
+				obj.requests.checked = true;
 			end
 		end
 	end
 	obj.missing_hist(end+1) = obj.requests.missing;
 end
 
-function setLabel (obj, label)
+function setLabel (obj, label, search)
 	obj.label = label;
 	obj.visual_label = label(1:strfind(label, '_')-1);
 	obj.audio_label = label(strfind(label, '_')+1:end);
+	obj.audiovisual_category = search;
 end
 
-function updateCatHist (obj, value)
-	t = obj.tsteps - 1;
-	obj.cat_hist(end-t:end) = ones(1, t+1)*value;
-end
+% function updateCatHist (obj, value)
+% 	t = obj.tsteps - 1;
+% 	obj.cat_hist(end-t:end) = ones(1, t+1)*value;
+% end
 
 function updateData (obj, data, theta, theta_v)
-	obj.addData(data);
+	% obj.addData(data);
+	obj.isDataMissing(data);
 	obj.theta(end+1) = theta;
 	obj.theta_v(end+1) = theta_v;
-	% obj.theta = theta;
 end
 
 function updateTime (obj, t)
@@ -143,6 +148,16 @@ function updateAngle (obj, theta)
 		end
 	end
 	obj.theta(end+1) = theta;
+end
+
+function initializeRequests (obj)
+    obj.requests = struct('inference'   , false,...
+				  'check'       , false,...
+				  'verification', false,...
+				  'label' 		, ''   ,...
+				  'missing'     , true ,...
+				  'checked'     , false ...
+				 );
 end
 
 function updateObj (obj)

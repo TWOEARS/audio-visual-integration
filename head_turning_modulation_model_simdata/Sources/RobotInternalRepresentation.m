@@ -54,14 +54,15 @@ end
 
 % === Add a new object to the environment
 function addObject (obj)
+    env = getEnvironment(obj, 0);
     obj.getEnv().addObject();
     obj.nb_objects = obj.nb_objects + 1;
 end
 
 % === Update the label of the last object with a new INPUT_VECTOR
 function updateObject (obj)
-    obj.getEnv().updateObjectData();
-                                  %obj.dist_hist(end)  ...
+    env = getEnvironment(obj, 0);
+    env.updateObjectData();
 end
 
 function updateData (obj)
@@ -79,7 +80,8 @@ end
 function updateObjects (obj)
     tmIdx = obj.htm.iStep;
     if obj.nb_objects > 0
-        obj.getEnv().updateEnvironment(tmIdx);
+        env = getEnvironment(obj, 0);
+        env.updateEnvironment(tmIdx);
     end
 end
 

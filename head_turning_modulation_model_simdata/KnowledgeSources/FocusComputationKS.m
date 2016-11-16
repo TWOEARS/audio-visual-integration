@@ -50,25 +50,27 @@ function execute (obj)
     mfi_focus = obj.computeMFIFocus();
 
     % --- Comparison of the two results
-    if mfi_focus == 0 && dwmod_focus > 0 % DWmod takes the lead
+    if mfi_focus == 0 && dwmod_focus > 0       % --- DWmod takes the lead
         focus = dwmod_focus;
         focus_origin = 1;
-    elseif mfi_focus == 0 && dwmod_focus == 0 % No focused object
+    elseif mfi_focus == 0 && dwmod_focus == 0  % --- No focused object
+        focus = obj.focus(end);
+        % focus = 0;
+        focus_origin = 0;
+    elseif mfi_focus == 0 && dwmod_focus == -1 % --- DWmod focus but AV category not performant
         focus = obj.focus(end);
         focus_origin = 0;
-    elseif mfi_focus == 0 && dwmod_focus == -1
-        focus = obj.focus(end);
-        focus_origin = 0;
-    else % MFImod takes the lead over the DWmod
+    else                                       % --- MFImod takes the lead over the DWmod
         focus = mfi_focus;
         focus_origin = -1;
     end
 
-    % === USEFUL??? === %
-    if ~obj.isPresent(focus)
+    % % === USEFUL??? === %
+    % if ~obj.isPresent(focus)
+    if ~getObject(obj, focus, 'presence')
         focus = 0;
     end
-    % === USEFUL??? === %
+    % % === USEFUL??? === %
 
     obj.focus_origin(end+1) = focus_origin;
     obj.focus(end+1) = focus;
@@ -77,30 +79,32 @@ end
 % === Compute focused object thanks to the DYNAMIC WEIGHTING module (DWmod) algorithm
 function focus = computeDWmodFocus (obj)
     focus = obj.getMaxWeightObject();
-    object = getObject(obj.RIR, focus);
-    if object.weight < 0.98
+    object = getObject(obj, focus);
+    env = getEnvironment(obj, 0);
+    if object.weight < 0
         focus = 0;
-    elseif ~isPerformant(obj.htm.RIR.getEnv(), object.audiovisual_category)
-        focus = -1;
+    % elseif ~isPerformant(env, object.audiovisual_category)
+    %     focus = -1;
     end
 end
 
 % === Compute focused object thanks to the MULTIMODAL FUSION and INFERENCE module (MFImod) algorithm
 function focus = computeMFIFocus (obj)
     focus = 0;
-    current_object = obj.htm.ODKS.id_object(end);
+    % current_object = obj.htm.ODKS.id_object(end);
+    current_object = getLastHypothesis(obj.htm, 'ODKS', 'id_object');
     if current_object == 0
         focus = 0;
         return;
     end
 
-    if getObject(obj.RIR, current_object, 'presence')
-        requests = getObject(obj.RIR, current_object, 'requests');
+    if getObject(obj, current_object, 'presence')
+        requests = getObject(obj, current_object, 'requests');
         if requests.check 
             focus = current_object;
-            % === TO BE CHENGED === %
-            obj.RIR.getEnv().objects{current_object}.requests.checked = true;
-            % === TO BE CHENGED === %
+            % === TO BE CHANGED === %
+            % obj.RIR.getEnv().objects{current_object}.requests.checked = true;
+            % === TO BE CHANGED === %
         elseif requests.checked
             focus = current_object;
         end
@@ -109,7 +113,8 @@ end
 
 % === Check if the considered object is present in the environment
 function bool = isPresent (obj, idx)
-    if find(idx == obj.RIR.getEnv().present_objects)
+    present_objects = getEnvironment(obj, 0, 'present_objects');
+    if find(idx == present_objects)
         bool = true;
     else
         bool = false;
