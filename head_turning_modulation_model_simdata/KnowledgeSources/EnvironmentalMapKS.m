@@ -411,7 +411,7 @@ end
 function endSimulation (obj)
 	obj.drawFieldOfView('end');
 	obj.drawLocalizationResults();
-	obj.drawEmittingSource();
+	obj.removeEmittingSources();
 end
 
 % ===================== %

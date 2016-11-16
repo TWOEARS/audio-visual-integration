@@ -48,7 +48,7 @@ function execute (obj)
 
     % --- MFI-based focus computing
     mfi_focus = obj.computeMFIFocus();
-
+    
     % --- Comparison of the two results
     if mfi_focus == 0 && dwmod_focus > 0       % --- DWmod takes the lead
         focus = dwmod_focus;
@@ -81,7 +81,7 @@ function focus = computeDWmodFocus (obj)
     focus = obj.getMaxWeightObject();
     object = getObject(obj, focus);
     env = getEnvironment(obj, 0);
-    if object.weight < 0
+    if object.weight <= 0
         focus = 0;
     % elseif ~isPerformant(env, object.audiovisual_category)
     %     focus = -1;
@@ -90,8 +90,6 @@ end
 
 % === Compute focused object thanks to the MULTIMODAL FUSION and INFERENCE module (MFImod) algorithm
 function focus = computeMFIFocus (obj)
-    focus = 0;
-    % current_object = obj.htm.ODKS.id_object(end);
     current_object = getLastHypothesis(obj.htm, 'ODKS', 'id_object');
     if current_object == 0
         focus = 0;
@@ -105,9 +103,14 @@ function focus = computeMFIFocus (obj)
             % === TO BE CHANGED === %
             % obj.RIR.getEnv().objects{current_object}.requests.checked = true;
             % === TO BE CHANGED === %
-        elseif requests.checked
-            focus = current_object;
+        % elseif requests.checked
+        %     %focus = current_object;
+        %     focus = 0;
+        else
+            focus = 0;
         end
+    else
+        focus = 0;
     end
 end
 
