@@ -67,9 +67,9 @@ function execute (obj)
 
     % % === USEFUL??? === %
     % if ~obj.isPresent(focus)
-    if ~getObject(obj, focus, 'presence')
-        focus = 0;
-    end
+    % if ~getObject(obj, focus, 'presence')
+    %     focus = 0;
+    % end
     % % === USEFUL??? === %
 
     obj.focus_origin(end+1) = focus_origin;
@@ -81,7 +81,7 @@ function focus = computeDWmodFocus (obj)
     focus = obj.getMaxWeightObject();
     object = getObject(obj, focus);
     env = getEnvironment(obj, 0);
-    if object.weight <= 0
+    if object.weight <= 0 || ~getObject(obj, focus, 'presence')
         focus = 0;
     % elseif ~isPerformant(env, object.audiovisual_category)
     %     focus = -1;
