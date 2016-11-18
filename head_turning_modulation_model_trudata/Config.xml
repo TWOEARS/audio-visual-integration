@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<categoryStructure>    
+        <pair parameter="fov" value="45"> </pair>
+
+        <pair parameter="smoothing" value="1"> </pair>
+
+        <pair parameter="q" value="0.7"> </pair>
+
+        <pair parameter="nb_sources" value="4"> </pair>
+        
+</categoryStructure>
