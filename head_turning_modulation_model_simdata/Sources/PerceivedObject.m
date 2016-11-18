@@ -45,6 +45,9 @@ methods
 % === Constructor [BEG] === %
 function obj = PerceivedObject (data, theta, theta_v, source)
 	obj.theta(end+1) = theta;
+	if isempty(theta_v)
+		theta_v = -1;
+	end
 	obj.theta_v(end+1) = theta_v;
 	obj.source = source;
 	% obj.d = d;
