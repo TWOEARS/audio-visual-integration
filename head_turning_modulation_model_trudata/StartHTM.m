@@ -30,7 +30,7 @@ disp( 'Building blackboard system...' );
 
 bbs = BlackboardSystem(0);
 bbs.setRobotConnect(Jido) ;
-bbs.setDataConnect('AuditoryFrontEndKS');
+bbs.setDataConnect('AuditoryFrontEndKS', 16000);
 
 [models, files] = retrieveAudioClassifiers();
 
@@ -38,7 +38,7 @@ auditoryClassifiersKS = createAuditoryIdentityKS(bbs, models);
 
 signalLevelKS = bbs.createKS('SignalLevelKS');
 
-visualIdentityKS = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
+visualIdentityKS  = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
 
 visualLocationKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
 
