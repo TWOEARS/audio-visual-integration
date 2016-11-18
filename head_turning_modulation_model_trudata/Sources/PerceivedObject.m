@@ -127,6 +127,9 @@ function updateData (obj, data, theta, theta_v)
 	% obj.addData(data);
 	obj.isDataMissing(data);
 	obj.theta(end+1) = theta;
+	if isempty(theta_v)
+		theta_v = -1;
+	end
 	obj.theta_v(end+1) = theta_v;
 end
 
