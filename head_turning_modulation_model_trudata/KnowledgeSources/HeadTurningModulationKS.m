@@ -60,8 +60,8 @@ function obj = HeadTurningModulationKS (bbs)
 
     obj.MSOM = MultimodalSelfOrganizingMap();
     obj.MFI = MultimodalFusionAndInference(obj);
-    obj.RIR = RobotInternalRepresentation(obj);
     obj.DW = DynamicWeighting(obj);
+    obj.RIR = RobotInternalRepresentation(obj);
 end
 
 % === Execute functionality
