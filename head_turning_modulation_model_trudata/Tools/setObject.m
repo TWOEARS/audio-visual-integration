@@ -1,11 +1,10 @@
 function setObject (obj, idx, parameter, value)
 
-    if isa(obj, 'RobotInternalRepresentation')
-        objects = obj.getEnv().objects;
-    elseif isa(obj, 'PerceivedEnvironment')
+    if isa(obj, 'PerceivedEnvironment')
         objects = obj.objects;
-    elseif isa(obj, 'HeadTurningModulationKS')
-        objects = obj.RIR.getEnv().objects;
+    else
+        env = getEnvironment(obj, 0);
+        objects = env.objects;
     end
 
     if idx == 0
@@ -15,9 +14,13 @@ function setObject (obj, idx, parameter, value)
     if isempty(objects)
         return;
     end
-	
-	for iObject = idx
-    	objects{iObject}.(parameter) = value;
+
+    if strcmp(parameter, 'requests') && strcmp(value, 'init')
+        objects{idx}.initializeRequests();
+    else
+        for iObject = idx
+            objects{iObject}.(parameter) = value;
+        end
     end
 
 end
