@@ -37,7 +37,7 @@ function [b, wait] = canExecute( obj )
 end
 
 function execute (obj)
-	visual_data = obj.robot.getData();
+	visual_data = obj.robot.getVisualData();
 
     data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
     present_objects = data('present_objects');
