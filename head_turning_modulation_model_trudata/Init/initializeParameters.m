@@ -19,7 +19,8 @@ information = struct('audio_labels'    , [],...
                      );
 
 
-path_to_folder = '../../examples/attention_jido';
+% path_to_folder = '../../examples/attention_jido';
+path_to_folder = '';
 
 config_file = xmlread([path_to_folder, filesep, 'Config.xml']);
 
