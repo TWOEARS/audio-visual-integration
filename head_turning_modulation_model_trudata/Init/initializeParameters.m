@@ -63,8 +63,8 @@ information.nb_audio_labels = numel(information.audio_labels);
 information.visual_labels    = visual_labels;
 information.nb_visual_labels = numel(information.visual_labels);
 
-information.AVPairs    = AVPairs;
-information.nb_AVPairs = numel(information.AVPairs);
+% information.AVPairs    = AVPairs;
+% information.nb_AVPairs = numel(information.AVPairs);
 
 information.nb_labels = information.nb_audio_labels + information.nb_visual_labels;
 
