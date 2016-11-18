@@ -54,7 +54,7 @@ audio_labels = retrieveAudioIdentityModels(htm);
 
 % visual_labels = retrieveVisualIdentityModels(htm);
 % visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};
-visual_labels = {'fake6', 'mag0', 'mag2', 'mag1', 'fake7', 'fake5', 'fake9', 'fake8', 'mag3', 'fake4'};
+visual_labels = {'mag7', 'mag2', 'mag1', 'mag5', 'mag4', 'mag8', 'mag6', 'mag3'};
 % visual_labels = {'siren', 'dog', 'female', 'baby', 'engine', 'door', 'male', 'phone', 'female'};
 
 information.audio_labels    = audio_labels;
