@@ -7,7 +7,7 @@
 
 % === TO BE CHANGED BY A OMRE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 %p = '/home/twoears/AuditoryModel/TwoEars-1.2/';
-p = '/home/tforgue/mystuff/work/laas/twoears';
+p = '/home/tforgue/mystuff/work/laas/twoears/';
 addpath(genpath(p));
 % addpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_trudata']));
 % addpath(genpath([p, 'blackboard-system']));
