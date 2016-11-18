@@ -76,7 +76,9 @@ function updateObjectData (obj)
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
 
-	obj.objects{iObj}.updateData(data, theta, theta_v);
+	obj.objects{iObj}.updateData(data,...
+								 theta_a,...
+								 theta_v);
 	obj.objects{iObj}.updateTime(obj.htm.iStep);
 	% obj.objects{iObj}.presence = true;
 
