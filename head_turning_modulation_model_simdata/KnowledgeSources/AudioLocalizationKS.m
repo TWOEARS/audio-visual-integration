@@ -1,4 +1,4 @@
-% 'AudioLocalizationKS' class
+% AudioLocalizationKS class
 % This knowledge source aims at determining if a new object has appeared in the scene or not
 % Author: Benjamin Cohen-Lhyver
 % Date: 26.09.16
@@ -10,15 +10,14 @@ classdef AudioLocalizationKS < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-
 	htm;
-
-	% audio_localization_hyp;
 	hypotheses = [];
-	% avpairs
 	sources_position;
-
+	nb_sources;
 end
+% ======================== %
+% === PROPERTIES [END] === %
+% ======================== %
 
 % ===================== %
 % === METHODS [BEG] === %
@@ -29,29 +28,29 @@ methods
 function obj = AudioLocalizationKS (htm)
 	obj.htm = htm;
 	obj.sources_position = getInfo('sources_position');
-    % obj.avpairs = mergeLabels(info.AVPairs(info.scenario.scene{1}));
-    % obj.sources_position = info.sources_position;
+	obj.nb_sources = getInfo('nb_sources');
 end
 % === CONSTRUCTOR [END] === %
 
 function execute (obj)
 	iStep = obj.htm.iStep;
-    % label = obj.htm.gtruth{iStep, 1};
-    % tmp = strcmp(label, avpairs);
-    source = obj.htm.sources(iStep); % --- which source is emitting now
-	if source == 0
-		audio_localization_hyp = -1;
-	else
-    	% audio_localization_hyp = abs(obj.sources_position(source) - obj.htm.RIR.head_position);
-    	audio_localization_hyp = mod(obj.sources_position(source)-obj.htm.MOKS.head_position(end), 360);
-    	% audio_localization_hyp = mod(360 - obj.htm.MotorOrderKS.head_position + obj.sources_position(source), 360);
-	end
+    % source = obj.htm.sources(iStep); % --- which source is emitting now
+    streams = getLastHypothesis(obj.htm, 'SSKS');
+    audio_localization_hyp = zeros(obj.nb_sources, 1);
+    for iSource = 1:numel(streams)
+        if streams(iSource) == 0
+            audio_localization_hyp(iSource) = -1;
+        else
+        	audio_localization_hyp(iSource) = mod(obj.sources_position(iSource)-obj.htm.MOKS.head_position(end), 360);
+        end
+    end
+	% if source == 0
+	% 	audio_localization_hyp = -1;
+	% else
+ %    	audio_localization_hyp = mod(obj.sources_position(source)-obj.htm.MOKS.head_position(end), 360);
+	% end
 
-    % if isempty(audio_localization_hyp)
-    % 	audio_localization_hyp = -1;
-    % end
-    obj.hypotheses(end+1) = audio_localization_hyp;
-    % obj.audio_localization_hyp = audio_localization_hyp;
+    obj.hypotheses(:, end+1) = audio_localization_hyp;
 end
 
 % ===================== %
