@@ -21,8 +21,9 @@ rmpath(genpath([p, 'TwoEars']));
 % addpath(genpath(p));
 % === TO BE CHANGED BY A MORE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 
+pathToGenomix = getGenomixPath();
 % --- OdiInterface: class making the interface between the robot and the system
-Jido = JidoInterface();
+Jido = JidoInterface(pathToGenomix);
 
 % === Initialise and run model
 disp( 'Building blackboard system...' );
