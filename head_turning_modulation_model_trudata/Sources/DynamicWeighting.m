@@ -118,7 +118,7 @@ end
 
 function computeWeights (obj)
 	env = getEnvironment(obj.htm, 0);
-	for iObj = env.present_objects
+	for iObj = env.present_objects'
 		obj_cat = getObject(obj.htm, iObj, 'audiovisual_category');
 		if obj_cat ~= 0
 			if ~isPerformant(obj.htm, obj_cat)
