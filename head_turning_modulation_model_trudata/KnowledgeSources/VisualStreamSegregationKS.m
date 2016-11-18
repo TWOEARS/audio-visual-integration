@@ -40,7 +40,7 @@ function execute (obj)
     visual_vec = zeros(getInfo('nb_visual_labels'), 1);
 
     % visual_labels = getInfo('visual_labels');
-    data = obj.robot.visualStreamsHypotheses();
+    data = obj.robot.getVisualData();
 
     present_objects = find(arrayfun(@(x) data.triangulation{x}.triangulated, 1:getInfo('nb_visual_labels')));
 
