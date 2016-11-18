@@ -189,7 +189,8 @@ function updateAngles (obj)
         
         
         theta = mod(360 - motor_order + theta_object(end), 360);
-        obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
+        env = getEnvironment(obj, 0);
+        env.objects{iObject}.updateAngle(theta);
     end
 end
 
