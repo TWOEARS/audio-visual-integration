@@ -38,21 +38,23 @@ function execute (obj)
     % --- If no sound -> make the head turn to 0° (resting state)
     focus = obj.FCKS.focus(end);
 
-    % if obj.isFocusedObjectPresent(focus) % --- move the head to 'theta'
     if focus > 0
-        theta = getObject(obj.RIR, focus, 'theta');
+        theta = getObject(obj, focus, 'theta');
         theta = theta(end);
+        % obj.htm.RIR.environments{1}.objects{focus}.requests.checked = true;
+        % obj.htm.RIR.environments{1}.objects{focus}.requests.check = false;
     elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
         theta = -obj.head_position(end);
     else
         theta = 0;
     end
 
-    if ~obj.isFocusedObjectPresent(focus)
-        theta = -obj.head_position(end);
-    end
+    % if ~obj.isFocusedObjectPresent(focus)
+        % theta = -obj.head_position(end);
+    % end
 
     obj.motor_order(end+1) = theta;
+    
 
     if numel(obj.head_position) > 1
         obj.head_position(end+1) = mod(obj.head_position(end)+theta, 360);
@@ -68,7 +70,7 @@ end
 function bool = isFocusedObjectPresent (obj, focus)
     if obj.RIR.nb_objects == 0 && focus ~= 0
         bool = false;
-    elseif getObject(obj.RIR, focus, 'presence')
+    elseif getObject(obj, focus, 'presence')
         bool = true;
     else
         bool = false;
@@ -76,11 +78,6 @@ function bool = isFocusedObjectPresent (obj, focus)
 end
 
 function computeSHM (obj)
-    % if numel(obj.head_position) > 1
-    %     if obj.head_position(end-1) ~= obj.head_position(end) && obj.head_position(end) ~= 0
-    %         obj.shm = obj.shm+1;
-    %     end
-    % end
     if numel(obj.motor_order) > 1
         if obj.motor_order(end-1) ~= obj.motor_order(end) && obj.motor_order(end) > 0
             obj.shm = obj.shm+1;

@@ -35,6 +35,7 @@ properties (SetAccess = public, GetAccess = public)
     FCKS; % Focus Computation Focus
     EMKS; % Environmental Map
     ODKS; % Object Detection
+    SSKS; % Stream Segregation
     ALKS; % Audio Location
     VLKS; % Visual Location
     ACKS; % Audio Classifiers
@@ -64,26 +65,18 @@ methods
 function obj = HeadTurningModulationKS (varargin)
 
     p = inputParser();
-      % p.addOptional('Scene', 0,...
-      %               @(x) validateattributes(x, {'numeric'},{'vector', 'integer'}));
-      % p.addOptional('Steps', 1000,...
-      %               @(x) validateattributes(x, {'numeric'}, {'integer', 'positive'}));
       p.addOptional('Save', false,...
                     @islogical);
       p.addOptional('Load', false,...
                     @islogical);
-      % p.addOptional('Run', true,...
-      %               @islogical);
-      % p.addOptional('GUI', false,...
-      %               @islogical);
     p.parse(varargin{:});
     p = p.Results;
 
     obj.save = p.Save;
     obj.load = p.Load;
 
-    initializeParameters();
     if p.Load
+        initializeParameters();
         disp('HTM: loading simulation');
         [filename, pathname] = uigetfile('~/SciWork/Dat/HTM');
         data = load([pathname, filename]);
@@ -102,14 +95,14 @@ function obj = HeadTurningModulationKS (varargin)
         obj.classif_mfi = repmat({'none_none'}, getInfo('nb_steps'), 1);
     else
         disp('HTM: creating simulation');
+        initializeParameters(obj);
         % initializeParameters();
 
         obj.nb_steps_final = getInfo('nb_steps');
 
-        obj.statistics = getInfo('statistics');
-        obj.classif_mfi = repmat({'none_none'}, getInfo('nb_steps'), 1);
+        %obj.statistics = getInfo('statistics');
 
-        initializeScenario(obj);
+        % initializeScenario(obj);
     end
 
     obj.MSOM = MultimodalSelfOrganizingMap();
@@ -120,10 +113,10 @@ function obj = HeadTurningModulationKS (varargin)
     obj.FCKS = FocusComputationKS(obj);
     obj.MOKS = MotorOrderKS(obj, obj.FCKS);
     
-    % if EMKS
-        obj.EMKS = EnvironmentalMapKS(obj);
-    % end
+    obj.EMKS = EnvironmentalMapKS(obj);
 
+    obj.SSKS = StreamSegregationKS(obj);
+    
     obj.ALKS = AudioLocalizationKS(obj);
     obj.VLKS = VisualLocalizationKS(obj);
 
@@ -193,6 +186,10 @@ function run (obj)
         obj.displayProgressBar('update');
         % --- DISPLAY --- %
 
+        obj.EMKS.updateMap();
+        
+        % --- Stream Segregation
+        obj.SSKS.execute();
         % --- Audio Localization
         obj.ALKS.execute();
         % --- Visual Localization
@@ -200,21 +197,28 @@ function run (obj)
         % --- Object detection
         obj.ODKS.execute();
 
-        % --- Processing the ObjectDetectionKS output for time step iStep
-        if ~obj.createNew() && ~obj.updateObject()
-            obj.setPresence(false);
-            obj.RIR.updateData();
-        else
-            obj.degradeData(); % --- Remove visual components if object is NOT in field of view
-            obj.RIR.updateData(); % --- Updating the RIR observed data
-            if obj.createNew()
-                obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
-                obj.RIR.addObject(); % --- Add the object
-            elseif obj.updateObject()
-                obj.MSOM.idx_data = obj.MSOM.idx_data+1;
-                obj.RIR.updateObject(); % --- Update the current object
+        streams = getLastHypothesis(obj, 'SSKS');
+        for iSource = 1:numel(streams)
+            if streams(iSource) ~= 0
+                % --- Processing the ObjectDetectionKS output for time step iStep
+                %if ~obj.createNew(iSource) && ~obj.updateObject(iSource)
+                tmp = getLastHypothesis(obj, 'ODKS', 'id_object');
+                if tmp(iSource) == 0
+                    obj.setPresence(iSource, false);
+                    % obj.RIR.updateData(iSource);
+                else
+                    obj.degradeData(iSource); % --- Remove visual components if object is NOT in field of view
+                    % obj.RIR.updateData(iSource); % --- Updating the RIR observed data
+                    if obj.createNew(iSource)
+                        obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
+                        obj.RIR.addObject(iSource); % --- Add the object
+                    elseif obj.updateObject(iSource)
+                        obj.MSOM.idx_data = obj.MSOM.idx_data+1;
+                        obj.RIR.updateObject(iSource); % --- Update the current object
+                    end
+                    obj.setPresence(iSource, true);
+                end
             end
-            obj.setPresence(true);
         end
 
         obj.RIR.updateObjects();
@@ -225,15 +229,15 @@ function run (obj)
 
         obj.updateAngles();
 
-        if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
-            obj.statistics.max_shm(iStep) = 0;
-        end
+%         if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
+%             obj.statistics.max_shm(iStep) = 0;
+%         end
 
         obj.retrieveMfiCategorization();
 
         % obj.storeMsomWeights(iStep);
 
-        obj.EMKS.updateMap();
+        
 
     end
 
@@ -254,12 +258,11 @@ function run (obj)
 end
 % === 'RUN' FUNCTION [END] === %
 
-function setPresence (obj, bool)
+function setPresence (obj, iSource, bool)
     if ~bool 
-        if obj.RIR.nb_objects > 0 
-            % idx = obj.ODKS.id_object(end-1);
+        if obj.RIR.nb_objects > 0
             idx = getHypothesis(obj, 'ODKS', 'id_object');
-            idx = idx(end-1);
+            idx = idx(iSource, end-1);
             if idx ~= 0 && getObject(obj, idx, 'presence')
                 setObject(obj, idx, 'presence', false);
                 setObject(obj, idx, 'requests', 'init');
@@ -267,16 +270,19 @@ function setPresence (obj, bool)
         end
     else
         idx = getLastHypothesis(obj, 'ODKS', 'id_object');
+        idx = idx(iSource);
         setObject(obj, idx, 'presence', true); % --- The object is present but not necessarily facing the robot
     end
 end
 
-function bool = createNew (obj)
-    bool = getLastHypothesis(obj, 'ODKS', 'create_new');
+function bool = createNew (obj, iSource)
+    hyp = getLastHypothesis(obj, 'ODKS', 'create_new');
+    bool = hyp(iSource);
 end
 
-function bool = updateObject (obj)
-    bool = getLastHypothesis(obj, 'ODKS', 'update_object');
+function bool = updateObject (obj, iSource)
+    hyp = getLastHypothesis(obj, 'ODKS', 'update_object');
+    bool = hyp(iSource);
 end
 
 % === Given the position of the head, updates the position of all the sources observed so far
@@ -284,18 +290,19 @@ function updateAngles (obj)
     if obj.RIR.nb_objects == 0
         return;
     end
+    env = getEnvironment(obj, 0);
     for iObject = 1:obj.RIR.nb_objects
         theta_object = getObject(obj, iObject, 'theta');
         theta = mod(360 - obj.MOKS.motor_order(end) + theta_object(end), 360);
-        obj.RIR.getEnv().objects{iObject}.updateAngle(theta);
+        env.objects{iObject}.updateAngle(theta);
     end
 end
 
 % === If the robot is not facing the audio source, visual data perceived should not be taken into account
-function degradeData (obj)
+function degradeData (obj, iSource)
     theta = getLastHypothesis(obj, 'ALKS');
-    if ~isInFieldOfView(theta)
-        obj.data(getInfo('nb_audio_labels')+1:end, obj.iStep) = 0;
+    if ~isInFieldOfView(theta(iSource))
+        obj.data{iSource}(getInfo('nb_audio_labels')+1:end, obj.iStep) = 0;
     end
 end
 
@@ -309,16 +316,27 @@ function storeMsomWeights (obj)
 end
 
 function retrieveMfiCategorization (obj)
-    % if sum(obj.data(:, obj.iStep)) ~= 0
     iStep = obj.iStep;
-    if obj.sources(iStep) ~= 0
-        id_object = getLastHypothesis(obj, 'ODKS', 'id_object');
-        data = retrieveObservedData(obj, id_object, 'best');
-        obj.classif_mfi{iStep} = obj.MFI.inferCategory(data);
+    pobj = obj.RIR.environments{end}.present_objects';
+    for iObject = pobj
+        iSource = getObject(obj, iObject, 'source');
+        t = getObject(obj, iObject, 'tmIdx');
+        t = t(1);
+        obj.classif_mfi{iSource}(iStep) = {getObject(obj, iObject, 'label')};
+        obj.statistics.mfi(iStep, iSource) = strcmp(obj.classif_mfi{iSource}(iStep), obj.gtruth{iSource}(iStep, 1));
+        obj.statistics.mfi_mean(t:iStep, iSource) = cumsum(obj.statistics.mfi(t:iStep, iSource)) ./ (t:iStep)';
+        obj.statistics.max_mean_shm(t:iStep, iSource) = cumsum(obj.statistics.max_shm(t:iStep, iSource)) ./ (t:iStep)';
     end
-    obj.statistics.mfi(iStep) = strcmp(obj.classif_mfi{iStep}, obj.gtruth(iStep, 1));
-    obj.statistics.mfi_mean(1:iStep) = cumsum(obj.statistics.mfi(1:iStep)) ./ (1:iStep)';
-    obj.statistics.max_mean_shm(1:iStep) = cumsum(obj.statistics.max_shm(1:iStep)) ./ (1:iStep)';
+    % obj.RIR.environments{end}.present_objects
+    % obj.statistics.mfi_mean(iStep, end) = mean(obj.statistics.mfi_mean(iStep, 1:end-1));
+    if isempty(pobj)
+        obj.statistics.mfi_mean(iStep, end) = 0;
+        obj.statistics.max_mean_shm(1:iStep, end) = 0;
+    else
+        sources = getObject(obj, pobj, 'source');
+        obj.statistics.mfi_mean(iStep, end) = mean(obj.statistics.mfi_mean(iStep, sources), 2);
+        obj.statistics.max_mean_shm(iStep, end) = mean(obj.statistics.max_mean_shm(iStep, sources), 2);
+    end
 end
 
 function displayProgressBar (obj, sim_status)

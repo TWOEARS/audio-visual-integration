@@ -14,10 +14,10 @@ classdef FocusComputationKS < handle
 properties (SetAccess = public)
     htm; 
     RIR;
+    
+    nb_sources = 0;
 
-    % focused_object = 0;
     focus_origin = []; % to be renamed as "focus_type"
-    % previous_focus = 0;
     focus = [];
 end
 
@@ -26,12 +26,13 @@ end
 % ===================== %
 methods
 
-% === Constructor === %
+% === Constructor [BEG] === %
 function obj = FocusComputationKS (htm)
     obj.htm = htm;
     obj.RIR = htm.RIR;
+    obj.nb_sources = getInfo('nb_sources');
 end
-
+% === Constructor [END] === %
 
 % === Other Methods === %
 function execute (obj)
@@ -41,21 +42,33 @@ function execute (obj)
         obj.focus(end+1) = 0;
         obj.focus_origin(end+1) = 0;
         return;
+%     elseif isempty(obj.htm.MSOM.categories)
+%         objects = getLastHypothesis(obj, 'ODKS', 'id_object');
+%         f = find(objects > 0);
+%         t = randi(numel(f));
+%         obj.focus(end+1) = f(t);
+%         return;
     end
+
     
     % --- DWmod-based focus computing
     dwmod_focus = obj.computeDWmodFocus();
 
     % --- MFI-based focus computing
-    mfi_focus = obj.computeMFIFocus();
+    mfi_focus = obj.computeMFImodFocus();
     
     % --- Comparison of the two results
     if mfi_focus == 0 && dwmod_focus > 0       % --- DWmod takes the lead
         focus = dwmod_focus;
         focus_origin = 1;
     elseif mfi_focus == 0 && dwmod_focus == 0  % --- No focused object
-        focus = obj.focus(end);
-        % focus = 0;
+        if obj.focus(end) ~= 0 && getObject(obj, obj.focus(end), 'audiovisual_category') ~= 1
+            if ~isPerformant(obj, getObject(obj, obj.focus(end), 'audiovisual_category')) && getObject(obj, obj.focus(end), 'presence')
+                focus = obj.focus(end);
+            else
+                focus = 0;
+            end
+        end
         focus_origin = 0;
     elseif mfi_focus == 0 && dwmod_focus == -1 % --- DWmod focus but AV category not performant
         focus = obj.focus(end);
@@ -67,9 +80,9 @@ function execute (obj)
 
     % % === USEFUL??? === %
     % if ~obj.isPresent(focus)
-    % if ~getObject(obj, focus, 'presence')
-    %     focus = 0;
-    % end
+    if ~getObject(obj, focus, 'presence')
+        focus = 0;
+    end
     % % === USEFUL??? === %
 
     obj.focus_origin(end+1) = focus_origin;
@@ -78,10 +91,11 @@ end
 
 % === Compute focused object thanks to the DYNAMIC WEIGHTING module (DWmod) algorithm
 function focus = computeDWmodFocus (obj)
+    focus = zeros(obj.nb_sources, 1);
     focus = obj.getMaxWeightObject();
     object = getObject(obj, focus);
-    env = getEnvironment(obj, 0);
-    if object.weight <= 0 || ~getObject(obj, focus, 'presence')
+    %env = getEnvironment(obj, 0);
+    if object.weight <= 0 || ~object.presence
         focus = 0;
     % elseif ~isPerformant(env, object.audiovisual_category)
     %     focus = -1;
@@ -89,28 +103,54 @@ function focus = computeDWmodFocus (obj)
 end
 
 % === Compute focused object thanks to the MULTIMODAL FUSION and INFERENCE module (MFImod) algorithm
-function focus = computeMFIFocus (obj)
-    current_object = getLastHypothesis(obj.htm, 'ODKS', 'id_object');
-    if current_object == 0
-        focus = 0;
-        return;
-    end
-
-    if getObject(obj, current_object, 'presence')
-        requests = getObject(obj, current_object, 'requests');
-        if requests.check 
-            focus = current_object;
-            % === TO BE CHANGED === %
-            % obj.RIR.getEnv().objects{current_object}.requests.checked = true;
-            % === TO BE CHANGED === %
-        % elseif requests.checked
-        %     %focus = current_object;
-        %     focus = 0;
+function focus = computeMFImodFocus (obj)
+    focus = zeros(obj.nb_sources, 1);
+    hyp = getLastHypothesis(obj, 'ODKS', 'id_object');
+    for iSource = 1:obj.nb_sources
+        current_object = hyp(iSource);
+        if current_object == 0
+            focus(iSource) = 0;
         else
-            focus = 0;
+            if getObject(obj, current_object, 'presence')
+                requests = getObject(obj, current_object, 'requests');
+                if requests.check || ~isPerformant(obj.htm, getObject(obj, current_object, 'audiovisual_category'))
+                    focus(iSource) = current_object;
+                    % === TO BE CHANGED === %
+                    % obj.RIR.getEnv().objects{current_object}.requests.checked = true;
+                    % === TO BE CHANGED === %
+                % elseif requests.checked
+                %     %focus = current_object;
+                %     focus = 0;
+                else
+                    focus(iSource) = 0;
+                end
+            else
+                focus(iSource) = 0;
+            end
         end
-    else
+    end
+    focus = obj.solveConflicts(focus);
+end
+
+function focus = solveConflicts (obj, focuses)
+    % objects = find(focuses);
+    objects = focuses(focuses ~= 0);
+    if isempty(objects)
         focus = 0;
+    elseif numel(objects) == 1
+        focus = objects;
+    else
+        avcats = getObject(obj, objects, 'audiovisual_category');
+        if all(avcats == 1)
+            focus = objects(end);
+        else
+            %avcats = avcats(avcats ~= 1);
+            objects = objects(avcats~=1);
+            avcats = getObject(obj, objects, 'audiovisual_category');
+            cats = cell2mat(arrayfun(@(x) getCategory(obj, x, 'nb_inf'), avcats));
+            [~, p] = min(cats);
+            focus = objects(p);
+        end
     end
 end
 
@@ -127,12 +167,11 @@ end
 
 % === Get Objects of Max Weight (DWmod computation)
 function request = getMaxWeightObject (obj)
-    RIR = obj.RIR;
-    obj_weights = getObject(RIR, 'all', 'weight');
+    obj_weights = getObject(obj, 'all', 'weight');
     [val, pos] = max(obj_weights);
     max_weight_obj = find(obj_weights == val);
     if numel(max_weight_obj) > 1
-        tsteps = getObject(RIR, max_weight_obj, 'tsteps');
+        tsteps = getObject(obj.RIR, max_weight_obj, 'tsteps');
         [~, pos] = min(tsteps);
         request = max_weight_obj(pos);
     else

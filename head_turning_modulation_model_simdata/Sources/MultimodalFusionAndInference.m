@@ -76,12 +76,12 @@ function AVCategory = inferCategory (obj, input_vector)
 	[data, value] = obj.checkMissingModality(input_vector);
 
 	switch value
-	case 0    % ---------------------------- no data
+	case 0    % --- no data
 		AVCategory = 'none_none';
 	   	return;
-	case 3    % ---------------------------- full data
+	case 3    % --- full data
 		bmu = obj.MSOM.getCombinedBMU(data);
-	otherwise % ---------------------------- one of the modality is missing
+	otherwise % --- one of the modality is missing
 		bmu = obj.MSOM.getBMU(data, value);
 	end
 	
@@ -104,20 +104,15 @@ function [data, value] = checkMissingModality (obj, input_vector)
 	   sum(input_vector(nb_audio_labels+1:end)) < 0.2
 	   value = 0;
 	   data = input_vector;
-	   % AVCategory = 'none_none';
-	   % return;
-	% --- Audio missing
-	% --- Find BMU with VISUAL components
+	% --- Audio missing --> Find BMU with VISUAL components
 	elseif sum(input_vector(1:nb_audio_labels)) < 0.2
 		value = 2;
 		data = input_vector(nb_audio_labels+1:end);
-	% --- Vision missing
-	% --- Find BMU with AUDIO components
+	% --- Vision missing --> Find BMU with AUDIO components
 	elseif sum(input_vector(nb_audio_labels+1:end)) < 0.2
 		value = 1;
 		data = input_vector(1:nb_audio_labels);
-	% --- Full vector
-	% --- Find BMU with both VISUAL & AUDIO components
+	% --- Full vector --> Find BMU with both VISUAL & AUDIO components
 	else
 		value = 3;
 		data = input_vector;

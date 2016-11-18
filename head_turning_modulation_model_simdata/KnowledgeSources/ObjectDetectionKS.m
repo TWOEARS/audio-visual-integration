@@ -39,38 +39,52 @@ end
 % === CONSTRUCTOR [END] === %
 
 function execute (obj)
-
-	theta_a = getLastHypothesis(obj.htm, 'ALKS');
-	if theta_a == -1
-		hyp = [0, 0, 0];
-	else
-		putative_audio_object = [];
-		nb_objects = obj.RIR.nb_objects;
-		% --- Look for an object that has already been observed
-		for iObject = 1:nb_objects
-			theta_o = getObject(obj.htm, iObject, 'theta');
-			theta_o = theta_o(end);
-			% theta_diff_a = abs(theta_o - theta_a);
-			theta_diff_a = theta_o - theta_a;
-			if theta_diff_a <= obj.thr_theta  && theta_diff_a >= -obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
-				putative_audio_object(end+1) = iObject;
+    hyp = zeros(getInfo('nb_sources'), 3);
+	
+    streams = getLastHypothesis(obj.htm, 'SSKS');
+    if isempty(streams)
+        obj.setHypotheses(hyp);
+        return;
+    end
+	theta = getLastHypothesis(obj.htm, 'ALKS');
+	
+	nb_objects = obj.RIR.nb_objects;
+	for iSource = 1:numel(streams)
+		theta_a = theta(iSource);
+		if theta_a == -1
+			hyp(iSource, :) = [0, 0, 0];
+		else
+			putative_audio_object = [];
+			% nb_objects = obj.RIR.nb_objects;
+			% --- Look for an object that has already been observed
+			for iObject = 1:obj.RIR.nb_objects
+                % if iObject <= obj.RIR.nb_objects
+                    theta_o = getObject(obj.htm, iObject, 'theta');
+                    theta_o = theta_o(end);
+                    % theta_diff_a = abs(theta_o - theta_a);
+                    theta_diff_a = theta_o - theta_a;
+                    if theta_diff_a <= obj.thr_theta  && theta_diff_a >= -obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
+                        putative_audio_object(end+1) = iObject;
+                    end
+                % end
 			end
-		end
 
-		if isempty(putative_audio_object) % --- Create a new object
-			hyp = [1, 0, nb_objects+1];
-		else % --- Update already existing object
-			hyp = [0, 1, putative_audio_object(1)];
-			
+			if isempty(putative_audio_object) % --- Create a new object
+				hyp(iSource, :) = [1, 0, nb_objects+1];
+				nb_objects = nb_objects+1;
+			else % --- Update already existing object
+				hyp(iSource, :) = [0, 1, putative_audio_object(1)];
+				
+			end
 		end
 	end
 	obj.setHypotheses(hyp);
 end
 
 function setHypotheses (obj, hyp)
-	obj.create_new(end+1) = hyp(1);
-	obj.update_object(end+1) = hyp(2);
-	obj.id_object(end+1) = hyp(3);
+	obj.create_new(:, end+1) = hyp(:, 1);
+	obj.update_object(:, end+1) = hyp(:, 2);
+	obj.id_object(:, end+1) = hyp(:, 3);
 end
 
 function plotDecisions (obj)

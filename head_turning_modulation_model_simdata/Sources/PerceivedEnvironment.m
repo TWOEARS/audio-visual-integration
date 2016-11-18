@@ -42,25 +42,32 @@ function obj = PerceivedEnvironment (RIR)
 	obj.MFI  = RIR.MFI;    % --- Multimodal Fusion & Inference module
 	obj.MSOM = RIR.MSOM;   % --- Multimodal SelfOrganizing Map
 	obj.DW   = obj.htm.DW; % --- Dynamic Weighting module
-	% --- Initialize categories
-	%obj.observed_categories{1} = getInfo('obs_struct');
 end
 % === Constructor [END] === %
 
 % --- Other methods --- %
-function addObject (obj)
+function addObject (obj, iSource)
+    iStep = obj.htm.iStep;
+    theta = getLastHypothesis(obj, 'ALKS');
+    theta = theta(iSource);
+    theta_v = getLastHypothesis(obj, 'VLKS');
 	% --- Create a new PERCEIVEDOBJECT object
-    obj.objects{end+1} = PerceivedObject(obj.RIR.data(:, end),...
-    									 obj.RIR.theta_hist(end),...
-    									 obj.RIR.theta_v_hist(end));
+    obj.objects{end+1} = PerceivedObject(obj.htm.data{iSource}(:, obj.htm.iStep),...
+    									 theta,...
+    									 theta_v,...
+    									 iSource);
+    									 % obj.RIR.theta_hist(end),...
+    									 % obj.RIR.theta_v_hist(end),...
     % obj.objects{end}.updateTime(obj.htm.iStep);
                                     %obj.RIR.dist_hist(end)  ...
 	obj.objects{end}.updateTime(obj.htm.iStep);
-    obj.addInput();
+    obj.addInput(iSource);
 end
 
-function addInput (obj)
-	iObj = obj.htm.ODKS.id_object(end);
+function addInput (obj, iSource)
+    iObj = getLastHypothesis(obj, 'ODKS', 'id_object');
+    iObj = iObj(iSource);
+	%iObj = obj.htm.ODKS.id_object(end);
 	% --- No data missing
 	if ~obj.objects{iObj}.requests.missing
 		% --- Train nets
@@ -69,61 +76,50 @@ function addInput (obj)
 	end
 end
 
-function updateObjectData (obj)
-	iObj = obj.htm.ODKS.id_object(end);
+function updateObjectData (obj, iSource)
+	iObj = getLastHypothesis(obj, 'ODKS', 'id_object');
+    iObj = iObj(iSource);
 	% theta = abs(obj.RIR.head_position - theta);
-	data = obj.RIR.data(:, end);
-	theta = obj.RIR.theta_hist(end);
-	theta_v = obj.RIR.theta_v_hist(end);
+    data = obj.htm.data{iSource}(:, obj.htm.iStep);
+	%data = obj.RIR.data(:, end);
+	%theta = obj.RIR.theta_hist(end);
+    theta = getLastHypothesis(obj, 'ALKS');
+    theta = theta(iSource);
+	%theta_v = obj.RIR.theta_v_hist(end);
+    theta_v = getLastHypothesis(obj, 'VLKS');
 	obj.objects{iObj}.updateData(data, theta, theta_v);
 	obj.objects{iObj}.updateTime(obj.htm.iStep);
-	obj.objects{iObj}.presence = true;
-	obj.addInput();
+	%obj.objects{iObj}.presence = true;
+	obj.addInput(iSource);
 end
 
-% function setClasses (obj)
-% 	if isempty(obj.MFI.categories)
-% 		obj.MFI.setCategories();
-% 	end
-% 	categories = obj.MFI.getCategories();
-% 	for iClass = 1:numel(categories)
-% 		% labels = obj.getCategories('label') ;
-% 		search = find(strcmp(categories{iClass}, obj.labels));
-% 		if isempty(search)
-% 			obj.createNewCategory(categories{iClass});
-% 		end			
-% 	end
-% end
-
-% function createNewCategory (obj, label)
-% 	obj.observed_categories{end+1} = getInfo('obs_struct');
-% 	obj.observed_categories{end}.label = label;
-% 	obj.labels = [obj.labels, label];
-% end
-
 function checkInference (obj)
-	for iObj = obj.present_objects
+	for iObj = obj.present_objects'
 		[inference, missing, check, verification, label] = obj.getObjectRequests(iObj);
 		if inference && missing % --- If an inference has been requested & data is missing
 			if check % --- If a CHECK has been requested (-> motor order)
 				% --- Continue to turn the head to the object
 			else % --- If a CHECK has not been yet requested: trigger a motor order?
 				[AVClass, search] = obj.simulateAVInference(iObj);
-				if isPerformant(obj, search) % --- If the category has been correctly inferred in the past: CHECK not needed
-					obj.preventVerification(iObj, search, AVClass);
-				else % --- If the cat. hasn't been well infered in the past -> CHECK needed
-					obj.requestVerification(iObj, AVClass);
-					obj.DW.updateInferenceCpt(search);
-				end
+				% if ~strcmp(AVClass, 'none_none')
+					if isPerformant(obj, search) % --- If the category has been correctly inferred in the past: CHECK not needed
+						obj.preventVerification(iObj, search, AVClass);
+					else % --- If the cat. hasn't been well infered in the past -> CHECK needed
+						obj.requestVerification(iObj, AVClass);
+						obj.DW.updateInferenceCpt(search);
+					end
+				% end
 			end
 		% --- If no inference requested (AV data available) but a verification is requested
 		% --- ADD A VERIFICATION WITH NO CHECK in order to verify the inference in the case we have AV thanks to DWmod
 		elseif verification
 			[AVClass, search] = obj.simulateAVInference(iObj);
-			if strcmp(AVClass, label) % --- If inferred AV is the same as observed AV
+			if strcmp(AVClass, label) && ~strcmp(AVClass, 'none_none') % --- If inferred AV is the same as observed AV
 				obj.preventVerification(iObj, search, AVClass);
 				obj.DW.updateGoodInferenceCpt(search);
+				obj.objects{iObj}.requests.checked = true;
 			else % --- If infered AV is NOT the same as observed AV
+                obj.objects{iObj}.requests.label = AVClass;
 				% --- Make the network learn with n more iterations
 				obj.highTrainingPhase();
 				% obj.objects{iObj}.requests.verification = true;
@@ -131,23 +127,15 @@ function checkInference (obj)
 		elseif ~missing % All data available
 			[AVClass, search] = obj.simulateAVInference(iObj);
 			obj.objects{iObj}.setLabel(AVClass, search);
-			% obj.objects{iObj}.audiovisual_category = search;
 			obj.objects{iObj}.requests.check = false;
 		end
 	end
 end
 
-% function updateGoodInferenceCpt (obj, search)
-% 	obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf+1;
-% end
-
-% function updateInferenceCpt (obj, search)
-% 	obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
-% end
-
 % === Request a CHECK of infered AV vs observed AV
 function requestVerification (obj, iObj, AVClass)
 	obj.objects{iObj}.requests.check = true;
+	obj.objects{iObj}.requests.verification = true;
 	obj.objects{iObj}.requests.label = AVClass;
 end
 
@@ -156,8 +144,8 @@ function preventVerification (obj, iObj, search, AVClass)
 		obj.objects{iObj}.requests.check = false;
 		obj.objects{iObj}.requests.verification = false;
 		obj.objects{iObj}.requests.inference = false;
+		% obj.objects{iObj}.requests.checked = false;
 		obj.objects{iObj}.setLabel(AVClass, search);
-		% obj.objects{iObj}.audiovisual_category = search;
 	end
 end
 
@@ -184,102 +172,12 @@ function highTrainingPhase (obj)
 	obj.MFI.MSOM.setParameters(1);
 end
 
-% === Compute the level of correct inferences by category
-% function computeCategoryPerformance (obj)
-% 	for iClass = 1:numel(obj.observed_categories)
-% 		obj.observed_categories{iClass}.perf = obj.observed_categories{iClass}.nb_goodInf/...
-% 											   obj.observed_categories{iClass}.nb_inf;
-
-% 		if isnan(obj.observed_categories{iClass}.perf) || isinf(obj.observed_categories{iClass}.perf)
-% 			obj.observed_categories{iClass}.perf = 0;
-% 		end
-
-% 		if isPerformant(obj.htm, iClass)
-% 			obj.observed_categories{iClass}.proba = obj.observed_categories{iClass}.cpt/numel(obj.objects);
-
-% 			if isnan(obj.observed_categories{iClass}.proba) || isinf(obj.observed_categories{iClass}.proba)
-% 				obj.observed_categories{iClass}.proba = 0;
-% 			end
-% 		end
-% 	end
-% end
-
-% function computeCategoryProba (obj)
-% 	for iClass = 1:numel(obj.observed_categories)
-% 		obj.observed_categories{iClass}.proba = obj.observed_categories{iClass}.cpt/numel(obj.objects) ;
-
-% 		if isnan(obj.observed_categories{iClass}.proba) || isinf(obj.observed_categories{iClass}.proba)
-% 			obj.observed_categories{iClass}.proba = 0 ;
-% 		end
-% 	end
-% end
-
-
-% function reinitializeClasses (obj)
-% 	for iClass = 1:numel(obj.observed_categories)
-% 		obj.observed_categories{iClass}.cpt = 0;
-% 	end
-% end
-
-% function categorizeObjects (obj)
-
-% 	obj.reinitializeClasses() ;
-% 	for iObj = 1:obj.RIR.nb_objects
-% 		c = getObject(obj, iObj, 'audiovisual_category');
-% 		if c > 0
-% 			obj.observed_categories{c}.cpt = obj.observed_categories{c}.cpt + 1;
-% 		else
-% 			obj.observed_categories{1}.cpt = obj.observed_categories{1}.cpt + 1;
-% 		end
-% 	end
-
-% 	cpts = cell2mat(arrayfun(@(x) obj.observed_categories{x}.cpt > 0,...
-% 							 1:numel(obj.observed_categories),...
-% 							 'UniformOutput', false));
-% 	obj.nb_classes = sum(cpts);
-% end
-
-% function countObjects (obj)
-% 	for iObj = 1:numel(obj.objects)
-% 		if iObj ~= obj.present_objects
-% 			[AVClass, search] = obj.simulateAVInference(iObj);
-%             obj.objects{iObj}.audiovisual_category = search;
-% 		end
-% 	end
-% end
-
 function computePresence (obj)
 	obj.present_objects = find(getObject(obj, 'all', 'presence'));
 	if isempty(obj.present_objects)
 		obj.present_objects = [];
 	end
 end
-
-% function computeWeights (obj)
-% 	% for iObj = 1:numel(obj.objects)
-% 	for iObj = obj.present_objects
-% 		obj_cat = obj.objects{iObj}.audiovisual_category;
-% 		if obj_cat ~= 0
-% 			if ~isPerformant(obj.htm, obj_cat)
-% 				% obj.observed_categories{obj_cat}.congruence = 0;
-% 			else
-% 			% --- Compute weights thanks to weighting functions
-% 				% --- Incongruent
-% 				if obj.observed_categories{obj_cat}.proba <= 1/obj.nb_classes
-% 					increaseObjectWeight(obj.htm, iObj);
-% 				% --- Congruent
-% 				else
-% 					decreaseObjectWeight(obj.htm, iObj);
-% 				end
-% 				obj.observed_categories{obj_cat}.congruence = obj.objects{iObj}.weight;
-% 			end
-% 		end
-% 	end
-% end
-
-% function cpt = getCounter (obj)
-% 	cpt = obj.counter;
-% end
 
 function request = getCategories (obj, varargin)
 	if nargin == 1
@@ -309,22 +207,12 @@ function updateEnvironment (obj, tmIdx)
 	
 	obj.computePresence();
 	
-	% obj.labels = getCategory(obj, 'all', 'label');
-
 	obj.DW.setClasses();
 
 	obj.checkInference();
 
 	obj.DW.execute();
 
-	% obj.categorizeObjects();
-
-	% obj.countObjects();
-
-	% obj.computeCategoryPerformance();
-
-	% obj.computeWeights();
-	
 	arrayfun(@(x) obj.objects{x}.updateObj(), obj.present_objects);
 		
 end

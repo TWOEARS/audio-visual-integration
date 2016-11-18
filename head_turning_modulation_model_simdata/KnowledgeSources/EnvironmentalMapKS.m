@@ -33,6 +33,9 @@ properties (SetAccess = public, GetAccess = public)
 	object_creation;
 
 	sources = [];
+    nb_sources = 0;
+    
+    emitting_sources = [];
 
 	% angles;
 
@@ -62,6 +65,7 @@ function obj = EnvironmentalMapKS (htm)
 
 	obj.depth_of_view = 9;
 	obj.field_of_view = 30;
+    obj.nb_sources = getInfo('nb_sources');
 
 	obj.createFigure();
 	obj.drawSources();
@@ -71,7 +75,6 @@ function obj = EnvironmentalMapKS (htm)
 	obj.drawRobot();
 
 	obj.drawFieldOfView('init');
-
 
 	obj.emitting_handle = zeros(2, getInfo('nb_sources'));
 
@@ -86,23 +89,32 @@ function obj = EnvironmentalMapKS (htm)
 	obj.angles = getInfo('sources_position');
 	obj.angles_rad = deg2rad(obj.angles);
 	obj.angles_cpt = [zeros(1, numel(obj.angles_rad)) ; zeros(1, numel(obj.angles_rad))];
-	obj.drawSHM('init');
+	%obj.drawSHM('init');
 
-	obj.drawSilence();
+	% obj.drawSilence();
 
 end
 % === CONSTRUCTOR [END] === %
 
 function updateMap (obj)
 	obj.iStep = obj.htm.iStep;
+    timeline = getInfo('timeline');
+	sources = zeros(1, obj.nb_sources);
+	for iSource = 1:obj.nb_sources
+		tmp = find(timeline{iSource} <= obj.iStep, 1, 'last');
+		if ~isempty(tmp) && mod(tmp, 2) == 0
+			sources(iSource) = 1;
+		end
+    end
+    obj.emitting_sources = sources;
 	obj.drawLocalizationResults();
 	obj.drawEmittingSource();
 	obj.drawFieldOfView('update');
 	obj.drawSeenSources();
 	obj.drawClassificationResults();
 	obj.drawMeanClassificationResults();
-	obj.drawSHM('update');
-	% pause(0.05);
+	%obj.drawSHM('update');
+	pause(0.05);
 end
 
 function createFigure (obj)
@@ -122,19 +134,24 @@ function createFigure (obj)
 end
 
 function drawClassificationResults (obj)
-	iSource = obj.htm.sources(obj.iStep);
-	if iSource == 0
-		return;
+	%sources = obj.emitting_sources;
+    if obj.htm.RIR.nb_objects == 0,
+        return;
     end
+	objects = getLastHypothesis(obj, 'ODKS', 'id_object');
     
-    current_object = getLastHypothesis(obj.htm, 'ODKS', 'id_object');
-	l = getObject(obj.htm, current_object, 'label');
-	g = obj.htm.gtruth{obj.iStep, 1};
-	if strcmp(l, g)
-		set(obj.objects_handle(iSource), 'FaceColor', 'blue');
-	else
-		set(obj.objects_handle(iSource), 'FaceColor', 'red');
-	end
+    for iSource = 1:obj.nb_sources
+        if objects(iSource) ~= 0
+	        current_object = objects(iSource);
+	        l = getObject(obj, current_object, 'label');
+	        g = obj.htm.gtruth{iSource}{obj.iStep, 1};
+	        if strcmp(l, g)
+	            set(obj.objects_handle(iSource), 'FaceColor', 'blue');
+	        else
+	            set(obj.objects_handle(iSource), 'FaceColor', 'red');
+	        end
+	    end
+    end
 end
 
 function drawSeenSources (obj)
@@ -153,10 +170,11 @@ function drawLocalizationResults (obj)
 	for iObject = 1:obj.htm.RIR.nb_objects
 		tmIdx = getObject(obj.htm, iObject, 'tmIdx');
 		tmIdx = tmIdx(1);
-		current_theta = getObject(obj.htm, iObject, 'theta');
+		current_theta = getObject(obj, iObject, 'theta');
 		current_theta = current_theta(end);
 
-		source = obj.htm.sources(tmIdx);
+		%source = obj.htm.sources(tmIdx);
+        source = getObject(obj, iObject, 'source');
 		
 		object_pos = get(obj.objects_handle(source), 'Position');
 		
@@ -214,56 +232,65 @@ function drawFieldOfView (obj, k)
 		set(obj.fov_handle(3), 'XData', [x2, x0], 'YData', [y2, y0]);
 
 		hold(obj.h1, 'off');
-		pause(0.05);
 	end
 end
 
 function drawEmittingSource (obj, varargin)
-	iSource = obj.htm.sources(obj.htm.iStep);
-	if iSource == 0
-		obj.removeEmittingSources();
-	else
-		info = getInfo('all');
-		circle_size = 2;
-		circle_size2 = 3;
-		% --- Centering the center around [0, 0]
-		% --- 'pos' is: [x, y, width, height]
-		pos1 = [obj.sources(1, iSource)-circle_size/4, obj.sources(2, iSource)-circle_size/4,...
-			   circle_size, circle_size];
-		pos2 = [obj.sources(1, iSource)-circle_size2/3, obj.sources(2, iSource)-circle_size2/3,...
-			   circle_size2, circle_size2];
-		% --- The 'Curvature' is allowing to draw a circle from the 'rectangle' function
-		if obj.emitting_handle(1, iSource) == 0
-			h1 = rectangle('Position' , pos1  ,...
-						  'Curvature', [1 1],...
-						  'LineStyle', '-.',...
-						  'EdgeColor', [51, 102, 0]/255,...
-					  	  'Parent'   , obj.h1,...
-					  	  'Tag', num2str(iSource));
-			h2 = rectangle('Position' , pos2  ,...
-						  'Curvature', [1 1],...
-						  'LineStyle', '-.',...
-						  'EdgeColor', [51, 102, 0]/255,...
-					  	  'Parent'   , obj.h1,...
-					  	  'Tag', num2str(iSource));
+    sources = obj.emitting_sources;
+	for iSource = 1:obj.nb_sources
 
-			obj.emitting_handle(1, iSource) = h1;
-			obj.emitting_handle(2, iSource) = h2;
+		if sources(iSource) == 0
+			obj.removeEmittingSources(iSource);
 		else
-			set(obj.emitting_handle(1, iSource), 'Visible', 'on');
-			set(obj.emitting_handle(2, iSource), 'Visible', 'on');
+			%info = getInfo('all');
+			circle_size = 2;
+			circle_size2 = 3;
+			% --- Centering the center around [0, 0]
+			% --- 'pos' is: [x, y, width, height]
+			pos1 = [obj.sources(1, iSource)-circle_size/4, obj.sources(2, iSource)-circle_size/4,...
+				   circle_size, circle_size];
+			pos2 = [obj.sources(1, iSource)-circle_size2/3, obj.sources(2, iSource)-circle_size2/3,...
+				   circle_size2, circle_size2];
+			% --- The 'Curvature' is allowing to draw a circle from the 'rectangle' function
+			if obj.emitting_handle(1, iSource) == 0
+				h1 = rectangle('Position' , pos1  ,...
+							  'Curvature', [1 1],...
+							  'LineStyle', '-.',...
+							  'EdgeColor', [51, 102, 0]/255,...
+						  	  'Parent'   , obj.h1,...
+						  	  'Tag', num2str(iSource));
+				h2 = rectangle('Position' , pos2  ,...
+							  'Curvature', [1 1],...
+							  'LineStyle', '-.',...
+							  'EdgeColor', [51, 102, 0]/255,...
+						  	  'Parent'   , obj.h1,...
+						  	  'Tag', num2str(iSource));
+
+				obj.emitting_handle(1, iSource) = h1;
+				obj.emitting_handle(2, iSource) = h2;
+			else
+				set(obj.emitting_handle(1, iSource), 'Visible', 'on');
+				set(obj.emitting_handle(2, iSource), 'Visible', 'on');
+			end
 		end
 	end
 end
 
-function removeEmittingSources (obj)
-	for iSource = 1:size(obj.emitting_handle, 2)
+function removeEmittingSources (obj, iSource)
+	% for iSource = 1:obj.nb_sources
 		% if ~isempty(obj.emitting_handle)
 		if obj.emitting_handle(1, iSource) ~= 0
 			set(obj.emitting_handle(1, iSource), 'Visible', 'off');
 			set(obj.emitting_handle(2, iSource), 'Visible', 'off');
 		end
-	end
+	% end
+end
+
+function removeAllEmittingSources (obj)
+    for iSource = 1:obj.nb_sources
+		set(obj.emitting_handle(1, iSource), 'Visible', 'off');
+		set(obj.emitting_handle(2, iSource), 'Visible', 'off');
+    end
 end
 
 function drawMeanClassificationResults (obj)
@@ -275,7 +302,7 @@ function drawMeanClassificationResults (obj)
     if sum(obj.statistics_handle(1)) == 0 || obj.iStep <= 1
     % if obj.iStep ~= 0 && obj.iStep == 1
     	hold(obj.h2, 'on');
-        h1 = plot(obj.htm.statistics.mfi_mean(1),...
+        h1 = plot(obj.htm.statistics.mfi_mean(1, end),...
                   'LineWidth', 4             ,...
                   'LineStyle', '-'           ,...
                   'Color'    , [0.1, 0.1, 0.1],...
@@ -298,13 +325,14 @@ function drawMeanClassificationResults (obj)
     	hold(obj.h2, 'off');
     else
     	pdata = get(obj.statistics_handle(1), 'YData');
-    	set(obj.statistics_handle(1), 'XData', 1:obj.iStep, 'YData', [pdata, obj.htm.statistics.mfi_mean(obj.iStep)]);
+    	% set(obj.statistics_handle(1), 'XData', 1:obj.iStep, 'YData', [pdata, obj.htm.statistics.mfi_mean(obj.iStep-1, end)]);
+    	set(obj.statistics_handle(1), 'XData', 1:obj.iStep-1, 'YData', obj.htm.statistics.mfi_mean(1:obj.iStep-1, end));
     	
     	pdata = get(obj.statistics_handle(2), 'YData');
-    	set(obj.statistics_handle(2),'XData', 1:obj.iStep, 'YData', [pdata, obj.htm.statistics.max_mean(obj.iStep)]);
+    	set(obj.statistics_handle(2),'XData', 1:obj.iStep, 'YData', [pdata, obj.htm.statistics.max_mean(obj.iStep-1)]);
 
     	pdata = get(obj.statistics_handle(3), 'YData');
-    	set(obj.statistics_handle(3),'XData', 1:obj.iStep, 'YData', [pdata, obj.htm.statistics.max_mean_shm(obj.iStep)]);
+    	set(obj.statistics_handle(3),'XData', 1:obj.iStep, 'YData', [pdata, obj.htm.statistics.max_mean_shm(obj.iStep-1, end)]);
     end
 
 end
@@ -315,26 +343,24 @@ function drawSHM (obj, k)
 		obj.shm_handle = compass([x, x], [y, y], 'Parent', obj.h3);
 
 	elseif strcmp(k, 'update')
-		mo = obj.htm.MOKS.motor_order(obj.htm.iStep);
+		mo = obj.MOKS.motor_order(obj.iStep);
 		if mo > 0
 			pos = find(obj.angles == mo);
 			obj.angles_cpt(1, pos) = obj.angles_cpt(1, pos) + 1;
 		end
 		[x, y] = pol2cart(obj.angles_rad, obj.angles_cpt(1, :));
 		
-		iStep = obj.htm.iStep;
-		if iStep > 1
-			tmp = obj.htm.sources(iStep-1:iStep);
+		if obj.iStep > 1
+			tmp = obj.htm.sources(obj.iStep-1:obj.iStep);
 			if tmp(2)-tmp(1) > 1
 				obj.angles_cpt(2, tmp(2)) = obj.angles_cpt(2, tmp(2)) + 1;
 			end
 			% hold on;
 			[x2, y2] = pol2cart(obj.angles_rad, obj.angles_cpt(2, :));
 			
-			nb_sources = getInfo('nb_sources');
 			obj.shm_handle = compass([x2, x], [y2, y], 'Parent', obj.h3);
-			set(obj.shm_handle(nb_sources+1:end), 'LineWidth', 4);
-			set(obj.shm_handle(1:nb_sources), 'Color', 'red', 'LineWidth', 2);
+			set(obj.shm_handle(obj.nb_sources+1:end), 'LineWidth', 4);
+			set(obj.shm_handle(1:obj.nb_sources), 'Color', 'red', 'LineWidth', 2);
 		end
 	end
 end
@@ -411,7 +437,7 @@ end
 function endSimulation (obj)
 	obj.drawFieldOfView('end');
 	obj.drawLocalizationResults();
-	obj.removeEmittingSources();
+	obj.removeAllEmittingSources();
 end
 
 % ===================== %

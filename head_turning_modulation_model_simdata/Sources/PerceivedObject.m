@@ -1,4 +1,4 @@
-% 'PerceivedObject' class
+% PerceivedObject class
 % This class is part of the HeadTurningModulationKS
 % Author: Benjamin Cohen-Lhyver
 % Date: 01.02.16
@@ -10,36 +10,15 @@ classdef PerceivedObject < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-	label = 'none_none';
+	audiovisual_category = 1; % int
 	audio_label = 'none';
-    visual_label = 'none';
-
-    % audio_theta = 0;
-    % visual_theta = 0;
-    
-    theta = [];
-    theta_v = [];
-    % id 			= ''	   ; % hex
-
-    presence = true;
-
-    tsteps = 0;
-
-    weight = 0;
-
+    cat_hist = [];
+    cpt = 0;
     d = 0;
     dist_hist = [];
-
-    audiovisual_category = 1; % int
-    cat_hist = [];
-
+	label = 'none_none';
     missing_hist = [];
-
-end
-properties (SetAccess = public, GetAccess = public)
-    focus = 0;
-    occ_thr = 5;
-    cpt = 0;
+    presence = true;    
     requests = struct('inference'   , false,...
     				  'check'       , false,...
     				  'verification', false,...
@@ -47,7 +26,13 @@ properties (SetAccess = public, GetAccess = public)
     				  'missing'     , true ,...
     				  'checked'     , false ...
     				 );
+    source = 0;
+    theta = [];
+    theta_v = [];
     tmIdx = [];
+    tsteps = 0;
+    visual_label = 'none';
+    weight = 0;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -58,9 +43,10 @@ end
 % ===================== %
 methods
 % === Constructor [BEG] === %
-function obj = PerceivedObject (data, theta, theta_v)
+function obj = PerceivedObject (data, theta, theta_v, source)
 	obj.theta(end+1) = theta;
 	obj.theta_v(end+1) = theta_v;
+	obj.source = source;
 	% obj.d = d;
 	obj.tsteps = 1;
 	obj.presence = true;
@@ -101,7 +87,7 @@ function isDataMissing (obj, data)
 				obj.requests.checked = false;
 			else
 				obj.requests.verification = false;
-				obj.requests.checked = true;
+				% obj.requests.checked = true;
 			end
 		end
 	end
@@ -177,52 +163,52 @@ function updateObj (obj)
 	obj.cat_hist(end+1) = obj.audiovisual_category;
 end
 
-% --------------------- %
-% --- GET FUNCTIONS --- %
-% -                   - %
-function requestedData = getMeanData (obj, nb_samples)
-	if nargin == 1
-		nb_samples = obj.occ_thr ;
-	end
-	if nb_samples > size(obj.data, 2)
-		m = size(obj.data, 2) ;
-	else
-		m = min([nb_samples, size(obj.data, 2)]) ;
-	end
-	% --- Mean on the last 5 samples
-	requestedData = mean(obj.data(:, end-m+1:end), 2) ;
-	% request = mean(obj.data(:, obj.smoothing_tsteps:end-obj.smoothing_tsteps)) ;
-end
+% % --------------------- %
+% % --- GET FUNCTIONS --- %
+% % -                   - %
+% function requestedData = getMeanData (obj, nb_samples)
+% 	if nargin == 1
+% 		nb_samples = obj.occ_thr ;
+% 	end
+% 	if nb_samples > size(obj.data, 2)
+% 		m = size(obj.data, 2) ;
+% 	else
+% 		m = min([nb_samples, size(obj.data, 2)]) ;
+% 	end
+% 	% --- Mean on the last 5 samples
+% 	requestedData = mean(obj.data(:, end-m+1:end), 2) ;
+% 	% request = mean(obj.data(:, obj.smoothing_tsteps:end-obj.smoothing_tsteps)) ;
+% end
 
-function requestedData = getData (obj, nb_samples)
-	if nargin == 1
-		requestedData = obj.data ;
-	else
-		requestedData = obj.data(:, nb_samples) ;
-	end
-end
+% function requestedData = getData (obj, nb_samples)
+% 	if nargin == 1
+% 		requestedData = obj.data ;
+% 	else
+% 		requestedData = obj.data(:, nb_samples) ;
+% 	end
+% end
 
-function requestedData = getVisualData (obj, nb_samples)
-	na = getInfo('nb_audio_labels');
-	if nargin == 1
-		requestedData = obj.data(na+1:end, :) ;
-	elseif ischar(nb_samples) && strcmp(nb_samples, 'end')
-		requestedData = obj.data(na+1:end, end) ;	
-	else
-		requestedData = obj.data(na+1:end, nb_samples) ;
-	end
-end
+% function requestedData = getVisualData (obj, nb_samples)
+% 	na = getInfo('nb_audio_labels');
+% 	if nargin == 1
+% 		requestedData = obj.data(na+1:end, :) ;
+% 	elseif ischar(nb_samples) && strcmp(nb_samples, 'end')
+% 		requestedData = obj.data(na+1:end, end) ;	
+% 	else
+% 		requestedData = obj.data(na+1:end, nb_samples) ;
+% 	end
+% end
 
-function requestedData = getAudioData (obj, nb_samples)
-	na = getInfo('nb_audio_labels');
-	if nargin == 1
-		requestedData = obj.data(1:na, :) ;
-	elseif ischar(nb_samples) && strcmp(nb_samples, 'end')
-		requestedData = obj.data(1:na, end) ;
-	else
-		requestedData = obj.data(1:na, nb_samples) ;
-	end
-end
+% function requestedData = getAudioData (obj, nb_samples)
+% 	na = getInfo('nb_audio_labels');
+% 	if nargin == 1
+% 		requestedData = obj.data(1:na, :) ;
+% 	elseif ischar(nb_samples) && strcmp(nb_samples, 'end')
+% 		requestedData = obj.data(1:na, end) ;
+% 	else
+% 		requestedData = obj.data(1:na, nb_samples) ;
+% 	end
+% end
 
 % -                   - %
 % --- GET FUNCTIONS --- %

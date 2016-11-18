@@ -125,6 +125,7 @@ function feed (obj, data)
 	% obj.cpt = obj.cpt + 1;
 
 	% for ISTEP = 1:obj.nb_iterations
+	% disp('feeding')
 	ISTEP = (obj.nb_iterations - obj.idx_data) + 1;
 	ISTEP = max([ISTEP, 1]);
 	% ISTEP = min([obj.idx_data, obj.nb_iterations]);
