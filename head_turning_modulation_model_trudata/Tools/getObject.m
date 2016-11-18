@@ -13,7 +13,7 @@
 function request = getObject (obj, idx, varargin)
 
     if isa(obj, 'RobotInternalRepresentation')
-        objects = obj.getEnv().objects;
+        objects = obj.environments{end}.objects;
     elseif isa(obj, 'PerceivedEnvironment')
         objects = obj.objects;
     else
