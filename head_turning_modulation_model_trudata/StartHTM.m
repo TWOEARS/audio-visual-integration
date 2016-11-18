@@ -50,7 +50,7 @@ focusComputationKS = bbs.createKS('FocusComputationKS', {bbs, headTurningModulat
 
 objectDetectionKS = bbs.createKS('ObjectDetectionKS', {bbs, headTurningModulationKS});
 
-localizerKS = bbs.createKS('DnnLocationKS');
+dnnLocationKS = bbs.createKS('DnnLocationKS');
 
 motorOrderKS = bbs.createKS('MotorOrderKS', {bbs, bbs.robotConnect});
 
@@ -60,7 +60,7 @@ bbs.blackboardMonitor.bind({bbs.scheduler},...
                            'replaceOld', 'AgendaEmpty');
 
 bbs.blackboardMonitor.bind({bbs.dataConnect},...
-                           {localizerKS},...
+                           {dnnLocationKS},...
                            'replaceOld');
 
 bbs.blackboardMonitor.bind({bbs.dataConnect},...
