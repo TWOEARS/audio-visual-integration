@@ -1,11 +1,24 @@
+% GETOBJECT - get information of an object
+%
+% This HTM function provides the information about the IDX object observed
+% by the robot from the OBJ class.
+%
+% o = getObject(obj, idx)
+% o = getObject(obj, idx, field)
+%
+% Example: o = getObject(htm, 2, 'audio_label')
+% author: Benjamin Cohen-Lhyver
+% version 1.0
+
 function request = getObject (obj, idx, varargin)
 
     if isa(obj, 'RobotInternalRepresentation')
         objects = obj.getEnv().objects;
     elseif isa(obj, 'PerceivedEnvironment')
         objects = obj.objects;
-    elseif isa(obj, 'HeadTurningModulationKS')
-        objects = obj.RIR.getEnv().objects;
+    else
+        env = getEnvironment(obj, 0);
+        objects = env.objects;
     end
 
     if isempty(objects)
@@ -43,7 +56,7 @@ function request = getObject (obj, idx, varargin)
                                idx                          ,...
                                'UniformOutput', false...
                                );
-            if isnumeric(request{1})
+            if isnumeric(request{1}) || islogical(request{1})
                 request = cell2mat(request)';
             else
                 request = request';
