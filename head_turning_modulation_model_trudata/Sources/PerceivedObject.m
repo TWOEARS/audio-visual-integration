@@ -144,6 +144,9 @@ function updateAngle (obj, theta)
 		end
 		% === TO BE CHANGED: the first results of locationKS are not good === %
 	else
+		if isempty(theta_v)
+			theta_v = -1;
+		end
 		if theta <= 5
 			theta = 0;
 		else
