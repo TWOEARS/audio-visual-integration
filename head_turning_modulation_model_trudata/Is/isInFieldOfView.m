@@ -1,8 +1,8 @@
 function bool = isInFieldOfView (theta)
-    %theta = getLocalisationOutput(obj.blackboard) ;
-    if theta <= getInfo('fov')
+	fov = getInfo('fov');
+    if theta <= fov
         bool = true ;
-    elseif theta >= 360-getInfo('fov')
+    elseif theta >= 360-fov
         bool = true ;
     else
         bool = false ;

@@ -12,9 +12,8 @@ properties (SetAccess = public, GetAccess = public)
     motor_order = [];
     htm;
     RIR;
-    HTMFocusKS;
     
-    shm;
+    shm = 0;
     robot;
     bbs;
 end
@@ -50,9 +49,9 @@ function execute (obj)
     focus = focus.data('focus');
 
     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data;
-    
-    if obj.isFocusedObjectPresent(focus)  % --- move the head to 'theta'
-        theta = getObject(obj.RIR, focus, 'theta');
+
+    if focus > 0
+        theta = getObject(obj, focus, 'theta');
         theta = theta(end);
     elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
         theta = -obj.head_position(end);
@@ -86,11 +85,9 @@ function execute (obj)
 end
 
 function bool = isFocusedObjectPresent (obj, focus)
-    % focus = obj.HTMFocusKS.focus(end);
-
-    if obj.RIR.nb_objects == 0
+    if obj.RIR.nb_objects == 0 && focus ~= 0
         bool = false;
-    elseif getObject(obj.RIR, focus, 'presence')
+    elseif getObject(obj, focus, 'presence')
         bool = true;
     else
         bool = false;
@@ -98,8 +95,8 @@ function bool = isFocusedObjectPresent (obj, focus)
 end
 
 function computeSHM (obj)
-    if numel(obj.head_position) > 1
-        if obj.head_position(end-1) ~= obj.head_position(end)
+    if numel(obj.motor_order) > 1
+        if obj.motor_order(end-1) ~= obj.motor_order(end) && obj.motor_order(end) > 0
             obj.shm = obj.shm+1;
         end
     end

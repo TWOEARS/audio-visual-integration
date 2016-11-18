@@ -14,8 +14,6 @@ classdef HeadTurningModulationKS < AbstractKS
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public)
-    head_position = 0;
- 
     bbs = [];
 
     data = [];
@@ -24,11 +22,12 @@ properties (SetAccess = public)
  
     current_time = 0;
     
-    current_object = 0;
+    % current_object = 0;
 
     RIR; % Robot Internal Representation
     MSOM; % Multimodal SelfOrganizing Map
     MFI; % Multimodal Fusion & Inference
+    DW;   % Dynamic Weighting
 
     % EMKS; % Environmental_Map class
 
@@ -62,6 +61,7 @@ function obj = HeadTurningModulationKS (bbs)
     obj.MSOM = MultimodalSelfOrganizingMap();
     obj.MFI = MultimodalFusionAndInference(obj);
     obj.RIR = RobotInternalRepresentation(obj);
+    obj.DW = DynamicWeighting(obj);
 end
 
 % === Execute functionality
@@ -78,22 +78,23 @@ end
 function execute (obj)
     
     fprintf('\nHead Turning Modulation KS evaluation\n');
+    obj.updateAngles();
 
     obj.iStep = obj.iStep + 1;
 
     obj.data(:, end+1) = getClassifiersOutput(obj);
-    obj.theta(end+1) = getLocalisationOutput(obj);
-    tmp = obj.blackboard.getLastData('audiovisualHypotheses').data;
-    obj.theta_v(end+1) = tmp('theta');
+    % obj.theta(end+1) = getLocalisationOutput(obj);
+    % tmp = obj.blackboard.getLastData('audiovisualHypotheses').data;
+    % obj.theta_v(end+1) = tmp('theta');
     
-    object_detection = obj.blackboard.getData('objectDetectionHypotheses').data;
-    obj.current_object = object_detection.id_object;
+    % object_detection = obj.blackboard.getData('objectDetectionHypotheses').data;
+    % obj.current_object = object_detection.id_object;
 
     if ~obj.createNew() && ~obj.updateObject()
         obj.setPresence(false);
         obj.RIR.updateData();
     else
-        obj.degradeData(obj.theta); % --- Remove visual components if object is NOT in field of view
+        obj.degradeData(); % --- Remove visual components if object is NOT in field of view
         obj.RIR.updateData(); % --- Updating the RIR observed data
         if obj.createNew()
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
@@ -108,7 +109,6 @@ function execute (obj)
     % --- Update all objects
     obj.RIR.updateObjects();
 
-    obj.updateAngles();
 % 
 %     if sum(obj.data(getInfo('nb_audio_labels')+1:end, obj.iStep)) == 0
 %         obj.statistics.max_shm(iStep) = 0;
@@ -141,17 +141,16 @@ function execute (obj)
                            false, obj.trigger.tmIdx);
 
     notify(obj, 'KsFiredEvent');
-% end
 end
 
 function setPresence (obj, bool)
     if ~bool 
         if obj.RIR.nb_objects > 0 
             object_detection = obj.blackboard.getData('objectDetectionHypotheses').data;
-            idx = object_detection.id_object;
-            idx = idx(end-1);
+            idx = object_detection.id_object(end-1);
             if idx ~= 0 && getObject(obj, idx, 'presence')
                 setObject(obj, idx, 'presence', false);
+                setObject(obj, idx, 'requests', 'init');
             end
         end
     else
@@ -224,6 +223,7 @@ end
 % === TO BE MODIFIED === %
 
 function degradeData (obj, theta)
+    theta = getLocalisationOutput(obj);
     if ~isInFieldOfView(theta)
         obj.data(getInfo('nb_audio_labels')+1:end, obj.iStep) = 0;
     end
