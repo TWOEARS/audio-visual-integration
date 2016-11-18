@@ -318,6 +318,7 @@ end
 function retrieveMfiCategorization (obj)
     iStep = obj.iStep;
     pobj = obj.RIR.environments{end}.present_objects';
+    timeline = getInfo('timeline');
     for iObject = pobj
         iSource = getObject(obj, iObject, 'source');
         t = getObject(obj, iObject, 'tmIdx');
@@ -325,7 +326,12 @@ function retrieveMfiCategorization (obj)
         obj.classif_mfi{iSource}(iStep) = {getObject(obj, iObject, 'label')};
         obj.statistics.mfi(iStep, iSource) = strcmp(obj.classif_mfi{iSource}(iStep), obj.gtruth{iSource}(iStep, 1));
         obj.statistics.mfi_mean(t:iStep, iSource) = cumsum(obj.statistics.mfi(t:iStep, iSource)) ./ (t:iStep)';
-        obj.statistics.max_mean_shm(t:iStep, iSource) = cumsum(obj.statistics.max_shm(t:iStep, iSource)) ./ (t:iStep)';
+        tmp = find(timeline{iSource} <= iStep, 1, 'last');
+        if mod(tmp, 2) == 1
+            obj.statistics.max_mean_shm(t:iStep, iSource) = obj.statistics.max_mean_shm(timeline{iSource}(tmp), iSource);
+        else
+            obj.statistics.max_mean_shm(t:iStep, iSource) = cumsum(obj.statistics.max_shm(t:iStep, iSource)) ./ (t:iStep)';
+        end
     end
     % obj.RIR.environments{end}.present_objects
     % obj.statistics.mfi_mean(iStep, end) = mean(obj.statistics.mfi_mean(iStep, 1:end-1));

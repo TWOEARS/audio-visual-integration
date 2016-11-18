@@ -55,6 +55,8 @@ function initializeScenario (htm, init_scenario)
        	tmp_audio_idx = find(strcmp(audio_label, info.audio_labels));
        	
        	ground_truth{iSource}(timeline(2):end, 1) = repmat({mergeLabels(avpair)}, numel(timeline(2):info.nb_steps), 1);
+       	ground_truth{iSource}(timeline(2):end, 2) = repmat({mergeLabels(avpair)}, numel(timeline(2):info.nb_steps), 1);
+       	
        	ground_truth_stats{iSource}(1:timeline(2), 1) = 0;
 		
 		for iStep = 2 :2 :numel(timeline)-1 % only object tmIdx

@@ -22,8 +22,10 @@ classdef JidoInterface < handle
     end
     
     methods (Access = public)
-        function obj = JidoInterface(pathToGenomix)
+        function obj = JidoInterface()
             % JIDOINTERFACE Constructor...
+
+            pathToGenomix = getGenomixPath();
             
             % Check if path to genomix is valid
             if ~exist(pathToGenomix, 'dir')
