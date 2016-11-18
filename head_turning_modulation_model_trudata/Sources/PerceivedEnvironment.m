@@ -57,7 +57,7 @@ end
 
 function addInput (obj)
 	hyp = obj.htm.blackboard.getLastData('objectDetectionHypotheses').data;
-	id = hyp.id_object;
+	iObj = hyp.id_object;
 	% --- No data missing
 	if ~obj.objects{iObj}.requests.missing
 		% --- Train nets
@@ -68,14 +68,14 @@ end
 
 function updateObjectData (obj)
 	hyp = obj.htm.blackboard.getLastData('objectDetectionHypotheses').data;
-	id = hyp.id_object;
+	iObj = hyp.id_object;
 
 	data = getClassifiersOutput(obj.htm);
 
 	theta_a = getLocalisationOutput(obj.htm.blackboard);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
-	
+
 	obj.objects{iObj}.updateData(data, theta, theta_v);
 	obj.objects{iObj}.updateTime(obj.htm.iStep);
 	% obj.objects{iObj}.presence = true;
