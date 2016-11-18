@@ -7,7 +7,7 @@
 
 % === TO BE CHANGED BY A OMRE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 %p = '/home/twoears/AuditoryModel/TwoEars-1.2/';
-p = '/home/tforgue/mystuff/work/laas/twoears'
+p = '/home/tforgue/mystuff/work/laas/twoears';
 addpath(genpath(p));
 % addpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_trudata']));
 % addpath(genpath([p, 'blackboard-system']));
@@ -22,7 +22,7 @@ rmpath(genpath([p, 'TwoEars']));
 % === TO BE CHANGED BY A MORE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
 
 % --- OdiInterface: class making the interface between the robot and the system
-Jido = OdiInterface();
+Jido = JidoInterface();
 
 % === Initialise and run model
 disp( 'Building blackboard system...' );
