@@ -2,7 +2,7 @@ function plotSHM (htm)
 
     nb_sources = size(htm.EMKS.sources, 2);
     angles_cpt = zeros(2, nb_sources);
-    angles = htm.EMKS.angles;
+    angles = getInfo('sources_position');
     angles_rad = deg2rad(angles);
 
     for iStep = 2:htm.nb_steps_final
@@ -24,8 +24,8 @@ function plotSHM (htm)
     set(h_fig, 'Color', [1, 1, 1]);
 
     h = compass([x2, x], [y2, y]);
-    set(h(nb_sources+1:end), 'LineWidth', 6);
-    set(h(1:nb_sources), 'Color', 'red', 'LineWidth', 3);
+    set(h(nb_sources+1:end), 'LineWidth', 4);
+    set(h(1:nb_sources), 'Color', 'red', 'LineWidth', 2);
     
     set(get(h(1), 'Parent'), 'FontSize', 60);
  
