@@ -219,5 +219,9 @@ classdef JidoInterface < handle
             % Just live with this...
             result = false;
         end
+
+        function bool = isActive(obj)
+            bool = true;
+        end
     end
 end
