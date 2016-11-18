@@ -123,6 +123,7 @@ end
 % === Request a CHECK of infered AV vs observed AV
 function requestVerification (obj, iObj, AVClass)
 	obj.objects{iObj}.requests.check = true;
+	obj.objects{iObj}.requests.verification = true;
 	obj.objects{iObj}.requests.label = AVClass;
 end
 
@@ -131,8 +132,8 @@ function preventVerification (obj, iObj, search, AVClass)
 		obj.objects{iObj}.requests.check = false;
 		obj.objects{iObj}.requests.verification = false;
 		obj.objects{iObj}.requests.inference = false;
+		% obj.objects{iObj}.requests.checked = false;
 		obj.objects{iObj}.setLabel(AVClass, search);
-		% obj.objects{iObj}.audiovisual_category = search;
 	end
 end
 
