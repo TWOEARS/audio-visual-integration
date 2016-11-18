@@ -45,6 +45,7 @@ end
 function addObject (obj)
 	theta_a = getLocalisationOutput(obj.htm.blackboard);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
+	theta_v = theta_v('theta');
 	data = getClassifiersOutput(obj.htm);
 	% --- Create a new PERCEIVEDOBJECT object
     obj.objects{end+1} = PerceivedObject(data,...
@@ -73,7 +74,8 @@ function updateObjectData (obj)
 
 	theta_a = getLocalisationOutput(obj.htm.blackboard);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
-
+	theta_v = theta_v('theta');
+	
 	obj.objects{iObj}.updateData(data, theta, theta_v);
 	obj.objects{iObj}.updateTime(obj.htm.iStep);
 	% obj.objects{iObj}.presence = true;
