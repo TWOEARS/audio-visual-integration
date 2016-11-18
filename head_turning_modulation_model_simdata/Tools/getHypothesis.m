@@ -6,15 +6,18 @@ function hypothesis = getHypothesis (obj, KS, varargin)
         htm = obj.htm;
     elseif isa(obj, 'HeadTurningModulationKS')
         htm = obj;
-    else
-        disp('provide good arguments please.');
-        return;
     end
 
-	if strcmp(KS, 'ALKS') || strcmp(KS, 'VLKS')
-		hypothesis = htm.(KS).hypotheses;
-	elseif strcmp(KS, 'ODKS')
-		hypothesis = htm.(KS).(varargin{1});
+	if strcmp(KS, 'ODKS')
+        if nargin == 2
+            hypothesis.create_new = htm.ODKS.create_new;
+            hypothesis.update_object = htm.ODKS.update_object;
+            hypothesis.id_object = htm.ODKS.id_object;
+        else
+            hypothesis = htm.ODKS.(varargin{1});
+        end
+    else
+        hypothesis = htm.(KS).hypotheses;
 	end
 			
 end

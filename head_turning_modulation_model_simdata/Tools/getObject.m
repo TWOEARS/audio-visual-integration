@@ -12,22 +12,11 @@
 
 function request = getObject (obj, idx, varargin)
 
-    if isa(obj, 'RobotInternalRepresentation')
-        objects = obj.getEnv().objects;
-    elseif isa(obj, 'PerceivedEnvironment')
+    if isa(obj, 'PerceivedEnvironment')
         objects = obj.objects;
-    elseif isa(obj, 'HeadTurningModulationKS')
-        env = getEnvironment(obj, 0);
-        objects = env.objects;
-    elseif isa(obj, 'FocusComputationKS')
-        env = getEnvironment(obj, 0);
-        objects = env.objects;
-    elseif isa(obj, 'DynamicWeighting')
-        env = getEnvironment(obj, 0);
-        objects = env.objects;
     else
-        disp('provide good arguments please.');
-        return;
+        env = getEnvironment(obj, 0);
+        objects = env.objects;
     end
 
     if isempty(objects)

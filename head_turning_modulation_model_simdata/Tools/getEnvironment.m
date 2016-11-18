@@ -4,13 +4,8 @@ function request = getEnvironment(obj, idx, varargin)
         env = obj.environments;
     elseif isa(obj, 'HeadTurningModulationKS')
         env = obj.RIR.environments;
-    elseif isa(obj, 'DynamicWeighting')
-        env = obj.htm.RIR.environments;
-    elseif isa(obj, 'FocusComputationKS')
-        env = obj.htm.RIR.environments;
     else
-        disp('provide good arguments please.');
-        return;
+        env = obj.htm.RIR.environments;
     end
 
     if isempty(env)

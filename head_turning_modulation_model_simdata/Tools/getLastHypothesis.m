@@ -1,20 +1,17 @@
 function hypothesis = getLastHypothesis (obj, KS, varargin)
 
-	if isa(obj, 'RobotInternalRepresentation')
-        htm = obj.htm;
-    elseif isa(obj, 'PerceivedEnvironment')
-        htm = obj.htm;
-    elseif isa(obj, 'HeadTurningModulationKS')
+    if isa(obj, 'HeadTurningModulationKS')
         htm = obj;
     else
-        disp('provide good arguments please.');
-        return;
+        htm = obj.htm;
     end
 
-	if strcmp(KS, 'ALKS') || strcmp(KS, 'VLKS') || strcmp(KS, 'FCKS')
-		hypothesis = htm.(KS).hypotheses(end);
-	elseif strcmp(KS, 'ODKS')
-		hypothesis = htm.(KS).(varargin{1})(end);
+	if strcmp(KS, 'ODKS')
+		hypothesis = htm.(KS).(varargin{1})(:, end);
+    elseif strcmp(KS, 'SSKS') || strcmp(KS, 'ALKS')
+        hypothesis = htm.(KS).hypotheses(:, end);
+    else
+        hypothesis = htm.(KS).hypotheses(end);
 	end
 			
 end

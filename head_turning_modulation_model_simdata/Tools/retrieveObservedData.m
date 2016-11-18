@@ -2,25 +2,30 @@ function data = retrieveObservedData (obj, idx, str)
 	
 	if isa(obj, 'PerceivedEnvironment')
 		objects = obj.objects;
-		RIR = obj.RIR;
+		%RIR = obj.RIR;
+        htm = obj.htm;
 	elseif isa(obj, 'HeadTurningModulationKS')
         env = getEnvironment(obj, 0);
 		objects = env.objects;
-		RIR = obj.RIR;
+        htm = obj;
+		%RIR = obj.RIR;
 	elseif isa(obj, 'RobotInternalRepresentation')
         env = getEnvironment(obj, 0);
 		objects = env.objects;
-		RIR = obj;
+		%RIR = obj;
+        htm = obj.htm;
 	end
 	if idx == 0
 		idx = numel(objects);
 	end
 	if nargin == 2
 		str = 'all';
-	end
+    end
+    
+    iSource = objects{idx}.source;
 
 	tmIdx = objects{idx}.tmIdx;
-	data = RIR.data(:, tmIdx);
+	data = htm.data{iSource}(:, tmIdx);
 	
 	tmIdx = tmIdx - (tmIdx(1)-1);
 

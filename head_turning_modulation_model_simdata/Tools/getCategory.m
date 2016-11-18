@@ -1,13 +1,13 @@
 function request = getCategory (obj, idx, field)
 
-    if isa(obj, 'RobotInternalRepresentation')
-        obs_cat = obj.htm.DW.observed_categories;
-    elseif isa(obj, 'PerceivedEnvironment')
+    if isa(obj, 'PerceivedEnvironment')
         obs_cat = obj.DW.observed_categories;
     elseif isa(obj, 'HeadTurningModulationKS')
         obs_cat = obj.DW.observed_categories;
     elseif isa(obj, 'DynamicWeighting')
         obs_cat = obj.observed_categories;
+    else
+        obs_cat = obj.htm.DW.observed_categories;
     end
 
     if isempty(obs_cat)
