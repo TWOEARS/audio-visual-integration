@@ -15,11 +15,7 @@ classdef PerceivedEnvironment < handle
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
     present_objects = [] 	 ; % objects present in the environment
-    objects 		= cell(0); % all detected objects 
-    % labels = {};
-    % nb_classes = 0;
-    % observed_categories = cell(0);
-    % hyper_categories = cell(0);
+    objects = cell(0); % all detected objects
     htm;
     RIR;					% --- Robot Internal Representation
     MFI;					% --- Multimodal Fusion & Inference module
@@ -47,18 +43,20 @@ end
 
 % --- Other methods --- %
 function addObject (obj)
+	theta_a = getLocalisationOutput(obj.htm.blackboard);
+	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
+	data = getClassifiersOutput(obj.htm);
 	% --- Create a new PERCEIVEDOBJECT object
-    obj.objects{end+1} = PerceivedObject(obj.RIR.data(:, end),...
-    									 obj.RIR.theta_hist(end),...
-    									 obj.RIR.theta_v_hist(end));
-    % obj.objects{end}.updateTime(obj.htm.iStep);
-                                    %obj.RIR.dist_hist(end)  ...
+    obj.objects{end+1} = PerceivedObject(data,...
+    									 theta_a,...
+    									 theta_v);
 	obj.objects{end}.updateTime(obj.htm.iStep);
     obj.addInput();
 end
 
 function addInput (obj)
-	iObj = obj.htm.ODKS.id_object(end);
+	hyp = obj.htm.blackboard.getLastData('objectDetectionHypotheses').data;
+	id = hyp.id_object;
 	% --- No data missing
 	if ~obj.objects{iObj}.requests.missing
 		% --- Train nets
@@ -68,40 +66,48 @@ function addInput (obj)
 end
 
 function updateObjectData (obj)
-	iObj = obj.htm.ODKS.id_object(end);
-	% theta = abs(obj.RIR.head_position - theta);
-	data = obj.RIR.data(:, end);
-	theta = obj.RIR.theta_hist(end);
-	theta_v = obj.RIR.theta_v_hist(end);
+	hyp = obj.htm.blackboard.getLastData('objectDetectionHypotheses').data;
+	id = hyp.id_object;
+
+	data = getClassifiersOutput(obj.htm);
+
+	theta_a = getLocalisationOutput(obj.htm.blackboard);
+	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
+
 	obj.objects{iObj}.updateData(data, theta, theta_v);
 	obj.objects{iObj}.updateTime(obj.htm.iStep);
-	obj.objects{iObj}.presence = true;
+	% obj.objects{iObj}.presence = true;
+
 	obj.addInput();
 end
 
 function checkInference (obj)
-	for iObj = obj.present_objects
+	for iObj = obj.present_objects'
 		[inference, missing, check, verification, label] = obj.getObjectRequests(iObj);
 		if inference && missing % --- If an inference has been requested & data is missing
 			if check % --- If a CHECK has been requested (-> motor order)
 				% --- Continue to turn the head to the object
 			else % --- If a CHECK has not been yet requested: trigger a motor order?
 				[AVClass, search] = obj.simulateAVInference(iObj);
-				if isPerformant(obj, search) % --- If the category has been correctly inferred in the past: CHECK not needed
-					obj.preventVerification(iObj, search, AVClass);
-				else % --- If the cat. hasn't been well infered in the past -> CHECK needed
-					obj.requestVerification(iObj, AVClass);
-					obj.DW.updateInferenceCpt(search);
-				end
+				% if ~strcmp(AVClass, 'none_none')
+					if isPerformant(obj, search) % --- If the category has been correctly inferred in the past: CHECK not needed
+						obj.preventVerification(iObj, search, AVClass);
+					else % --- If the cat. hasn't been well infered in the past -> CHECK needed
+						obj.requestVerification(iObj, AVClass);
+						obj.DW.updateInferenceCpt(search);
+					end
+				% end
 			end
 		% --- If no inference requested (AV data available) but a verification is requested
 		% --- ADD A VERIFICATION WITH NO CHECK in order to verify the inference in the case we have AV thanks to DWmod
 		elseif verification
 			[AVClass, search] = obj.simulateAVInference(iObj);
-			if strcmp(AVClass, label) % --- If inferred AV is the same as observed AV
+			if strcmp(AVClass, label) && ~strcmp(AVClass, 'none_none') % --- If inferred AV is the same as observed AV
 				obj.preventVerification(iObj, search, AVClass);
 				obj.DW.updateGoodInferenceCpt(search);
+				obj.objects{iObj}.requests.checked = true;
 			else % --- If infered AV is NOT the same as observed AV
+                obj.objects{iObj}.requests.label = AVClass;
 				% --- Make the network learn with n more iterations
 				obj.highTrainingPhase();
 				% obj.objects{iObj}.requests.verification = true;
@@ -109,7 +115,6 @@ function checkInference (obj)
 		elseif ~missing % All data available
 			[AVClass, search] = obj.simulateAVInference(iObj);
 			obj.objects{iObj}.setLabel(AVClass, search);
-			% obj.objects{iObj}.audiovisual_category = search;
 			obj.objects{iObj}.requests.check = false;
 		end
 	end

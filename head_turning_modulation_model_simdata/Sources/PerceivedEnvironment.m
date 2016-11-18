@@ -16,10 +16,6 @@ classdef PerceivedEnvironment < handle
 properties (SetAccess = public, GetAccess = public)
     present_objects = [] 	 ; % objects present in the environment
     objects 		= cell(0); % all detected objects 
-    % labels = {};
-    % nb_classes = 0;
-    % observed_categories = cell(0);
-    % hyper_categories = cell(0);
     htm;
     RIR;					% --- Robot Internal Representation
     MFI;					% --- Multimodal Fusion & Inference module
@@ -56,10 +52,6 @@ function addObject (obj, iSource)
     									 theta,...
     									 theta_v,...
     									 iSource);
-    									 % obj.RIR.theta_hist(end),...
-    									 % obj.RIR.theta_v_hist(end),...
-    % obj.objects{end}.updateTime(obj.htm.iStep);
-                                    %obj.RIR.dist_hist(end)  ...
 	obj.objects{end}.updateTime(obj.htm.iStep);
     obj.addInput(iSource);
 end
@@ -67,7 +59,6 @@ end
 function addInput (obj, iSource)
     iObj = getLastHypothesis(obj, 'ODKS', 'id_object');
     iObj = iObj(iSource);
-	%iObj = obj.htm.ODKS.id_object(end);
 	% --- No data missing
 	if ~obj.objects{iObj}.requests.missing
 		% --- Train nets
@@ -79,17 +70,17 @@ end
 function updateObjectData (obj, iSource)
 	iObj = getLastHypothesis(obj, 'ODKS', 'id_object');
     iObj = iObj(iSource);
-	% theta = abs(obj.RIR.head_position - theta);
+    
     data = obj.htm.data{iSource}(:, obj.htm.iStep);
-	%data = obj.RIR.data(:, end);
-	%theta = obj.RIR.theta_hist(end);
-    theta = getLastHypothesis(obj, 'ALKS');
+	
+	theta = getLastHypothesis(obj, 'ALKS');
     theta = theta(iSource);
-	%theta_v = obj.RIR.theta_v_hist(end);
-    theta_v = getLastHypothesis(obj, 'VLKS');
+	
+	theta_v = getLastHypothesis(obj, 'VLKS');
+	
 	obj.objects{iObj}.updateData(data, theta, theta_v);
 	obj.objects{iObj}.updateTime(obj.htm.iStep);
-	%obj.objects{iObj}.presence = true;
+	
 	obj.addInput(iSource);
 end
 

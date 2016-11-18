@@ -92,10 +92,10 @@ function execute (obj)
 
     if ~obj.createNew() && ~obj.updateObject()
         obj.setPresence(false);
-        obj.RIR.updateData();
+        % obj.RIR.updateData();
     else
         obj.degradeData(); % --- Remove visual components if object is NOT in field of view
-        obj.RIR.updateData(); % --- Updating the RIR observed data
+        % obj.RIR.updateData(); % --- Updating the RIR observed data
         if obj.createNew()
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
             obj.RIR.addObject(); % --- Add the object
