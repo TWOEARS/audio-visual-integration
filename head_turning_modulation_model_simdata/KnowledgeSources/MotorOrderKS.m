@@ -36,17 +36,16 @@ end
 
 function execute (obj)
     % --- If no sound -> make the head turn to 0° (resting state)
+    % --- Change to getLastHypothesis
     focus = obj.FCKS.focus(end);
 
     if focus > 0
         theta = getObject(obj, focus, 'theta');
         theta = theta(end);
-        % obj.htm.RIR.environments{1}.objects{focus}.requests.checked = true;
-        % obj.htm.RIR.environments{1}.objects{focus}.requests.check = false;
     elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
         theta = -obj.head_position(end);
-    else
-        theta = 0;
+    % else
+    %     theta = 0;
     end
 
     % if ~obj.isFocusedObjectPresent(focus)
