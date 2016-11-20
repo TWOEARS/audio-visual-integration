@@ -93,7 +93,9 @@ function initializeScenario (htm, init_scenario)
 		timeline_all{iSource} = timeline;
 	end
 
-	setInfo('timeline', timeline_all);
+	% setInfo('timeline', timeline_all);
+	global information;
+	information.timeline = timeline_all;
 
 
 % =====================
@@ -122,12 +124,13 @@ function initializeScenario (htm, init_scenario)
 		htm.gtruth = ground_truth;
 		htm.gtruth_data = simulated_data;
 		% htm.statistics.max = groundTruth_stats(:, 1);
-		htm.statistics.max_mean = ground_truth_stats;
+		htm.statistics.max_mean = [ground_truth_stats, zeros(info.nb_steps, 1)];
+		% htm.statistics.max_mean(:, end) = mean(htm.statistics.max_mean, 2);
 		% htm.statistics.max_mean = groundTruth_stats(:, 2);
 		htm.statistics.max_shm = htm.statistics.max;
 		htm.statistics.max_mean_shm = htm.statistics.max_mean;
 		htm.statistics.max_mean_shm(:, end+1) = zeros(info.nb_steps, 1);
-		htm.statistics.mfi = zeros(info.nb_steps, info.nb_sources+1);
+		htm.statistics.mfi = zeros(info.nb_steps, info.nb_sources);
 		htm.statistics.mfi_mean = zeros(info.nb_steps, info.nb_sources+1);
 		% htm.sources = sources;
 		htm.classif_mfi = cell(1, 5);
