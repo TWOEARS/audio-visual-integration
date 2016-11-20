@@ -126,7 +126,8 @@ function computeWeights (obj)
 			else
 			% --- Compute weights thanks to weighting functions
 				% --- Incongruent
-				if obj.observed_categories{obj_cat}.proba <= 1/obj.nb_classes
+				% if obj.observed_categories{obj_cat}.proba <= 1/obj.nb_classes
+				if obj.observed_categories{obj_cat}.congruence == -1
 					increaseObjectWeight(obj.htm, iObj);
 				% --- Congruent
 				else
@@ -138,11 +139,20 @@ function computeWeights (obj)
 	end
 end
 
-function updateGoodInferenceCpt (obj, search)
-	obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf + 1;
+function updateGoodInferenceCpt (obj, AVClass, search)
+    if isempty(search)
+        obj.createNewCategory(AVClass);
+        search = find(strcmp(obj.labels, AVClass));
+    else
+		obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf + 1;
+	end
 end
 
-function updateInferenceCpt (obj, search)
+function updateInferenceCpt (obj, AVClass, search)
+    if isempty(search)
+        obj.createNewCategory(AVClass);
+        search = find(strcmp(obj.labels, AVClass));
+    end
 	obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
 end
 
