@@ -1,8 +1,9 @@
 function value = getInfo (varargin)
 
-	information = getappdata(0, 'information');
+	global information info_fnames;
+	% information = getappdata(0, 'information');
 
-	fnames = fieldnames(information);
+	% fnames = fieldnames(information);
 
 	if nargin == 0
 		disp(information);
@@ -10,7 +11,7 @@ function value = getInfo (varargin)
 		str = input('Please select a field to retrieve: ', 's');
 		while ~BOOL
 			varargin{1} = str;
-			if ~strcmp(str, fnames)
+			if ~strcmp(str, info_fnames)
 				str = input('Error: Wrong Field. \nPlease select again a field to retrieve: ', 's');
 			else
 				BOOL = true;
@@ -19,18 +20,18 @@ function value = getInfo (varargin)
 	end
 
 	if nargin == 1 && strcmp(varargin{1}, 'all')
-		fnames = fieldnames(information);
+		info_fnames = fieldnames(information);
 	elseif nargin > 1
-		fnames = varargin;
+		info_fnames = varargin;
 	else
 		value = information.(varargin{1});
 		return;
 	end
 
-	nb_fields = numel(fnames);
+	nb_fields = numel(info_fnames);
 
 	for iParam = 1:nb_fields
-		value.(fnames{iParam}) = information.(fnames{iParam});
+		value.(info_fnames{iParam}) = information.(info_fnames{iParam});
 	end
 
 end
