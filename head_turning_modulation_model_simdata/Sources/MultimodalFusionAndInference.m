@@ -39,25 +39,15 @@ function newInput (obj, input_vector)
 	obj.inputs(:, end+1) = input_vector;
 	obj.trainMSOM();
 	obj.setCategories();
-	% obj.labels = [obj.labels ; obj.inferCategory(input_vector)];
 end
 
 function setCategories (obj)
-	% p = getInfo('audio_labels',...
-	% 			'visual_labels'...
-	% 		   );
-
 	MSOM_categories = obj.MSOM.categories;
 
-	obj.categories = arrayfun(@(x) mergeLabels(MSOM_categories(x, 1) ,...
-											   MSOM_categories(x, 2)),...
-							  1:size(MSOM_categories, 1)			 ,...
-							  'UniformOutput', false	 			  ...
-							 );
-
-	obj.nb_categories = numel(obj.categories) ;
-	% obj.assignNodesToCategories();
-	% obj.contributions_of_nodes = obj.MSOM.cat;
+	obj.categories = arrayfun(@(x) mergeLabels(MSOM_categories(x, 1), MSOM_categories(x, 2)),...
+							  1:size(MSOM_categories, 1),...
+							  'UniformOutput', false);
+	obj.nb_categories = numel(obj.categories);
 end
 
 function trainMSOM (obj)
