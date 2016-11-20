@@ -53,8 +53,8 @@ function execute (obj)
     if focus > 0
         theta = getObject(obj, focus, 'theta');
         theta = theta(end);
-    elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
-        theta = -obj.head_position(end);
+    % elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
+    %     theta = -obj.head_position(end);
     else
         theta = 0;
     end
