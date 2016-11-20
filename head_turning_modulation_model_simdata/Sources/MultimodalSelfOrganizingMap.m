@@ -59,7 +59,7 @@ methods
 % === CONSTRUCTOR [BEG] === %
 function obj = MultimodalSelfOrganizingMap (varargin)
 	p = inputParser ;
-	  p.addOptional('Iterations', 1);
+	  p.addOptional('Iterations', 10);
 	  p.addOptional('Leading', 1);
 	p.parse(varargin{:});
 	p = p.Results;
@@ -190,7 +190,6 @@ function clusterizeMSOM (obj)
 	[~, max_a] = max(obj.weights_vectors{1}, [], 2);
 	[~, max_v] = max(obj.weights_vectors{2}, [], 2);
 
-	% obj.categories = [max_v(1), max_a(1)] ;
 	obj.categories = unique([max_v, max_a], 'Rows');
 end
 
