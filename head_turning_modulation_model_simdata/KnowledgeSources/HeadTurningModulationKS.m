@@ -40,6 +40,8 @@ properties (SetAccess = public, GetAccess = public)
     VLKS; % Visual Location
     ACKS; % Audio Classifiers
     VCKS; % Visual Classifiers
+
+    naive_shm = {};
 end
 
 properties (SetAccess = private, GetAccess = public)
@@ -186,6 +188,8 @@ function run (obj)
         obj.displayProgressBar('update');
         % --- DISPLAY --- %
 
+        obj.computeNaiveSHM();
+        
         obj.EMKS.updateMap();
         
         % --- Stream Segregation
@@ -213,7 +217,9 @@ function run (obj)
                         obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
                         obj.RIR.addObject(iSource); % --- Add the object
                     elseif obj.updateObject(iSource)
+                        % === TO CHANGE!!!!!
                         obj.MSOM.idx_data = obj.MSOM.idx_data+1;
+                        % === TO CHANGE!!!!!
                         obj.RIR.updateObject(iSource); % --- Update the current object
                     end
                     obj.setPresence(iSource, true);
@@ -229,15 +235,9 @@ function run (obj)
 
         obj.updateAngles();
 
-%         if sum(obj.data(getInfo('nb_audio_labels')+1:end, iStep)) == 0
-%             obj.statistics.max_shm(iStep) = 0;
-%         end
-
         obj.retrieveMfiCategorization();
 
         % obj.storeMsomWeights(iStep);
-
-        
 
     end
 
@@ -317,31 +317,64 @@ end
 
 function retrieveMfiCategorization (obj)
     iStep = obj.iStep;
-    pobj = obj.RIR.environments{end}.present_objects';
+    % pobj = obj.RIR.environments{end}.present_objects';
+    pobj = obj.RIR.nb_objects;
     timeline = getInfo('timeline');
-    for iObject = pobj
+    focus = obj.FCKS.focus(end);
+    focus = getObject(obj, focus, 'source');
+    
+    for iObject = 1:pobj
         iSource = getObject(obj, iObject, 'source');
         t = getObject(obj, iObject, 'tmIdx');
         t = t(1);
+
+        % --- If missing data -> max_shm = 0
+        if focus ~= iSource
+            obj.statistics.max_shm(iStep, iSource) = 0;
+        end
+
         obj.classif_mfi{iSource}(iStep) = {getObject(obj, iObject, 'label')};
+        % === Binary value
         obj.statistics.mfi(iStep, iSource) = strcmp(obj.classif_mfi{iSource}(iStep), obj.gtruth{iSource}(iStep, 1));
+        % === Mean value
         obj.statistics.mfi_mean(t:iStep, iSource) = cumsum(obj.statistics.mfi(t:iStep, iSource)) ./ (t:iStep)';
-        tmp = find(timeline{iSource} <= iStep, 1, 'last');
-        if mod(tmp, 2) == 1
-            obj.statistics.max_mean_shm(t:iStep, iSource) = obj.statistics.max_mean_shm(timeline{iSource}(tmp), iSource);
-        else
-            obj.statistics.max_mean_shm(t:iStep, iSource) = cumsum(obj.statistics.max_shm(t:iStep, iSource)) ./ (t:iStep)';
+        
+        tmp = find(timeline{iSource} < iStep, 1, 'last');
+        if mod(tmp, 2) == 1 % --- take the last value (silence)
+            obj.statistics.max_mean_shm(iStep, iSource) = obj.statistics.max_mean_shm(timeline{iSource}(tmp), iSource);
+        else % --- take the last value (silence)
+            n = numel(t:iStep);
+            obj.statistics.max_mean_shm(t:iStep, iSource) = cumsum(obj.statistics.max_shm(t:iStep, iSource)) ./ (1:n)';
         end
     end
     % obj.RIR.environments{end}.present_objects
     % obj.statistics.mfi_mean(iStep, end) = mean(obj.statistics.mfi_mean(iStep, 1:end-1));
-    if isempty(pobj)
+    % if isempty(pobj)
+    if pobj == 0
         obj.statistics.mfi_mean(iStep, end) = 0;
         obj.statistics.max_mean_shm(1:iStep, end) = 0;
+        obj.statistics.max_mean(1:iStep, end) = 0;
     else
+        pobj = 1:pobj;
         sources = getObject(obj, pobj, 'source');
         obj.statistics.mfi_mean(iStep, end) = mean(obj.statistics.mfi_mean(iStep, sources), 2);
         obj.statistics.max_mean_shm(iStep, end) = mean(obj.statistics.max_mean_shm(iStep, sources), 2);
+        obj.statistics.max_mean(iStep, end) = mean(obj.statistics.max_mean(iStep, sources), 2);
+    end
+end
+
+function computeNaiveSHM (obj)
+    if obj.iStep > 2
+        id_object = getHypothesis(obj, 'ODKS', 'id_object');
+        obj_update = id_object(:, obj.iStep-2)-id_object(:, obj.iStep-1);
+        tmp = find(obj_update < 0);
+        if ~isempty(tmp)
+            obj.naive_shm{end+1} = id_object(tmp, end);
+        else
+            obj.naive_shm{end+1} = tmp;
+        end
+    else
+        obj.naive_shm{end+1} = [];
     end
 end
 
