@@ -97,7 +97,7 @@ function checkInference (obj)
 						obj.preventVerification(iObj, search, AVClass);
 					else % --- If the cat. hasn't been well infered in the past -> CHECK needed
 						obj.requestVerification(iObj, AVClass);
-						obj.DW.updateInferenceCpt(search);
+						obj.DW.updateInferenceCpt(AVClass, search);
 					end
 				% end
 			end
@@ -107,7 +107,7 @@ function checkInference (obj)
 			[AVClass, search] = obj.simulateAVInference(iObj);
 			if strcmp(AVClass, label) && ~strcmp(AVClass, 'none_none') % --- If inferred AV is the same as observed AV
 				obj.preventVerification(iObj, search, AVClass);
-				obj.DW.updateGoodInferenceCpt(search);
+				obj.DW.updateGoodInferenceCpt(AVClass, search);
 				obj.objects{iObj}.requests.checked = true;
 			else % --- If infered AV is NOT the same as observed AV
                 obj.objects{iObj}.requests.label = AVClass;
@@ -157,10 +157,10 @@ end
 
 function highTrainingPhase (obj)
 	% --- Change the number of iterations of the MSOM
-	obj.MFI.MSOM.setParameters(10);
+	obj.MFI.MSOM.setParameters(30);
 	% --- Train again the MSOM with last data
 	obj.MFI.trainMSOM();
-	obj.MFI.MSOM.setParameters(1);
+	obj.MFI.MSOM.setParameters(10);
 end
 
 function computePresence (obj)
