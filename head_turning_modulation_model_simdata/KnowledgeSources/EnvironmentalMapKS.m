@@ -26,6 +26,7 @@ properties (SetAccess = public, GetAccess = public)
 	statistics_handle;
 	hl;
 	tl_handle;
+	tc_handle;
 
 	text_handle;
 
@@ -70,33 +71,37 @@ function obj = EnvironmentalMapKS (htm)
 	obj.field_of_view = 30;
     obj.nb_sources = getInfo('nb_sources');
     obj.timeline = getInfo('timeline');
+	obj.angles = getInfo('sources_position');
+	obj.angles_rad = deg2rad(obj.angles);
+	obj.angles_cpt = [zeros(1, numel(obj.angles_rad)) ; zeros(1, numel(obj.angles_rad))];
     
 
 	obj.createFigure();
-	obj.drawSources();
-    obj.drawHistograms('init');
 
-	% obj.robot_position = RIR.position;
+	obj.drawSources();
+
+    obj.drawHistograms('init');
 
 	obj.drawRobot();
 
 	obj.drawFieldOfView('init');
 
-	obj.emitting_handle = zeros(2, getInfo('nb_sources'));
+	obj.emitting_handle = zeros(2, obj.nb_sources);
 
-	obj.text_handle = zeros(1, getInfo('nb_sources'));
+	obj.text_handle = zeros(1, obj.nb_sources);
 
 	obj.tl_handle = zeros(1, 3);
 
-	obj.shm_handle = zeros(1, getInfo('nb_sources'));
+	obj.tc_handle = zeros(3, obj.nb_sources);
+
+	obj.shm_handle = zeros(1, obj.nb_sources);
 
 	obj.statistics_handle = zeros(1, 3);
 
-	obj.drawMeanClassificationResults();
+	obj.drawMeanClassificationResults('init');
 
-	obj.angles = getInfo('sources_position');
-	obj.angles_rad = deg2rad(obj.angles);
-	obj.angles_cpt = [zeros(1, numel(obj.angles_rad)) ; zeros(1, numel(obj.angles_rad))];
+	obj.writeClassification('init');
+
 	obj.drawSHM('init');
 
 	% obj.drawSilence();
@@ -109,7 +114,7 @@ function updateMap (obj)
     timeline = obj.timeline;
 	sources = zeros(1, obj.nb_sources);
 	for iSource = 1:obj.nb_sources
-		tmp = find(timeline{iSource} <= obj.iStep, 1, 'last');
+		tmp = find(timeline{iSource} <= obj.iStep-1, 1, 'last');
 		if ~isempty(tmp) && mod(tmp, 2) == 0
 			sources(iSource) = 1;
 		end
@@ -117,45 +122,92 @@ function updateMap (obj)
     obj.emitting_sources = sources;
 	obj.drawLocalizationResults();
 	obj.drawEmittingSource();
-	obj.drawFieldOfView('update');
 	obj.drawSeenSources();
 	obj.drawClassificationResults();
-	obj.drawMeanClassificationResults();
-	obj.drawHistograms('update');
+	if obj.iStep > 1
+		obj.drawMeanClassificationResults('update');
+		obj.drawHistograms('update');
+        obj.drawFieldOfView('update');
+	end
 	if obj.iStep > 2
 		obj.drawSHM('update');
+		obj.writeClassification('update');
 	end
 	pause(0.01);
 end
 
-function createFigure (obj)
-	obj.figure_handle = axes();
-	p = get(obj.figure_handle(), 'Parent');	
-	set(p, 'Units', 'Normalized',...
-		   'Outerposition', [0 0 1 1],...
-		   'Tag', 'EMKS');
-	obj.h1 = subplot(6, 6, [1:4, 7:10, 13:16, 19:22, 25:28, 31:34], 'Parent', p);
-	set(obj.h1, 'XLim', [-11, 11],...
-				'YLim', [-11, 11],...
-				'Position', [0.01, 0.1, 0.6, 0.8]);%, 'XTick', [], 'YTick', []);
-	% set(htm.EMKS.h1, 'Position', [0, 0.11, 0.5, 0.8150])
-	axis off;
-	axis square;
+function writeClassification (obj, k)
+	if strcmp(k, 'init')
+		for iSource = 1:obj.nb_sources
+			pos = get(obj.objects_handle(iSource), 'Position');
+			if obj.angles(iSource) <= 90
+				pos1 = [pos(1) + 2, pos(2) + 2];
+				pos2 = [pos1(1), pos1(2)+0.5];
+				pos3 = [pos1(1), pos1(2)+1];
+			elseif obj.angles(iSource) <= 180
+				pos1 = [pos(1) - 3, pos(2) + 2];
+				pos2 = [pos1(1), pos1(2)+0.5];
+				pos3 = [pos1(1), pos1(2)+1];
+			elseif obj.angles(iSource) <= 270
+				pos1 = [pos(1)-3, pos(2)-1.5];
+				pos2 = [pos1(1), pos1(2)+0.5];
+				pos3 = [pos1(1), pos1(2)+1];
+			else
+				pos1 = [pos(1)+1.5, pos(2)-1.5];
+				pos2 = [pos1(1), pos1(2)+0.5];
+				pos3 = [pos1(1), pos1(2)+1];
+			end
+			obj.tc_handle(1, iSource) = text(pos1(1), pos1(2), '',...
+										  'FontSize', 12,...
+										  'FontWeight', 'bold',...
+										  'Color', [0, 153, 76]/255,...
+										  'Parent', obj.h1);
+			obj.tc_handle(2, iSource) = text(pos2(1), pos2(2), '',...
+										  'FontSize', 12,...
+										  'FontWeight', 'bold',...
+										  'Color', 'black',...
+										  'Parent', obj.h1);
+			obj.tc_handle(3, iSource) = text(pos3(1), pos3(2), '',...
+										  'FontSize', 12,...
+										  'FontWeight', 'bold',...
+										  'Color', 'black',...
+										  'Parent', obj.h1);
+		end
+	elseif strcmp(k, 'update')
+		for iSource = 1:obj.nb_sources
+			label1 = obj.htm.gtruth{iSource}{obj.iStep-1, 1};
+			uscore_pos = strfind(label1, '_');
+			str = [label1(1:uscore_pos-1), ' ', label1(uscore_pos+1:end)];
+			set(obj.tc_handle(1, iSource), 'String', str);
 
-	obj.h2 = subplot(6, 6, [5, 6, 11, 12, 17, 18]);
-	set(obj.h2, 'XLim', [0, obj.htm.nb_steps_final+20],...
-				'YLim', [0, 1],...
-				'Position', [0.52, 0.5374, 0.6, 0.45],...
-				'Parent', p);
-	axis square;
+			label2 = obj.htm.gtruth{iSource}{obj.iStep-1, 2};
+			if strcmp(label2, label1)
+				col = [0, 153, 76]/255;
+			else
+				col = [255, 51, 51]/255;
+			end
+			uscore_pos = strfind(label2, '_');
+			str = [label2(1:uscore_pos-1), ' ', label2(uscore_pos+1:end)];
+			set(obj.tc_handle(2, iSource),...
+				'String', str,...
+				'Color', col);
 
-	obj.h3 = subplot(6, 6, [23, 24, 29, 30, 35, 36]);
-	set(obj.h3, 'Position', [0.52, 0.05, 0.6, 0.45]);
-	axis square;
+			label3 = obj.htm.classif_mfi{iSource}{obj.iStep-1};
+			if strcmp(label3, label1)
+				col = [0, 153, 76]/255;
+			else
+				col = [255, 51, 51]/255;
+			end
+			uscore_pos = strfind(label3, '_');
+			str = [label3(1:uscore_pos-1), ' ', label3(uscore_pos+1:end)];
+			set(obj.tc_handle(3, iSource),...
+				'String', str,...
+				'Color', col);
+		end
+	end
 end
 
 function drawClassificationResults (obj)
-	%sources = obj.emitting_sources;
     if obj.htm.RIR.nb_objects == 0,
         return;
     end
@@ -217,9 +269,9 @@ function drawFieldOfView (obj, k)
 
 		if strcmp(k, 'init')
 			% === Naive robot
-			l1 = line([x0, x1], [y0, y1], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h1);
-			l2 = line([x1, x2], [y1, y2], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h1);
-			l3 = line([x2, x0], [y2, y0], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h1);
+			l1 = line([x0, x1], [y0, y1], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h1);
+			l2 = line([x1, x2], [y1, y2], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h1);
+			l3 = line([x2, x0], [y2, y0], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h1);
 			obj.fov_handle_naive = [l1, l2, l3];
 
 			% === HTM robot
@@ -237,15 +289,18 @@ function drawFieldOfView (obj, k)
 			set(obj.fov_handle_naive(2), 'XData', [x1, x2], 'YData', [y1, y2]);
 			set(obj.fov_handle_naive(3), 'XData', [x2, x0], 'YData', [y2, y0]);
 		end
-	else
+    elseif strcmp(k, 'update')
 		% hold(obj.h1, 'on');
 		x0 = obj.RIR.position(1);
 		y0 = obj.RIR.position(2);
 
 		% === Naive robot
 		if ~isempty(obj.htm.naive_shm)
-			naive_shm = obj.htm.naive_shm{end};
+			naive_shm = obj.htm.naive_shm{end-1};
 	        if ~isempty(naive_shm)
+	        	if numel(naive_shm) > 1
+	        		naive_shm = naive_shm(1);
+	        	end
 	            sources = getObject(obj, naive_shm, 'source');
 	            % obj.angles_cpt(2, sources) = obj.angles_cpt(2, sources) + 1;
 
@@ -266,7 +321,7 @@ function drawFieldOfView (obj, k)
 	    end
 
 	    % === HTM robot
-		if ~isempty(obj.MOKS.head_position)
+		if ~isempty(obj.MOKS.head_position(end-1))
 			theta1 = obj.MOKS.head_position(end) - (obj.field_of_view/2);
 			theta2 = obj.MOKS.head_position(end) + (obj.field_of_view/2);
 
@@ -282,12 +337,9 @@ function drawFieldOfView (obj, k)
 	pause(0.01);
 end
 
-function drawMeanClassificationResults (obj)
-	if obj.iStep == 0
-		return;
-	end
-    if sum(obj.statistics_handle(1)) == 0 || obj.iStep <= 1
-    	% hold(obj.h2, 'on');
+function drawMeanClassificationResults (obj, k)
+    if strcmp(k, 'init')
+    	hold(obj.h2, 'on');
 
         obj.statistics_handle(1) = plot(obj.htm.statistics.mfi_mean(1, end),...
 					                    'LineWidth', 4             ,...
@@ -333,8 +385,7 @@ function drawMeanClassificationResults (obj)
 								num2str(obj.htm.statistics.max_mean_shm(1)),...
 								'Parent', obj.h2);
 
-
-    	% hold(obj.h2, 'off');
+    	hold(obj.h2, 'off');
     else
     	data1 = obj.htm.statistics.mfi_mean(obj.iStep-1, end);
     	data2 = obj.htm.statistics.max_mean(obj.iStep-1, end);
@@ -362,7 +413,7 @@ function drawMeanClassificationResults (obj)
 
         str = num2str(data2);
     	tmp = strfind(str, '.');
-    	tt = min([numel(str), 4])
+    	tt = min([numel(str), 4]);
     	% if numel(str) > 4
     		str = str(1:tt);
     	% else
@@ -412,7 +463,7 @@ function drawSHM (obj, k)
             set(obj.shm_handle(1:obj.nb_sources), 'Color', 'red', 'LineWidth', 2);
         end
 
-        pause(0.01);
+        % pause(0.01);
 	end
 end
 
@@ -633,6 +684,38 @@ function drawSilence (obj)
 	end
 
 	hold(obj.h2, 'off');
+end
+
+function createFigure (obj)
+	% obj.figure_handle = axes();
+	% p = get(obj.figure_handle(), 'Parent');
+	p = figure();
+	set(p, 'Units', 'normalized',...
+		   'Outerposition', [0 0 1 1],...
+		   'Color', [1, 1, 1],...
+		   'Tag', 'EMKS');
+
+	obj.h1 = subplot(6, 6, [1:4, 7:10, 13:16, 19:22, 25:28, 31:34],...
+		             'Parent', p);
+	set(obj.h1, 'XLim', [-11, 11],...
+				'YLim', [-11, 11],...
+				'Position', [0.01, 0.1, 0.6, 0.8]);
+	axis off;
+	axis square;
+
+	obj.h2 = subplot(6, 6, [5, 6, 11, 12, 17, 18]);
+	set(obj.h2, 'XLim'    , [0, obj.htm.nb_steps_final],...
+				'YLim'	  , [0, 1],...
+				'Position', [0.55, 0.5374, 0.4, 0.45],...
+				'Parent'  , p);
+	axis square;
+
+	obj.h3 = subplot(6, 6, [23, 24, 29, 30, 35, 36]);
+	set(obj.h3, 'Position', [0.55, 0.05, 0.4, 0.45]);
+	axis square;
+
+	% img = imread('../../audio-visual-integration/head_turning_modulation_model_simdata/Img/Two!Ears.png');
+	% imagesc(-12, 12, img, 'Parent', obj.h1);
 end
 
 function removeEmittingSources (obj, iSource)
