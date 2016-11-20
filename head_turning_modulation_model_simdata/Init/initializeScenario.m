@@ -93,6 +93,25 @@ function initializeScenario (htm, init_scenario)
 		timeline_all{iSource} = timeline;
 	end
 
+	
+	cpt = 0;
+	for iStep = 2:info.nb_steps
+		for iSource = 1:info.nb_sources
+			if sum(simulated_data{iSource}(:, iStep-1)) == 0 && sum(simulated_data{iSource}(:, iStep)) > 0 % object starts emitting
+				if cpt == info.nb_simultaneous_sources
+					t = find(timeline_all{iSource} <= iStep, 1, 'last');
+					simulated_data{iSource}(:, timeline_all{iSource}(t):timeline_all{iSource}(t+1)) = 0;
+					timeline_all{iSource}(t) = [];
+					timeline_all{iSource}(t) = [];
+				else
+					cpt = cpt+1;
+				end
+			elseif sum(simulated_data{iSource}(:, iStep-1)) > 0 && sum(simulated_data{iSource}(:, iStep)) == 0 % object has stopped emitting
+				cpt = cpt-1;
+			end
+		end
+	end
+
 	% setInfo('timeline', timeline_all);
 	global information;
 	information.timeline = timeline_all;
