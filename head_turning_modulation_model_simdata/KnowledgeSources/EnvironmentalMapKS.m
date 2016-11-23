@@ -13,7 +13,7 @@ properties (SetAccess = public, GetAccess = public)
 	RIR; % Robot_Internal_Representation class
 	MOKS;
 	
-	figure_handle;
+	% figure_handle;
 	fov_handle;
 	fov_handle_naive;
 	objects_handle;
@@ -22,6 +22,8 @@ properties (SetAccess = public, GetAccess = public)
 	shm_handle;
 	naive_handle;
     hist_handle;
+    focus_type_handle;
+    classif_hist_handle;
 
 	statistics_handle;
 	hl;
@@ -44,15 +46,15 @@ properties (SetAccess = public, GetAccess = public)
 	% angles;
 
 	dmax = 1;
-	h1;
-	h2;
-	h3;
+	h;
 
 	angles = [];
 	angles_rad = [];
 	angles_cpt = [];
 
 	iStep;
+
+	shms;
 
 end
 
@@ -112,27 +114,29 @@ end
 function updateMap (obj)
 	obj.iStep = obj.htm.iStep;
     timeline = obj.timeline;
-	sources = zeros(1, obj.nb_sources);
-	for iSource = 1:obj.nb_sources
-		tmp = find(timeline{iSource} <= obj.iStep-1, 1, 'last');
-		if ~isempty(tmp) && mod(tmp, 2) == 0
-			sources(iSource) = 1;
-		end
-    end
-    obj.emitting_sources = sources;
-	obj.drawLocalizationResults();
-	obj.drawEmittingSource();
-	obj.drawSeenSources();
-	obj.drawClassificationResults();
+
+	% sources = zeros(1, obj.nb_sources);
+	% for iSource = 1:obj.nb_sources
+	% 	tmp = find(timeline{iSource} <= obj.iStep-1, 1, 'last');
+	% 	if ~isempty(tmp) && mod(tmp, 2) == 0
+	% 		sources(iSource) = 1;
+	% 	end
+ %    end
 	if obj.iStep > 1
+	    sources = getLastHypothesis(obj, 'ODKS', 'id_object');
+	    obj.emitting_sources = (sources > 0)';
+		obj.drawLocalizationResults();
+		obj.drawEmittingSource();
+		obj.drawSeenSources();
+		obj.drawClassificationResults();
 		obj.drawMeanClassificationResults('update');
 		obj.drawHistograms('update');
         obj.drawFieldOfView('update');
+		obj.writeClassification('update');
 	end
 	if obj.iStep > 2
 		obj.drawSHM('update');
-		obj.writeClassification('update');
-	end
+    end
 	pause(0.01);
 end
 
@@ -161,48 +165,52 @@ function writeClassification (obj, k)
 										  'FontSize', 12,...
 										  'FontWeight', 'bold',...
 										  'Color', [0, 153, 76]/255,...
-										  'Parent', obj.h1);
+										  'Parent', obj.h(1));
 			obj.tc_handle(2, iSource) = text(pos2(1), pos2(2), '',...
 										  'FontSize', 12,...
 										  'FontWeight', 'bold',...
 										  'Color', 'black',...
-										  'Parent', obj.h1);
+										  'Parent', obj.h(1));
 			obj.tc_handle(3, iSource) = text(pos3(1), pos3(2), '',...
 										  'FontSize', 12,...
 										  'FontWeight', 'bold',...
 										  'Color', 'black',...
-										  'Parent', obj.h1);
+										  'Parent', obj.h(1));
 		end
 	elseif strcmp(k, 'update')
-		for iSource = 1:obj.nb_sources
-			label1 = obj.htm.gtruth{iSource}{obj.iStep-1, 1};
-			uscore_pos = strfind(label1, '_');
-			str = [label1(1:uscore_pos-1), ' ', label1(uscore_pos+1:end)];
-			set(obj.tc_handle(1, iSource), 'String', str);
+		% for iSource = 1:obj.nb_sources
+		if obj.htm.RIR.nb_objects ~= 0
+			for iObject = 1:obj.htm.RIR.nb_objects
+				iSource = getObject(obj, iObject, 'source');
+				label1 = obj.htm.gtruth{iSource}{obj.iStep-1, 1};
+				uscore_pos = strfind(label1, '_');
+				str = [label1(1:uscore_pos-1), ' ', label1(uscore_pos+1:end)];
+				set(obj.tc_handle(1, iSource), 'String', str);
 
-			label2 = obj.htm.gtruth{iSource}{obj.iStep-1, 2};
-			if strcmp(label2, label1)
-				col = [0, 153, 76]/255;
-			else
-				col = [255, 51, 51]/255;
-			end
-			uscore_pos = strfind(label2, '_');
-			str = [label2(1:uscore_pos-1), ' ', label2(uscore_pos+1:end)];
-			set(obj.tc_handle(2, iSource),...
-				'String', str,...
-				'Color', col);
+				label2 = obj.htm.gtruth{iSource}{obj.iStep-1, 2};
+				if strcmp(label2, label1)
+					col = [0, 153, 76]/255;
+				else
+					col = [255, 51, 51]/255;
+				end
+				uscore_pos = strfind(label2, '_');
+				str = [label2(1:uscore_pos-1), ' ', label2(uscore_pos+1:end)];
+				set(obj.tc_handle(2, iSource),...
+					'String', str,...
+					'Color', col);
 
-			label3 = obj.htm.classif_mfi{iSource}{obj.iStep-1};
-			if strcmp(label3, label1)
-				col = [0, 153, 76]/255;
-			else
-				col = [255, 51, 51]/255;
+				label3 = obj.htm.classif_mfi{iSource}{obj.iStep-1};
+				if strcmp(label3, label1)
+					col = [0, 153, 76]/255;
+				else
+					col = [255, 51, 51]/255;
+				end
+				uscore_pos = strfind(label3, '_');
+				str = [label3(1:uscore_pos-1), ' ', label3(uscore_pos+1:end)];
+				set(obj.tc_handle(3, iSource),...
+					'String', str,...
+					'Color', col);
 			end
-			uscore_pos = strfind(label3, '_');
-			str = [label3(1:uscore_pos-1), ' ', label3(uscore_pos+1:end)];
-			set(obj.tc_handle(3, iSource),...
-				'String', str,...
-				'Color', col);
 		end
 	end
 end
@@ -248,7 +256,7 @@ function drawLocalizationResults (obj)
 			obj.text_handle(source) = text(x+0.2, y+0.2, num2str(current_theta),...
 										   'FontSize', 16,...
 										   'FontWeight', 'bold',...
-										   'Parent', obj.h1);
+										   'Parent', obj.h(1));
 		else
 			set(obj.text_handle(source), 'Position', [x+0.2, y+0.2, 0],...
 										 'String', [num2str(current_theta), '^\circ']);
@@ -269,15 +277,15 @@ function drawFieldOfView (obj, k)
 
 		if strcmp(k, 'init')
 			% === Naive robot
-			l1 = line([x0, x1], [y0, y1], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h1);
-			l2 = line([x1, x2], [y1, y2], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h1);
-			l3 = line([x2, x0], [y2, y0], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h1);
+			l1 = line([x0, x1], [y0, y1], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
+			l2 = line([x1, x2], [y1, y2], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
+			l3 = line([x2, x0], [y2, y0], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
 			obj.fov_handle_naive = [l1, l2, l3];
 
 			% === HTM robot
-			l1 = line([x0, x1], [y0, y1], 'Color', 'k', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h1);
-			l2 = line([x1, x2], [y1, y2], 'Color', 'k', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h1);
-			l3 = line([x2, x0], [y2, y0], 'Color', 'k', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h1);
+			l1 = line([x0, x1], [y0, y1], 'Color', 'k', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h(1));
+			l2 = line([x1, x2], [y1, y2], 'Color', 'k', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h(1));
+			l3 = line([x2, x0], [y2, y0], 'Color', 'k', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h(1));
 			
 			obj.fov_handle = [l1, l2, l3];
 		else
@@ -290,7 +298,7 @@ function drawFieldOfView (obj, k)
 			set(obj.fov_handle_naive(3), 'XData', [x2, x0], 'YData', [y2, y0]);
 		end
     elseif strcmp(k, 'update')
-		% hold(obj.h1, 'on');
+		% hold(obj.h(1), 'on');
 		x0 = obj.RIR.position(1);
 		y0 = obj.RIR.position(2);
 
@@ -332,60 +340,77 @@ function drawFieldOfView (obj, k)
 			set(obj.fov_handle(2), 'XData', [x1, x2], 'YData', [y1, y2]);
 			set(obj.fov_handle(3), 'XData', [x2, x0], 'YData', [y2, y0]);
 		end
-		% hold(obj.h1, 'off');
+		% hold(obj.h(1), 'off');
 	end
-	pause(0.01);
+	%pause(0.01);
 end
 
 function drawMeanClassificationResults (obj, k)
     if strcmp(k, 'init')
-    	hold(obj.h2, 'on');
+    	hold(obj.h(2), 'on');
 
         obj.statistics_handle(1) = plot(obj.htm.statistics.mfi_mean(1, end),...
 					                    'LineWidth', 4             ,...
 					                    'LineStyle', '-'           ,...
 					                    'Color'    , [0.1, 0.1, 0.1],...
-					                    'Parent'   , obj.h2);
+					                    'Parent'   , obj.h(2));
         obj.hl(1) = line([1, 1], [obj.htm.statistics.mfi_mean(1, end), obj.htm.statistics.mfi_mean(1, end)],...
                                  'Color', [0.1, 0.1, 0.1],...
                                  'LineWidth', 3,...
 	                             'LineStyle', ':',...
-	                             'Parent', obj.h2);
+	                             'Parent', obj.h(2));
 
         obj.statistics_handle(2) = plot(obj.htm.statistics.max_mean(1),...
 					                    'LineWidth', 4             ,...
 					                    'LineStyle', '-'           ,...
 					                    'Color'    , [0.6, 0.6, 0.6],...
-					                    'Parent'   , obj.h2);
+					                    'Parent'   , obj.h(2));
         obj.hl(2) = line([1, 1], [obj.htm.statistics.max_mean(1), obj.htm.statistics.max_mean(1)],...
 	                             'Color', [0.6, 0.6, 0.6],...
                                  'LineWidth', 3,...
 	                             'LineStyle', ':',...
-	                             'Parent', obj.h2);
+	                             'Parent', obj.h(2));
 
         obj.statistics_handle(3) = plot(obj.htm.statistics.max_mean_shm(1),...
 						                'LineWidth', 4,...
 						                'LineStyle', '-',...
 						                'Color'    , [0.8, 0.8, 0.8],...
-						                'Parent'   , obj.h2);
+						                'Parent'   , obj.h(2));
         obj.hl(3) = line([1, 1], [obj.htm.statistics.max_mean_shm(1), obj.htm.statistics.max_mean_shm(1)],...
                             	 'Color', [0.8, 0.8, 0.8],...
                                  'LineWidth', 3,...
                             	 'LineStyle', ':',...
-                            	 'Parent', obj.h2);
+                            	 'Parent', obj.h(2));
 
 
         obj.tl_handle(1) = text(5, obj.htm.statistics.mfi_mean(1)+0.02,...
         						num2str(obj.htm.statistics.mfi_mean(1)),...
-        						'Parent', obj.h2);
+        						'Parent', obj.h(2));
         obj.tl_handle(2) = text(5, obj.htm.statistics.max_mean(1)+0.02,...
         						num2str(obj.htm.statistics.max_mean(1)),...
-        						'Parent', obj.h2);
+        						'Parent', obj.h(2));
 		obj.tl_handle(3) = text(5, obj.htm.statistics.max_mean_shm(1)+0.02,...
 								num2str(obj.htm.statistics.max_mean_shm(1)),...
-								'Parent', obj.h2);
+								'Parent', obj.h(2));
 
-    	hold(obj.h2, 'off');
+    	hold(obj.h(2), 'off');
+
+    	obj.classif_hist_handle = bar([0, 0, 0], 'Parent', obj.h(6));
+        % p = get(obj.classif_hist_handle, 'Parent');
+        pos = get(obj.h(6), 'Outerposition');
+        set(obj.h(6), 'XTick'     	      , [1, 2, 3],...
+                      'XTickLabel'		  , {'naive wo SHM', 'naive w. SHM', 'HTMKS'},...
+                      'XTickLabelRotation', 45,...
+                      'YLim'			  , [0, 1],...
+                      'YTick'			  , 0:0.1:1,...
+                      'Position', pos+[0, 0.03, 0, -0.05]);
+        set(get(obj.h(6), 'YLabel'), 'String', 'mean classification rate');
+
+        % =========== TO ADD
+        % figure ;h=plotyy(1:200, [htm.statistics.mfi_mean(:, end), htm.statistics.max_mean(:, end),htm.statistics.max_mean_shm(:, end)], 1:200, [htm.FCKS.focus ; htm.FCKS.focus_origin])
+		% =========== TO ADD
+
+
     else
     	data1 = obj.htm.statistics.mfi_mean(obj.iStep-1, end);
     	data2 = obj.htm.statistics.max_mean(obj.iStep-1, end);
@@ -432,6 +457,11 @@ function drawMeanClassificationResults (obj, k)
     	set(obj.tl_handle(3), 'Position', [5, data3+0.02, 0],...
     						  'String'  , [str,'%']);
 
+    	data = [obj.htm.statistics.max_mean(obj.iStep-1, end),...
+    		    obj.htm.statistics.max_mean_shm(obj.iStep-1, end),...
+    		    obj.htm.statistics.mfi_mean(obj.iStep-1, end)];
+    	set(obj.classif_hist_handle, 'YData', data);
+
     end
 
 end
@@ -439,7 +469,16 @@ end
 function drawSHM (obj, k)
 	if strcmp(k, 'init')
 		[x, y] = pol2cart(obj.angles_rad, obj.angles_cpt(1, :));
-		obj.shm_handle = compass([x, x], [y, y], 'Parent', obj.h3);
+		obj.shm_handle = compass([x, x], [y, y], 'Parent', obj.h(3));
+        % set(obj.h(3), 'Position', [0.56, 0.07, 0.34, 0.42]);
+
+		obj.focus_type_handle = bar([0, 0], 'FaceColor', [102, 178, 255]/255, 'EdgeColor', 'none', 'Parent', obj.h(5));
+        % p = get(obj.focus_type_handle, 'Parent');
+        pos = get(obj.h(5), 'Outerposition');
+        set(obj.h(5), 'XTick'     	      , [1, 2],...
+		       		  'XTickLabel'		  , {'naive', 'HTMKS'},...
+		  	   		  'XTickLabelRotation', 45,...
+		  	   		  'Outerposition', [pos(1), pos(2)-0.05, pos(3), pos(4)]);
 
 	elseif strcmp(k, 'update')
 		mo = obj.MOKS.motor_order(obj.iStep-1);
@@ -448,6 +487,7 @@ function drawSHM (obj, k)
 			%pos = find(obj.angles == mo);
             pos = getObject(obj, fo, 'source');
 			obj.angles_cpt(1, pos) = obj.angles_cpt(1, pos) + 1;
+            obj.shms(end+1) = 1;
 		end
 		[x, y] = pol2cart(obj.angles_rad, obj.angles_cpt(1, :));
 		
@@ -458,14 +498,42 @@ function drawSHM (obj, k)
 
             [x2, y2] = pol2cart(obj.angles_rad, obj.angles_cpt(2, :));
 
-            obj.shm_handle = compass([x2, x], [y2, y], 'Parent', obj.h3);
+            obj.shm_handle = compass([x2, x], [y2, y], 'Parent', obj.h(3));
             set(obj.shm_handle(obj.nb_sources+1:end), 'LineWidth', 4);
             set(obj.shm_handle(1:obj.nb_sources), 'Color', 'red', 'LineWidth', 2);
-        end
 
-        % pause(0.01);
+            obj.shms(end+1) = 0;
+        end
+        uv = histc(obj.shms, [0, 1]);
+        m = max(uv);
+        if m < 10
+            ytick = 0:m;
+        elseif m < 20
+        	ytick = 0:2:m;
+        elseif m < 30
+        	ytick = 0:4:m;
+        elseif m < 40
+        	ytick = 0:5:m;
+        elseif m < 50
+        	ytick = 0:10:m;
+        else
+        	ytick = 0:20:m;
+        end
+        set(obj.focus_type_handle, 'YData', uv);
+        set(obj.h(5), 'YTick'     , ytick,...
+        			  'YTickLabel', ytick);
 	end
 end
+
+% function drawComparedFocuses (obj, k)
+% 	if strcmp(k, 'init')
+
+% 	elseif strcmp(k, 'update')
+% 		if ~isempty(obj.htm.naive_shm{obj.iStep-1}) && obj.htm.naive_shm{obj.iStep-1} > 0
+% 			obj.naive_shm
+% 	end
+
+% end
 
 function drawHistograms (obj, k)
     if strcmp(k, 'init')
@@ -481,7 +549,7 @@ function drawHistograms (obj, k)
                                                   'LineStyle', 'none',...
                                                   'FaceColor', [0.2, 0.2, 0.2],...
                                                   'Visible'  , 'off',...
-                                                  'Parent'   , obj.h1);
+                                                  'Parent'   , obj.h(1));
             new_pos = [x+0.33, y, 0.32, 1];
             obj.hist_handle(2, end) = rectangle('Position' , new_pos,...
                                                 'Curvature', 0.1 ,...
@@ -489,7 +557,7 @@ function drawHistograms (obj, k)
                                                 'LineStyle', 'none',...
                                                 'FaceColor', [0.6, 0.6, 0.6],...
                                                 'Visible'  , 'off',...
-                                                'Parent'   , obj.h1);
+                                                'Parent'   , obj.h(1));
             new_pos = [x+0.66, y, 0.32, 1];
             obj.hist_handle(3, end) = rectangle('Position' , new_pos,...
                                                 'Curvature', 0.1 ,...
@@ -497,7 +565,7 @@ function drawHistograms (obj, k)
                                                 'LineStyle', 'none',...
                                                 'FaceColor', [0.8, 0.8, 0.8],...
                                                 'Visible'  , 'off',...
-                                                'Parent'   , obj.h1);
+                                                'Parent'   , obj.h(1));
             % ===
             new_pos = [x, pos(2), 0.32, 1];
             obj.hist_handle(4, end) = rectangle('Position' , new_pos,...
@@ -506,7 +574,7 @@ function drawHistograms (obj, k)
                                                 'LineStyle', 'none',...
                                                 'FaceColor', [0.2, 0.2, 0.2],...
                                                 'Visible'  , 'off',...
-                                                'Parent'   , obj.h1);
+                                                'Parent'   , obj.h(1));
             new_pos = [x+0.33, pos(2), 0.32, 1];
             obj.hist_handle(5, end) = rectangle('Position' , new_pos,...
                                                 'Curvature', 0.1 ,...
@@ -514,7 +582,7 @@ function drawHistograms (obj, k)
                                                 'LineStyle', 'none',...
                                                 'FaceColor', [0.6, 0.6, 0.6],...
                                                 'Visible'  , 'off',...
-                                                'Parent'   , obj.h1);
+                                                'Parent'   , obj.h(1));
             new_pos = [x+0.66, pos(2), 0.32, 1];
             obj.hist_handle(6, end) = rectangle('Position' , new_pos,...
                                                 'Curvature', 0.1 ,...
@@ -522,7 +590,7 @@ function drawHistograms (obj, k)
                                                 'LineStyle', 'none',...
                                                 'FaceColor', [0.8, 0.8, 0.8],...
                                                 'Visible'  , 'off',...
-                                                'Parent'   , obj.h1);
+                                                'Parent'   , obj.h(1));
         end
     else
         nb_objects = obj.htm.RIR.nb_objects;
@@ -586,13 +654,13 @@ function drawEmittingSource (obj, varargin)
 							  'Curvature', [1 1],...
 							  'LineStyle', '-.',...
 							  'EdgeColor', [51, 102, 0]/255,...
-						  	  'Parent'   , obj.h1,...
+						  	  'Parent'   , obj.h(1),...
 						  	  'Tag', num2str(iSource));
 				h2 = rectangle('Position' , pos2  ,...
 							  'Curvature', [1 1],...
 							  'LineStyle', '-.',...
 							  'EdgeColor', [51, 102, 0]/255,...
-						  	  'Parent'   , obj.h1,...
+						  	  'Parent'   , obj.h(1),...
 						  	  'Tag', num2str(iSource));
 
 				obj.emitting_handle(1, iSource) = h1;
@@ -619,7 +687,7 @@ end
 
 function drawSources (obj, h)
 	if nargin == 1
-		h = obj.h1;
+		h = obj.h(1);
 	end
 
 	info = getInfo('all');
@@ -638,6 +706,10 @@ function drawSources (obj, h)
 			  		   			 			 );
 		obj.sources(:, end+1) = pos;
 	end
+
+	% pos = get(h, 'Outerposition');
+	% set(h, 'Outerposition', )
+
 end
 
 function drawRobot (obj)
@@ -651,7 +723,7 @@ function drawRobot (obj)
 			  		   			 'Curvature', [1 1],...
 			  		   			 'LineWidth', 2,...
 			  		   			 'FaceColor', 'black',...
-			  		   			 'Parent'   , obj.h1);
+			  		   			 'Parent'   , obj.h(1));
 			  		   			 % 'Parent'   , obj.figure_handle);
 	circle_size = 3;
 	% --- Centering the center around [0, 0]
@@ -664,13 +736,13 @@ function drawRobot (obj)
 			  		   		   'Curvature', [1 1],...
 			  		   		   'LineWidth', 2,...
 			  		   		   'FaceColor', 'none',...
-			  		   		   'Parent'   , obj.h1);
+			  		   		   'Parent'   , obj.h(1));
 end
 
 function drawSilence (obj)
 	info = getInfo('cpt_silence', 'cpt_object', 'nb_steps');
 	vec = 1 :(info.cpt_silence+info.cpt_object): info.nb_steps;
-	hold(obj.h2, 'on');
+	hold(obj.h(2), 'on');
 
 	for iSilence = 1:numel(vec)
 		x = vec(iSilence);
@@ -680,10 +752,10 @@ function drawSilence (obj)
 		patch(X, Y1, C,...
 			  'FaceAlpha', 0.6,...
 			  'EdgeColor', 'none',...
-			  'Parent', obj.h2);
+			  'Parent', obj.h(2));
 	end
 
-	hold(obj.h2, 'off');
+	hold(obj.h(2), 'off');
 end
 
 function createFigure (obj)
@@ -694,28 +766,41 @@ function createFigure (obj)
 		   'Outerposition', [0 0 1 1],...
 		   'Color', [1, 1, 1],...
 		   'Tag', 'EMKS');
+	% obj.figure_handle = p;
+	obj.h = zeros(1, 6);
 
-	obj.h1 = subplot(6, 6, [1:4, 7:10, 13:16, 19:22, 25:28, 31:34],...
-		             'Parent', p);
-	set(obj.h1, 'XLim', [-11, 11],...
-				'YLim', [-11, 11],...
-				'Position', [0.01, 0.1, 0.6, 0.8]);
+	obj.h(1) = subplot(5, 6, [1:3, 7:9, 13:15], 'Parent', p);
+	set(obj.h(1), 'XLim', [-11, 11],...
+				'YLim', [-11, 11])%,...
+	axis square;
+                % 'Position', [0.05, 0.4, 0.45, 0.45])
 	axis off;
-	axis square;
 
-	obj.h2 = subplot(6, 6, [5, 6, 11, 12, 17, 18]);
-	set(obj.h2, 'XLim'    , [0, obj.htm.nb_steps_final],...
-				'YLim'	  , [0, 1],...
-				'Position', [0.55, 0.5374, 0.4, 0.45],...
-				'Parent'  , p);
+	obj.h(2) = subplot(5, 6, [4, 5, 10, 11, 16, 17], 'Parent', p);
+	set(obj.h(2), 'XLim'    , [0, obj.htm.nb_steps_final],...
+				'YLim'	  , [0, 1]);%,...
 	axis square;
+				% 'Position', [0.6, 0.4, 0.18, 0.45]);
 
-	obj.h3 = subplot(6, 6, [23, 24, 29, 30, 35, 36]);
-	set(obj.h3, 'Position', [0.55, 0.05, 0.4, 0.45]);
+	obj.h(3) = subplot(5, 6, [22, 23, 28, 29], 'Parent', p);
 	axis square;
+	% set(obj.h(3), 'Position', [0.6, 0.05, 0.18, 0.25]);
+
+	obj.h(4) = subplot(5, 6, [19:21, 25:27], 'Parent', p);
+	axis square;
+	% set(obj.h(4), 'Position', [0.05, 0.05, 0.45, 0.25]);
+
+	obj.h(5) = subplot(5, 6, [24, 30], 'Parent', p);
+	% axis square;
+	% set(obj.h(5), 'Outerposition', [0.8, 0.05, 0.15, 0.4]);
+
+	obj.h(6) = subplot(5, 6, [6, 12, 18], 'Parent', p);
+	% set(obj.h(6), 'Outerposition', [0.8, 0.5, 0.15, 0.4]);
+    % set(obj.h(6), 'Position', [0.8, 0.4, 0.15, 0.45]);
+	% axis square;
 
 	% img = imread('../../audio-visual-integration/head_turning_modulation_model_simdata/Img/Two!Ears.png');
-	% imagesc(-12, 12, img, 'Parent', obj.h1);
+	% imagesc(-12, 12, img, 'Parent', obj.h(1));
 end
 
 function removeEmittingSources (obj, iSource)
@@ -730,8 +815,10 @@ end
 
 function removeAllEmittingSources (obj)
     for iSource = 1:obj.nb_sources
-		set(obj.emitting_handle(1, iSource), 'Visible', 'off');
-		set(obj.emitting_handle(2, iSource), 'Visible', 'off');
+        if obj.emitting_handle(1, iSource) ~= 0
+            set(obj.emitting_handle(1, iSource), 'Visible', 'off');
+            set(obj.emitting_handle(2, iSource), 'Visible', 'off');
+        end
     end
 end
 
