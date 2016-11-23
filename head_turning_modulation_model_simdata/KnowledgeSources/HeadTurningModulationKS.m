@@ -48,6 +48,8 @@ properties (SetAccess = private, GetAccess = public)
     nb_steps_init = 1;
     nb_steps_final = 0;
 
+    % detected_objects;
+
     iStep = 0;
 
     save = false;
@@ -203,28 +205,37 @@ function run (obj)
 
         streams = getLastHypothesis(obj, 'SSKS');
         for iSource = 1:numel(streams)
-            if streams(iSource) ~= 0
+            % if streams(iSource) ~= 0
                 % --- Processing the ObjectDetectionKS output for time step iStep
                 %if ~obj.createNew(iSource) && ~obj.updateObject(iSource)
-                tmp = getLastHypothesis(obj, 'ODKS', 'id_object');
-                if tmp(iSource) == 0
-                    obj.setPresence(iSource, false);
-                    % obj.RIR.updateData(iSource);
+                id_objects = getLastHypothesis(obj, 'ODKS', 'id_object');
+                if id_objects(iSource) == 0
+                    if obj.RIR.nb_objects ~= 0
+                        s = getObject(obj, 'all', 'source');
+                        s = find(s == iSource);
+                        % obj.setPresence(id_objects(iSource), false);
+                        if ~isempty(s)
+                            setObject(obj, s, 'presence', false);
+                        end
+                        % obj.RIR.updateData(iSource);
+                    end
                 else
                     obj.degradeData(iSource); % --- Remove visual components if object is NOT in field of view
                     % obj.RIR.updateData(iSource); % --- Updating the RIR observed data
                     if obj.createNew(iSource)
                         obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
                         obj.RIR.addObject(iSource); % --- Add the object
+                        % obj.detected_objects(end+1) = id_objects(iSource);
                     elseif obj.updateObject(iSource)
                         % === TO CHANGE!!!!!
                         obj.MSOM.idx_data = obj.MSOM.idx_data+1;
                         % === TO CHANGE!!!!!
                         obj.RIR.updateObject(iSource); % --- Update the current object
                     end
-                    obj.setPresence(iSource, true);
+                    % obj.setPresence(id_objects(iSource), true);
+                    setObject(obj, id_objects(iSource), 'presence', true);
                 end
-            end
+            % end
         end
 
         obj.RIR.updateObjects();
@@ -257,23 +268,6 @@ function run (obj)
 
 end
 % === 'RUN' FUNCTION [END] === %
-
-function setPresence (obj, iSource, bool)
-    if ~bool 
-        if obj.RIR.nb_objects > 0
-            idx = getHypothesis(obj, 'ODKS', 'id_object');
-            idx = idx(iSource, end-1);
-            if idx ~= 0 && getObject(obj, idx, 'presence')
-                setObject(obj, idx, 'presence', false);
-                setObject(obj, idx, 'requests', 'init');
-            end
-        end
-    else
-        idx = getLastHypothesis(obj, 'ODKS', 'id_object');
-        idx = idx(iSource);
-        setObject(obj, idx, 'presence', true); % --- The object is present but not necessarily facing the robot
-    end
-end
 
 function bool = createNew (obj, iSource)
     hyp = getLastHypothesis(obj, 'ODKS', 'create_new');
