@@ -39,10 +39,10 @@ function execute (obj)
     % --- Change to getLastHypothesis
     focus = obj.FCKS.focus(end);
 
-    if focus > 0
+    if focus ~= 0
         theta = getObject(obj, focus, 'theta');
         theta = theta(end);
-    elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
+    elseif focus == 0 %&& numel(obj.head_position) > 0 % --- go back to resting position (O°)
         theta = -obj.head_position(end);
     % else
     %     theta = 0;
