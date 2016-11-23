@@ -1,11 +1,9 @@
 function hypothesis = getHypothesis (obj, KS, varargin)
 
-	if isa(obj, 'RobotInternalRepresentation')
-        htm = obj.htm;
-    elseif isa(obj, 'PerceivedEnvironment')
-        htm = obj.htm;
-    elseif isa(obj, 'HeadTurningModulationKS')
+    if isa(obj, 'HeadTurningModulationKS')
         htm = obj;
+    else
+        htm = obj.htm;
     end
 
 	if strcmp(KS, 'ODKS')
