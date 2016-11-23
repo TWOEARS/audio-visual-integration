@@ -58,7 +58,8 @@ function execute (obj)
         focus_origin = 0;
     else
         % --- DWmod-based focus computing
-        dwmod_focus = obj.computeDWmodFocus();
+        % dwmod_focus = obj.computeDWmodFocus();
+        dwmod_focus = 0;
 
         % --- MFI-based focus computing
         mfi_focus = obj.computeMFImodFocus();
@@ -129,22 +130,12 @@ function focus = computeMFImodFocus (obj)
         if current_object == 0
             focus(iSource) = 0;
         else
-            %if getObject(obj, current_object, 'presence')
-                requests = getObject(obj, current_object, 'requests');
-                if requests.check || ~isPerformant(obj.htm, current_object, 'Object')
-                    focus(iSource) = current_object;
-                    % === TO BE CHANGED === %
-                    % obj.RIR.getEnv().objects{current_object}.requests.checked = true;
-                    % === TO BE CHANGED === %
-                % elseif requests.checked
-                %     %focus = current_object;
-                %     focus = 0;
-                else
-                    focus(iSource) = 0;
-                end
-            %else
-            %    focus(iSource) = 0;
-            %end
+            requests = getObject(obj, current_object, 'requests');
+            if requests.check || ~isPerformant(obj.htm, current_object, 'Object')
+                focus(iSource) = current_object;
+            else
+                focus(iSource) = 0;
+            end
         end
     end
     focus = obj.solveConflicts(focus);
@@ -158,19 +149,118 @@ function focus = solveConflicts (obj, focuses)
     elseif numel(objects) == 1
         focus = objects;
     else
-        % avcats = getObject(obj, objects, 'audiovisual_category');
-        uv = unique(cell2mat(arrayfun(@(x) obj.focus(obj.focus==x), objects', 'UniformOutput', false)));
-        if isempty(uv)
-            focus = 0;
-        else
-            n  = histc(obj.focus, uv);
-            [v, p] = min(n);
-            if sum(n == v) > 1
-                focus = obj.focus(end);
+        avcats = getObject(obj, objects, 'audiovisual_category');
+        undef_cats = find(avcats == 1);
+        if ~isempty(undef_cats)
+            if numel(undef_cats) == 1
+                focus = objects(undef_cats);
+            else
+                missing_hist = arrayfun(@(x) sum(getObject(obj, x, 'missing_hist')), undef_cats);
+                tm_idx = arrayfun(@(x) numel(getObject(obj, x, 'tmIdx')), undef_cats);
+                if numel(unique(tm_idx)) == 1
+                    if find(obj.focus(end) == objects)
+                        focus = obj.focus(end);
+                    else
+                        focus = objects(randi(numel(objects)));
+                    end
+                else
+                    [~, pos] = min(tm_idx);
+                    focus = obj.focus(pos);
+                end
             end
-            focus = objects(p);
+        else
+            if find(obj.focus(end) == objects)
+                focus = obj.focus(end);
+            else
+                focus = objects(randi(numel(objects)));
+                % focus = 0;
+            end
         end
     end
+            
+        % avcats = getObject(obj, objects, 'audiovisual_category');
+        %uv = unique(cell2mat(arrayfun(@(x) obj.focus(obj.focus==x), objects', 'UniformOutput', false)));
+        %uv = cell2mat(arrayfun(@(x) sum(obj.focus==x), objects', 'UniformOutput', false));
+        % --- Looking at how many time steps 'objects' had missing information
+        missing_hist = arrayfun(@(x) sum(getObject(obj, x, 'missing_hist')), objects');
+        %if isempty(uv)
+        %if all(uv == 0)
+        % --- If every 'objects' had the same number of time steps missing information
+%         if numel(unique(missing_hist)) == 1
+%             pos = find(obj.focus(end) == objects);
+%             % --- If last focus is present in 'objects' -> keep focusing it
+%             if ~isempty(pos)
+%                 focus = objects(pos);
+%             % --- If not, take a random object
+%             else
+%                 focus = objects(randi(numel(objects)));
+%             end
+%         % --- If some objects had more missing time steps
+%         else
+%             % --- Find the one with the max time steps
+%             [v, p] = max(missing_hist);
+%             if objects(p) == obj.focus(end)
+%                 focus = objects(p);
+%             else
+%                 s = sum(obj.focus(end-4:end) == objects(p));
+%                 if s == 5
+%                     focus = objects(p);
+%                 else
+%                     focus = obj.focus(end);
+%                 end
+%             end
+%                 
+            % --- To avoid deadlock situations, impose a 5 tsteps delay
+            %tmp = arrayfun(@(x) sum(getObject(obj, x, 'missing_hist')), objects');
+%             pos = find(obj.focus(end) == objects);
+%             if ~isempty(pos)
+%                 if abs(missing_hist(pos) - missing_hist(p)) >= 5
+%                     focus = objects(p);
+%                 else
+%                     focus = objects(pos);
+%                 end
+%             else
+%                 focus = objects(p);
+%             end
+            % --- introducing a 5 time steps smoothing delay
+%             ff = missing_hist - v;
+%             t1 = find(ff < 0);
+%             if isempty(t1)
+%                 focus = objects(p);
+%             else
+%                 t2 = find(ff > -5);
+%                 %if isempty(t2)
+%                 if ~isempty(t2)
+%                     ii = intersect(t1, t2);
+%                     if isempty(ii)
+%                         % check tmp(2)
+%                         [~, p] = max(ff(t1));
+%                         focus = objects(p);
+%                     else
+%                         focus = objects(p);
+%                     end
+%                 end
+%             end
+%             %n  = histc(obj.focus, uv);
+%             %[v, p] = min(n);
+%             [v, p] = min(uv);
+%             %if sum(n == v) > 1
+%             if sum(uv == v) > 1
+%                 [v2, m] = max(uv);
+%                 ff = find(uv-v2 < -5);
+%                 if isempty(ff)
+%                     focus = objects(m);
+%                 else
+%                     [~, p] = min(uv(ff));
+%                     focus = objects(p);
+%                 end
+%                 %focus = obj.focus(end);
+%                 % focus = obj.focus(p(1));
+%             else
+%                 focus = objects(p);
+%             end
+%         end
+%     end
 end
 
 % === Check if the considered object is present in the environment
@@ -186,7 +276,12 @@ end
 
 % === Get Objects of Max Weight (DWmod computation)
 function request = getMaxWeightObject (obj)
-    obj_weights = getObject(obj, 'all', 'weight');
+    % obj_weights = getObject(obj, 'all', 'weight');
+    present_objects = getLastHypothesis(obj, 'ODKS', 'id_object');
+    present_objects = present_objects(present_objects > 0)';
+    % env = getEnvironment(obj, 0);
+    % present_objects = env.present_objects';
+    obj_weights = getObject(obj, present_objects, 'weight');
     [val, pos] = max(obj_weights);
     max_weight_obj = find(obj_weights == val);
     if numel(max_weight_obj) > 1
@@ -194,7 +289,7 @@ function request = getMaxWeightObject (obj)
         [~, pos] = min(tsteps);
         request = max_weight_obj(pos);
     else
-        request = pos;
+        request = present_objects(pos);
     end
     request = int32(request);
 end
