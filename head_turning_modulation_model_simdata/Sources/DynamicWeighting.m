@@ -41,7 +41,7 @@ end
 % === 'execute' function
 function execute (obj)
 
-	obj.setClasses();
+	% obj.setClasses();
 
 	obj.computeAposterioriProbabilities();
 
