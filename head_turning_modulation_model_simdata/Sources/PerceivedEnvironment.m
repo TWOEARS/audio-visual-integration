@@ -135,7 +135,6 @@ function preventVerification (obj, iObj, search, AVClass)
 		obj.objects{iObj}.requests.check = false;
 		obj.objects{iObj}.requests.verification = false;
 		obj.objects{iObj}.requests.inference = false;
-		% obj.objects{iObj}.requests.checked = false;
 		obj.objects{iObj}.setLabel(AVClass, search);
 	end
 end
@@ -157,10 +156,10 @@ end
 
 function highTrainingPhase (obj)
 	% --- Change the number of iterations of the MSOM
-	obj.MFI.MSOM.setParameters(30);
+	obj.MFI.MSOM.setParameters(10);
 	% --- Train again the MSOM with last data
 	obj.MFI.trainMSOM();
-	obj.MFI.MSOM.setParameters(10);
+	obj.MFI.MSOM.setParameters(1);
 end
 
 function computePresence (obj)
@@ -204,7 +203,7 @@ function updateEnvironment (obj, tmIdx)
 
 	obj.DW.execute();
 
-	arrayfun(@(x) obj.objects{x}.updateObj(), obj.present_objects);
+	arrayfun(@(x) obj.objects{x}.updateObj(), obj.present_objects');
 		
 end
 	
