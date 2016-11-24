@@ -20,7 +20,7 @@ properties (SetAccess = public)
     focus_origin = []; % to be renamed as "focus_type"
     focus = [];
 
-    nb_suorces = 0;
+    nb_sources = 0;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -39,7 +39,7 @@ function obj = FocusComputationKS (bbs, htm)
 
     obj.htm = htm;
     % obj.RIR = htm.RIR;
-    obj.nb_sources = 1;
+    obj.nb_sources = getInfo('nb_sources');
 end
 % === Constructor [END] === %
 

@@ -7,6 +7,6 @@
 
         <pair parameter="q" value="0.7"> </pair>
 
-        <pair parameter="nb_sources" value="4"> </pair>
+        <pair parameter="nb_sources" value="1"> </pair>
         
 </categoryStructure>
