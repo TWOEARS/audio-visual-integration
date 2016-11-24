@@ -20,6 +20,9 @@ function setObject (obj, idx, parameter, value)
     else
         for iObject = idx
             objects{iObject}.(parameter) = value;
+            if strcmp(parameter, 'presence') && ~value
+                objects{iObject}.initializeRequests();
+            end
         end
     end
 

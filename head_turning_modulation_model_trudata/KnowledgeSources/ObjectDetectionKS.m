@@ -48,9 +48,6 @@ end
 
 function execute (obj)
 
-    % theta_a = obj.ALKS.getAudioLocalization();
-    %theta_a = obj.blackboard.getLastData('sourcesAzimuthsDistributionHypotheses').data;
-    %theta_a = data.prob_AFN_F;
     theta_a = getLocalisationOutput(obj.blackboard);
     if theta_a == -1
         hyp = [0, 0, 0];

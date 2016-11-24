@@ -83,19 +83,11 @@ function execute (obj)
     obj.iStep = obj.iStep + 1;
 
     obj.data(:, end+1) = getClassifiersOutput(obj);
-    % obj.theta(end+1) = getLocalisationOutput(obj);
-    % tmp = obj.blackboard.getLastData('audiovisualHypotheses').data;
-    % obj.theta_v(end+1) = tmp('theta');
-    
-    % object_detection = obj.blackboard.getData('objectDetectionHypotheses').data;
-    % obj.current_object = object_detection.id_object;
 
     if ~obj.createNew() && ~obj.updateObject()
         obj.setPresence(false);
-        % obj.RIR.updateData();
     else
         obj.degradeData(); % --- Remove visual components if object is NOT in field of view
-        % obj.RIR.updateData(); % --- Updating the RIR observed data
         if obj.createNew()
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
             obj.RIR.addObject(); % --- Add the object

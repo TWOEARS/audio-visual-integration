@@ -123,14 +123,10 @@ end
 
 % === Compute focused object thanks to the DYNAMIC WEIGHTING module (DWmod) algorithm
 function focus = computeDWmodFocus (obj)
-    %focus = zeros(obj.nb_sources, 1);
     focus = obj.getMaxWeightObject();
     object = getObject(obj, focus);
-    %env = getEnvironment(obj, 0);
     if object.weight <= 0 || ~object.presence
         focus = 0;
-    % elseif ~isPerformant(env, object.audiovisual_category)
-    %     focus = -1;
     end
 end
 
@@ -186,94 +182,9 @@ function focus = solveConflicts (obj, focuses)
                 focus = obj.focus(end);
             else
                 focus = objects(randi(numel(objects)));
-                % focus = 0;
             end
         end
     end
-            
-        % avcats = getObject(obj, objects, 'audiovisual_category');
-        %uv = unique(cell2mat(arrayfun(@(x) obj.focus(obj.focus==x), objects', 'UniformOutput', false)));
-        %uv = cell2mat(arrayfun(@(x) sum(obj.focus==x), objects', 'UniformOutput', false));
-        % --- Looking at how many time steps 'objects' had missing information
-        missing_hist = arrayfun(@(x) sum(getObject(obj, x, 'missing_hist')), objects');
-        %if isempty(uv)
-        %if all(uv == 0)
-        % --- If every 'objects' had the same number of time steps missing information
-%         if numel(unique(missing_hist)) == 1
-%             pos = find(obj.focus(end) == objects);
-%             % --- If last focus is present in 'objects' -> keep focusing it
-%             if ~isempty(pos)
-%                 focus = objects(pos);
-%             % --- If not, take a random object
-%             else
-%                 focus = objects(randi(numel(objects)));
-%             end
-%         % --- If some objects had more missing time steps
-%         else
-%             % --- Find the one with the max time steps
-%             [v, p] = max(missing_hist);
-%             if objects(p) == obj.focus(end)
-%                 focus = objects(p);
-%             else
-%                 s = sum(obj.focus(end-4:end) == objects(p));
-%                 if s == 5
-%                     focus = objects(p);
-%                 else
-%                     focus = obj.focus(end);
-%                 end
-%             end
-%                 
-            % --- To avoid deadlock situations, impose a 5 tsteps delay
-            %tmp = arrayfun(@(x) sum(getObject(obj, x, 'missing_hist')), objects');
-%             pos = find(obj.focus(end) == objects);
-%             if ~isempty(pos)
-%                 if abs(missing_hist(pos) - missing_hist(p)) >= 5
-%                     focus = objects(p);
-%                 else
-%                     focus = objects(pos);
-%                 end
-%             else
-%                 focus = objects(p);
-%             end
-            % --- introducing a 5 time steps smoothing delay
-%             ff = missing_hist - v;
-%             t1 = find(ff < 0);
-%             if isempty(t1)
-%                 focus = objects(p);
-%             else
-%                 t2 = find(ff > -5);
-%                 %if isempty(t2)
-%                 if ~isempty(t2)
-%                     ii = intersect(t1, t2);
-%                     if isempty(ii)
-%                         % check tmp(2)
-%                         [~, p] = max(ff(t1));
-%                         focus = objects(p);
-%                     else
-%                         focus = objects(p);
-%                     end
-%                 end
-%             end
-%             %n  = histc(obj.focus, uv);
-%             %[v, p] = min(n);
-%             [v, p] = min(uv);
-%             %if sum(n == v) > 1
-%             if sum(uv == v) > 1
-%                 [v2, m] = max(uv);
-%                 ff = find(uv-v2 < -5);
-%                 if isempty(ff)
-%                     focus = objects(m);
-%                 else
-%                     [~, p] = min(uv(ff));
-%                     focus = objects(p);
-%                 end
-%                 %focus = obj.focus(end);
-%                 % focus = obj.focus(p(1));
-%             else
-%                 focus = objects(p);
-%             end
-%         end
-%     end
 end
 
 % === Check if the considered object is present in the environment

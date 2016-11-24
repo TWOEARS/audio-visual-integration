@@ -207,7 +207,6 @@ function run (obj)
         for iSource = 1:numel(streams)
             % if streams(iSource) ~= 0
                 % --- Processing the ObjectDetectionKS output for time step iStep
-                %if ~obj.createNew(iSource) && ~obj.updateObject(iSource)
                 id_objects = getLastHypothesis(obj, 'ODKS', 'id_object');
                 if id_objects(iSource) == 0
                     if obj.RIR.nb_objects ~= 0
