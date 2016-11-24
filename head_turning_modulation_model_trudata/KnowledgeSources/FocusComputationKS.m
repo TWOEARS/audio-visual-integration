@@ -66,26 +66,27 @@ function execute (obj)
         focus_origin = 0;
     else
 
-    % --- DWmod-based focus computing
-    dwmod_focus = obj.computeDWmodFocus();
+        % --- DWmod-based focus computing
+        dwmod_focus = obj.computeDWmodFocus();
 
-    % --- MFI-based focus computing
-    mfi_focus = obj.computeMFIFocus();
+        % --- MFI-based focus computing
+        mfi_focus = obj.computeMFIFocus();
 
-    % --- Comparison of the two results
-    if mfi_focus == 0 && dwmod_focus > 0       % --- DWmod takes the lead
-        focus = dwmod_focus;
-        focus_origin = 1;
-    elseif mfi_focus == 0 && dwmod_focus == 0  % --- No focused object
-        focus = obj.focus(end);
-        % focus = 0;
-        focus_origin = 0;
-    elseif mfi_focus == 0 && dwmod_focus == -1 % --- DWmod focus but AV category not performant
-        focus = obj.focus(end);
-        focus_origin = 0;
-    else                                       % --- MFImod takes the lead over the DWmod
-        focus = mfi_focus;
-        focus_origin = -1;
+        % --- Comparison of the two results
+        if mfi_focus == 0 && dwmod_focus > 0       % --- DWmod takes the lead
+            focus = dwmod_focus;
+            focus_origin = 1;
+        elseif mfi_focus == 0 && dwmod_focus == 0  % --- No focused object
+            focus = obj.focus(end);
+            % focus = 0;
+            focus_origin = 0;
+        elseif mfi_focus == 0 && dwmod_focus == -1 % --- DWmod focus but AV category not performant
+            focus = obj.focus(end);
+            focus_origin = 0;
+        else                                       % --- MFImod takes the lead over the DWmod
+            focus = mfi_focus;
+            focus_origin = -1;
+        end
     end
 
     % === USEFUL??? === %
