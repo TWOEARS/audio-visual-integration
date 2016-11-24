@@ -29,15 +29,7 @@ function request = getObject (obj, idx, varargin)
     elseif idx == 0
         idx = numel(objects);
     end
-
-    % if isstr(idx) 
-    %     if strcmp(idx, 'all')
-    %         idx = 1:numel(objects);
-    %     % else
-    %     %     find(strcmp(idx, ))
-    %     end
-    % end
-
+    
     if nargin == 2
         if numel(idx) > 1
             request = arrayfun(@(x) objects{x},...

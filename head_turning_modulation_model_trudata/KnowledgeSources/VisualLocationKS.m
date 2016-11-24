@@ -46,7 +46,7 @@ function execute (obj)
 
     head_orientation = obj.robot.getCurrentHeadOrientation();
     for iTheta = 1:numel(theta)
-    	theta = theta - head_orientation;
+    	theta = mod(head_orientation, 360) + theta;
     end
 
     d = arrayfun(@(x) visual_data.triangulation{x}.coordinates.z*(-1), present_objects);

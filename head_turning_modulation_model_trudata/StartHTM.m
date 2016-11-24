@@ -40,9 +40,9 @@ signalLevelKS = bbs.createKS('SignalLevelKS');
 
 visualIdentityKS  = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
 
-visualLocationKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
-
 visualStreamSegregationKS = bbs.createKS('VisualStreamSegregationKS', {bbs.robotConnect});
+
+visualLocationKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
 
 audioVisualFusionKS = bbs.createKS('AudioVisualFusionKS', {bbs.robotConnect});
 
