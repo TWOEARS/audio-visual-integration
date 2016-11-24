@@ -24,13 +24,15 @@ properties (SetAccess = public, GetAccess = public)
     hist_handle;
     focus_type_handle;
     classif_hist_handle;
-
+    fo_handle;
 	statistics_handle;
 	hl;
 	tl_handle;
 	tc_handle;
-
 	text_handle;
+
+    ft_handle;
+    ft_colors;
 
 	depth_of_view;
 	field_of_view;
@@ -106,6 +108,12 @@ function obj = EnvironmentalMapKS (htm)
 
 	obj.drawSHM('init');
 
+	% obj.drawFocusDetails('init');
+
+	obj.drawFocusOrigin('init');
+
+	obj.drawMFIvsDW('init');
+
 	% obj.drawSilence();
 
 end
@@ -133,12 +141,121 @@ function updateMap (obj)
 		obj.drawHistograms('update');
         obj.drawFieldOfView('update');
 		obj.writeClassification('update');
+		obj.drawFocusOrigin('update');
+		obj.drawMFIvsDW('update');
 	end
 	if obj.iStep > 2
 		obj.drawSHM('update');
     end
 	pause(0.01);
 end
+
+function drawMFIvsDW (obj, k)
+	if strcmp(k, 'init')
+		% obj.ft_handle = bar([0, 0, 0, 0], 'FaceColor', [102, 178, 255]/255, 'EdgeColor', 'none', 'Parent', obj.h(7));
+		obj.ft_handle = bar(0, 'FaceColor', [204, 229, 255]/255, 'EdgeColor', 'none', 'Parent', obj.h(7));
+        p = get(obj.focus_type_handle, 'Parent');
+        pos = get(obj.h(7), 'Outerposition');
+        set(obj.h(7), 'XTick'     	      , 1,...
+		       		  'XTickLabel'		  , 'ratio',...
+		  	   		  'XTickLabelRotation', 45,...
+		  	   		  'YLim', [-1, 1],...
+		  	   		  'YTick', -1:1,...
+		  	   		  'YTickLabel', {'MFImod', '', 'DWmod'},...
+		  	   		  'Outerposition', pos+[0.05, -0.03, -0.05, 0]);
+        obj.ft_colors = [204, 255, 255 ;...
+        				 204, 229, 255 ;...
+		    			 153, 204, 255 ;...
+		    			 102, 178, 255 ;...
+		    			 51 , 153, 255 ;...
+		     			 0  , 128, 255 ;...
+		     			 0  , 102, 204 ;...
+		     			 0  , 76 , 153 ;...
+		     			 0  , 51 , 102 ;...
+		     			 0  , 0  , 102 ;...
+		     			 0  , 0  , 0]/255;
+	elseif strcmp(k, 'update')
+		% focus = getLastHypothesis(obj, 'FCKS', 'focus_origin');
+		%data = get(obj.ft_handle, 'YData');
+		ratio = getLastHypothesis(obj, 'FCKS', 'ratio');
+		% if focus == -1
+		% 	data = [1, 0, 0, ratio];
+		% elseif focus == 1
+		% 	data = [0, 1, 0, ratio];
+		% else
+		% 	data = [0, 0, 1, ratio];
+		% end
+    	set(obj.ft_handle, 'YData', ratio, 'FaceColor', obj.ft_colors(round(abs(ratio)*10)+1, :));
+    	set(obj.h(7), 'YTick', -1:1);
+	end
+end
+
+% function drawFocusOrigin (obj, k)
+% 	if strcmp(k, 'init')
+% 		obj.fo_handle = bar([0, 0], 'Parent', obj.h(4));
+%         pos = get(obj.h(6), 'Outerposition');
+%         set(obj.h(4), 'XTick'     	      , [1, 2],...
+%                       'XTickLabel'		  , {'MFImod', 'DWmod'},...
+%                       'XTickLabelRotation', 45,...
+%                       'YLim'			  , [0, 1],...
+%                       'YTick'			  , 0:1)%,...
+%                       % 'Position', pos+[0, 0.03, 0, -0.05]);
+%         set(get(obj.h(4), 'YLabel'), 'String', 'Module triggering the motor order');
+% 	elseif strcmp(k, 'update')
+% 		last_data = getLastHypothesis(obj, 'FCKS', 'focus_origin');
+%     	previous_data = get(obj.fo_handle, 'YData');
+%     	if last_data == -1 % --- MFImod
+%     		previous_data(1) = previous_data(1)+1;
+%     	elseif last_data == 1
+%     		previous_data(2) = previous_data(2)+1;
+%     	end
+%     	set(obj.fo_handle, 'YData', previous_data);
+%     	y_lim = max([max(previous_data, 1)]);
+%     	set(obj.h(4), 'YLim', [0, y_lim]);
+% 	end
+% end
+
+function drawFocusOrigin (obj, k)
+	if strcmp(k, 'init')
+		hold(obj.h(4), 'on');
+		obj.fo_handle(1) = plot(0,...
+			                    'LineWidth', 4             ,...
+			                    'LineStyle', '-'           ,...
+			                    'Color'    , [0.1, 0.1, 0.1],...
+			                    'Parent'   , obj.h(4));
+		obj.fo_handle(2) = plot(0,...
+								'LineWidth', 4             ,...
+			                    'LineStyle', '-'           ,...
+			                    'Color'    , [0.6, 0.6, 0.6],...
+			                    'Parent'   , obj.h(4));
+
+		line([1, getInfo('nb_steps')], [0, 0],...
+			 'Color', 'k',...
+			 'LineStyle', ':',...
+			 'LineWidth', 2,...
+			 'Parent', obj.h(4));
+
+		y_tick_label = {'', 'MFImod', 'None', 'DWmod', 'rest. pos.'};
+		for ii = 1:getInfo('nb_sources')
+			y_tick_label{end+1} = num2str(ii);
+		end
+		y_tick_label{end+1} = '';
+		set(obj.h(4), 'XLim', [0, obj.htm.nb_steps_final],...
+			'YLim', [-4, obj.nb_sources+1],...
+					  'YTick', -4:obj.nb_sources+1,...
+					  'YTickLabel', y_tick_label);
+		set(get(obj.h(4), 'XLabel'), 'String', 'time steps');
+		hold(obj.h(4), 'off');
+
+	elseif strcmp(k, 'update')
+		data = get(obj.fo_handle(1), 'YData');
+		set(obj.fo_handle(1), 'YData', [data, getLastHypothesis(obj, 'FCKS', 'focus_origin')-2]);
+		data = get(obj.fo_handle(2), 'YData');
+		set(obj.fo_handle(2), 'YData', [data, getLastHypothesis(obj, 'FCKS', 'focus')]);
+	end
+
+end
+
 
 function writeClassification (obj, k)
 	if strcmp(k, 'init')
@@ -403,11 +520,11 @@ function drawMeanClassificationResults (obj, k)
                       'XTickLabelRotation', 45,...
                       'YLim'			  , [0, 1],...
                       'YTick'			  , 0:0.1:1,...
-                      'Position', pos+[0, 0.03, 0, -0.05]);
+                      'Position', pos+[0.05, 0, 0, 0]);
         set(get(obj.h(6), 'YLabel'), 'String', 'mean classification rate');
 
         % =========== TO ADD
-        % figure ;h=plotyy(1:200, [htm.statistics.mfi_mean(:, end), htm.statistics.max_mean(:, end),htm.statistics.max_mean_shm(:, end)], 1:200, [htm.FCKS.focus ; htm.FCKS.focus_origin])
+        % h=plotyy(1:200, [htm.statistics.mfi_mean(:, end), htm.statistics.max_mean(:, end),htm.statistics.max_mean_shm(:, end)], 1:200, [htm.FCKS.focus ; htm.FCKS.focus_origin])
 		% =========== TO ADD
 
 
@@ -470,6 +587,9 @@ function drawSHM (obj, k)
 	if strcmp(k, 'init')
 		[x, y] = pol2cart(obj.angles_rad, obj.angles_cpt(1, :));
 		obj.shm_handle = compass([x, x], [y, y], 'Parent', obj.h(3));
+		% pos = get(obj.h(3), 'Outerposition');
+		% set(obj.h(3), 'OuterPosition', pos+[-0, -0.05, 0, 0.05])
+		% set(obj.h(3), 'Outerposition', [pos(1), pos(2)-0.05, pos(3), pos(4)]);
         % set(obj.h(3), 'Position', [0.56, 0.07, 0.34, 0.42]);
 
 		obj.focus_type_handle = bar([0, 0], 'FaceColor', [102, 178, 255]/255, 'EdgeColor', 'none', 'Parent', obj.h(5));
@@ -478,7 +598,7 @@ function drawSHM (obj, k)
         set(obj.h(5), 'XTick'     	      , [1, 2],...
 		       		  'XTickLabel'		  , {'naive', 'HTMKS'},...
 		  	   		  'XTickLabelRotation', 45,...
-		  	   		  'Outerposition', [pos(1), pos(2)-0.05, pos(3), pos(4)]);
+		  	   		  'Outerposition', pos+[0.05, -0.03, 0, 0]);
 
 	elseif strcmp(k, 'update')
 		mo = obj.MOKS.motor_order(obj.iStep-1);
@@ -769,35 +889,49 @@ function createFigure (obj)
 	% obj.figure_handle = p;
 	obj.h = zeros(1, 6);
 
-	obj.h(1) = subplot(5, 6, [1:3, 7:9, 13:15], 'Parent', p);
+	% --- h(1) = environment
+	% obj.h(1) = subplot(5, 6, [1:3, 7:9, 13:15], 'Parent', p);
+	obj.h(1) = subplot(3, 7, [1, 2, 3, 4, 8, 9, 10, 11, 15, 16, 17, 18], 'Parent', p);
 	set(obj.h(1), 'XLim', [-11, 11],...
 				'YLim', [-11, 11])%,...
 	axis square;
                 % 'Position', [0.05, 0.4, 0.45, 0.45])
 	axis off;
 
-	obj.h(2) = subplot(5, 6, [4, 5, 10, 11, 16, 17], 'Parent', p);
-	set(obj.h(2), 'XLim'    , [0, obj.htm.nb_steps_final],...
-				'YLim'	  , [0, 1]);%,...
-	axis square;
+	% --- h(2) = mean classification results
+	% obj.h(2) = subplot(5, 6, [4, 5, 10, 11, 16, 17], 'Parent', p);
+	obj.h(2) = subplot(3, 7, [5, 6], 'Parent', p);
+	set(obj.h(2), 'XLim', [0, getInfo('nb_steps')],...
+				  'YLim', [0, 1]);%,...
+	% axis square;
 				% 'Position', [0.6, 0.4, 0.18, 0.45]);
 
-	obj.h(3) = subplot(5, 6, [22, 23, 28, 29], 'Parent', p);
-	axis square;
+	% --- h(3) = SHMs
+	% obj.h(3) = subplot(5, 6, [22, 23, 28, 29], 'Parent', p);
+	obj.h(3) = subplot(3, 7, [19, 20], 'Parent', p);
+	% axis square;
 	% set(obj.h(3), 'Position', [0.6, 0.05, 0.18, 0.25]);
 
-	obj.h(4) = subplot(5, 6, [19:21, 25:27], 'Parent', p);
-	axis square;
+	% --- h(4) = focus origin
+	% obj.h(4) = subplot(5, 6, [19:21, 25:27], 'Parent', p);
+	obj.h(4) = subplot(3, 7, [12, 13], 'Parent', p);
+	% axis square;
 	% set(obj.h(4), 'Position', [0.05, 0.05, 0.45, 0.25]);
 
-	obj.h(5) = subplot(5, 6, [24, 30], 'Parent', p);
+	% --- h(5) = bar SHMs naive vs HTMKS
+	% obj.h(5) = subplot(5, 6, [24, 30], 'Parent', p);
+	obj.h(5) = subplot(3, 7, [21], 'Parent', p);
 	% axis square;
 	% set(obj.h(5), 'Outerposition', [0.8, 0.05, 0.15, 0.4]);
 
-	obj.h(6) = subplot(5, 6, [6, 12, 18], 'Parent', p);
+	% --- h(6) = bar classification results, naive w/o SHM vs naive w. SHM vs HTMKS
+	% obj.h(6) = subplot(5, 6, [6, 12, 18], 'Parent', p);
+	obj.h(6) = subplot(3, 7, [7], 'Parent', p);
 	% set(obj.h(6), 'Outerposition', [0.8, 0.5, 0.15, 0.4]);
     % set(obj.h(6), 'Position', [0.8, 0.4, 0.15, 0.45]);
 	% axis square;
+
+	obj.h(7) = subplot(3, 7, [14], 'Parent', p);
 
 	% img = imread('../../audio-visual-integration/head_turning_modulation_model_simdata/Img/Two!Ears.png');
 	% imagesc(-12, 12, img, 'Parent', obj.h(1));

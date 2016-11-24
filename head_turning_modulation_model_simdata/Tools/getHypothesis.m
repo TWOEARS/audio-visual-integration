@@ -14,6 +14,13 @@ function hypothesis = getHypothesis (obj, KS, varargin)
         else
             hypothesis = htm.ODKS.(varargin{1});
         end
+    elseif strcmp(KS, 'FCKS')
+        if nargin == 2
+            hypothesis.focus = htm.FCKS.focus;
+            hypothesis.focus_origin = htm.FCKS.focus_origin;
+        else
+            hypothesis = htm.FCKS.(varargin{1});
+        end
     else
         hypothesis = htm.(KS).hypotheses;
 	end

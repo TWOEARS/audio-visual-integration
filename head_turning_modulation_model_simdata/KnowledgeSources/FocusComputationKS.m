@@ -19,8 +19,9 @@ properties (SetAccess = public)
 
     focus_origin = []; % to be renamed as "focus_type"
     focus = [];
+    ratio = [];
 
-    hypotheses = [];
+    % hypotheses = [];
 end
 
 % ===================== %
@@ -58,8 +59,8 @@ function execute (obj)
         focus_origin = 0;
     else
         % --- DWmod-based focus computing
-        % dwmod_focus = obj.computeDWmodFocus();
-        dwmod_focus = 0;
+        dwmod_focus = obj.computeDWmodFocus();
+        % dwmod_focus = 0;
 
         % --- MFI-based focus computing
         mfi_focus = obj.computeMFImodFocus();
@@ -92,6 +93,17 @@ function execute (obj)
         end
     end
 
+    if focus == 0
+        objects = hyp(hyp ~= 0);
+        perfs = arrayfun(@(x) isPerformant(obj, objects(x), 'Object'), 1:numel(objects));
+        %p = perfs(perfs == 0);
+        if any(perfs == 0)
+            p = find(perfs == 0);
+            idx = randi(numel(p));
+            focus = objects(p(idx));
+        end
+    end
+
     % % === USEFUL??? === %
     % if ~obj.isPresent(focus)
 %     if ~getObject(obj, focus, 'presence')
@@ -99,13 +111,14 @@ function execute (obj)
 %     end
     % % === USEFUL??? === %
 
-    keySet = {'focus', 'focus_origin'};
-    valueSet = {focus, focus_origin};
-
-    obj.hypotheses{end+1} = containers.Map(keySet, valueSet);
+%     keySet = {'focus', 'focus_origin'};
+%     valueSet = {focus, focus_origin};
+% 
+%     obj.hypotheses{end+1} = containers.Map(keySet, valueSet);
 
     obj.focus_origin(end+1) = focus_origin;
     obj.focus(end+1) = focus;
+    obj.ratio = cumsum(obj.focus_origin)./(1:numel(obj.focus_origin));
 end
 
 % === Compute focused object thanks to the DYNAMIC WEIGHTING module (DWmod) algorithm
