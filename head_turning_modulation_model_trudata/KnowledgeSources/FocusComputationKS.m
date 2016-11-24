@@ -70,7 +70,7 @@ function execute (obj)
         dwmod_focus = obj.computeDWmodFocus();
 
         % --- MFI-based focus computing
-        mfi_focus = obj.computeMFIFocus();
+        mfi_focus = obj.computeMFImodFocus();
 
         % --- Comparison of the two results
         if mfi_focus == 0 && dwmod_focus > 0       % --- DWmod takes the lead
