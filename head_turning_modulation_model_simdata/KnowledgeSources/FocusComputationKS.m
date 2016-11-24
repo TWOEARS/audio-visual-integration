@@ -13,7 +13,7 @@ classdef FocusComputationKS < handle
 % ======================== %
 properties (SetAccess = public)
     htm; 
-    RIR;
+    % RIR;
     
     nb_sources = 0;
 
@@ -32,7 +32,7 @@ methods
 % === Constructor [BEG] === %
 function obj = FocusComputationKS (htm)
     obj.htm = htm;
-    obj.RIR = htm.RIR;
+    % obj.RIR = htm.RIR;
     obj.nb_sources = getInfo('nb_sources');
 end
 % === Constructor [END] === %

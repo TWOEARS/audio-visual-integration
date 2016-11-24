@@ -13,12 +13,14 @@ classdef FocusComputationKS < AbstractKS
 % ======================== %
 properties (SetAccess = public)
     htm; 
-    RIR;
+    % RIR;
 
     bbs;
 
     focus_origin = []; % to be renamed as "focus_type"
     focus = [];
+
+    nb_suorces = 0;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -36,7 +38,8 @@ function obj = FocusComputationKS (bbs, htm)
     obj.invocationMaxFrequency_Hz = inf;
 
     obj.htm = htm;
-    obj.RIR = htm.RIR;
+    % obj.RIR = htm.RIR;
+    obj.nb_sources = 1;
 end
 % === Constructor [END] === %
 
