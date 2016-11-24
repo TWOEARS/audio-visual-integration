@@ -39,7 +39,8 @@ function obj = FocusComputationKS (bbs, htm)
 
     obj.htm = htm;
     % obj.RIR = htm.RIR;
-    obj.nb_sources = getInfo('nb_sources');
+    % obj.nb_sources = getInfo('nb_sources');
+    obj.nb_sources = 1;
 end
 % === Constructor [END] === %
 
