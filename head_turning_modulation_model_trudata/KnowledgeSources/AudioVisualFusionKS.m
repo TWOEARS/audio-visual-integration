@@ -9,6 +9,7 @@ classdef AudioVisualFusionKS < AbstractKS
 % ======================== %
 properties (SetAccess = private)
     robot; % the robot environment interface
+    sensitivity = 20;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -21,7 +22,7 @@ methods
 
 % === CONSTRUCTOR [BEG] === %
 function obj = AudioVisualFusionKS (robot)
-    obj = obj@AbstractKS(); 
+    obj = obj@AbstractKS();
     % initialize class members
     obj.robot = robot;
     % run continuously
@@ -47,6 +48,12 @@ function execute (obj)
 
     d = v('d');
     audio_angles = getLocalisationOutput(obj.blackboard);
+
+    dif = visual_angles - audio_angles;
+    tmp = find(dif < obj.sensitivity)
+    if ~isempty(tmp)
+        theta = tmp;
+    end
 
     [~, p] = min(visual_angles - audio_angles);
     present_objects = present_objects(p);

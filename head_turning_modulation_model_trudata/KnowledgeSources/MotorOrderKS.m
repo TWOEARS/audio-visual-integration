@@ -16,6 +16,8 @@ properties (SetAccess = public, GetAccess = public)
     shm = 0;
     robot;
     bbs;
+
+    sensitivity = 20;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -53,8 +55,15 @@ function execute (obj)
     if focus > 0
         theta = getObject(obj, focus, 'theta');
         theta = theta(end);
-    % elseif focus == 0 && numel(obj.head_position) > 0 % --- go back to resting position (O°)
-    %     theta = -obj.head_position(end);
+        d = obj.blackboard.getLastData('visualLocationHypotheses').data;
+        detected_sources = d('detected_sources');
+        if ~isempty(detected_sources)
+            dif = abs(theta-detected_sources);
+            pos = find(dif <= obj.sensitivity);
+            if ~isempty(pos)
+                theta = detected_sources(pos);
+            end
+        end
     else
         theta = 0;
     end

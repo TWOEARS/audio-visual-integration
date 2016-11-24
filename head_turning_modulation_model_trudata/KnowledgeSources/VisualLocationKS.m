@@ -9,6 +9,8 @@ classdef VisualLocationKS < AbstractKS
 % ======================== %
 properties (SetAccess = private)
     robot; % the robot environment interface
+    detected_sources = [];
+    sensitivity = 10;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -47,12 +49,21 @@ function execute (obj)
     head_orientation = obj.robot.getCurrentHeadOrientation();
     for iTheta = 1:numel(theta)
     	theta = mod(head_orientation, 360) + theta;
+        if isempty(obj.detected_sources)
+            obj.detected_sources = theta;
+        else
+            dif = obj.detected_sources - theta;
+            tmp = find(dif <= obj.sensitivity)
+            if isempty(tmp)
+                obj.detected_sources(end+1) = theta;
+            end
+        end
     end
 
     d = arrayfun(@(x) visual_data.triangulation{x}.coordinates.z*(-1), present_objects);
 
-    keySet = {'present_objects', 'theta', 'd'};
-    valueSet = {present_objects, theta, d};
+    keySet = {'present_objects', 'theta', 'd', 'detected_sources'};
+    valueSet = {present_objects, theta, d, obj.detected_sources};
 
     visualLocationHypotheses = containers.Map(keySet, valueSet);
 
