@@ -46,6 +46,12 @@ function execute (obj)
     present_objects = data('present_objects');
 
     theta = arrayfun(@(x) visual_data.triangulation{x}.coordinates.azimuth, present_objects);
+    theta = round(theta);
+    if numel(theta) == 2
+        if theta(1)-theta(2) < 10
+            theta = theta(1);
+        end
+    end
 
     head_orientation = obj.robot.getCurrentHeadOrientation();
     for iTheta = 1:numel(theta)
