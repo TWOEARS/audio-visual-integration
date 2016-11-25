@@ -54,19 +54,27 @@ function execute (obj)
 			decision = rand();
 			if decision > 0.2
 				s = find(theta_vec == obj.sources_position(pos(iPos)));
-				hyp(s) = (1-lambda)*rand() + lambda;
-                idx = 1:72;
             else
                 s = randi(72, 1);
-			end
-		end
+            end
+            hyp(s) = (1-0.7)*rand() + 0.7;
+            idx = 1:72;
+            idx(idx == s) = [];
+            hyp(idx) = (1-0.8)*rand(1, 71);
+        end
 		%[hyp, ~, bool] = degradeLocalisation(obj.htm.MOKS.head_position(end), obj.nb_angles);
+    end
+
+    new_hyp = zeros(72, 1);
+	% vec1 = 1:5:355;
+	pos = obj.htm.MOKS.head_position(end)/5+1;
+	vec2 = [pos:72, 1:pos-1];
+	for iAngle = 1:72
+		new_hyp(vec2(iAngle)) = hyp(iAngle);
 	end
-    idx = 1:72;
-                idx(idx == s) = [];
-                hyp(idx) = (1-0.8)*rand(71);
+	obj.hypotheses(:, end+1) = new_hyp;
                 
-    obj.hypotheses(:, end+1) = hyp;
+    % obj.hypotheses(:, end+1) = hyp;
     %obj.correct(end+1) = bool;
     %obj.true_angles(end+1) = obj.htm.MOKS.head_position(end);
 end
