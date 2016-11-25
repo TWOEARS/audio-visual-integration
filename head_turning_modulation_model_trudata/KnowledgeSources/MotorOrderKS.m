@@ -17,7 +17,7 @@ properties (SetAccess = public, GetAccess = public)
     robot;
     bbs;
 
-    sensitivity = 20;
+    sensitivity = 10;
 end
 % ======================== %
 % === PROPERTIES [END] === %
