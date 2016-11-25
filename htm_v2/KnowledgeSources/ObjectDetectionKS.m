@@ -41,35 +41,41 @@ end
 function execute (obj)
     % hyp = zeros(getInfo('nb_sources'), 3);
 	
-	theta_a = getLastHypothesis(obj, 'ALKS');
-	theta_v = getLastHypothesis(obj, 'VLKS');
-    if sum(theta_a) == 0 || sum(theta_v) == 0
-        hyp = [0, 0, 0];
-        obj.setHypotheses(hyp);
-        return;
-    end
+% 	theta_a = getLastHypothesis(obj, 'ALKS');
+% 	theta_v = getLastHypothesis(obj, 'VLKS');
+%     if sum(theta_a) == 0 || sum(theta_v) == 0
+%         hyp = [0, 0, 0];
+%         obj.setHypotheses(hyp);
+%         return;
+%     end
 
-    [Ba, Ia] = sort(theta_a, 'descend');
-    [Bv, Iv] = sort(theta_v, 'descend');
-    f = intersect(Ia(1:5), Iv(1:5));
+    % [Ba, Ia] = sort(theta_a, 'descend');
+    % [Bv, Iv] = sort(theta_v, 'descend');
+    % f = intersect(Ia(1:5), Iv(1:5));
 
-    if isempty(f)
-    	hyp = [0, 0, 0];
-    	obj.setHypotheses(hyp)
-    	return;
-    end
-
+    % if isempty(f)
+    % 	hyp = [0, 0, 0];
+    % 	obj.setHypotheses(hyp)
+    % 	return;
+    % end
+    hyp_ssks = getLastHypothesis(obj, 'SSKS');
+    nb_streams = numel(hyp_ssks.current_streams);
+    
     nb_objects = obj.RIR.nb_objects;
-    hyp = zeros(numel(f), 3);
-    for iStream = 1:numel(f)
+    hyp = zeros(nb_streams, 3);
+    for iStream = 1:nb_streams
+    	iSource = hyp_ssks.current_streams(iStream);
     	putative_audio_object = [];
-    	for iObject = 1:obj.RIR.nb_objects
-    		theta = getObject(obj, iObject, 'theta');
-    		theta_diff = theta - theta_a;
-	    	if theta_diff_a <= obj.thr_theta  && theta_diff_a >= -obj.thr_theta
-	    		putative_audio_object(end+1) = iObject;
-	    	end
-	    end
+    	if hyp_ssks.azimuths(1, iStream) == hyp_ssks.azimuths(2, iStream)
+	    	for iObject = 1:obj.RIR.nb_objects
+	    		theta_o = getObject(obj, iObject, 'theta');
+	            theta_o = theta_o(end);
+	    		theta_diff_a = theta_o - hyp_ssks.azimuths(1, iSource);
+		    	if theta_diff_a <= obj.thr_theta  && theta_diff_a >= -obj.thr_theta
+		    		putative_audio_object(end+1) = iObject;
+		    	end
+		    end
+		end
 	    if isempty(putative_audio_object) % --- Create a new object
 			hyp(iStream, :) = [1, 0, nb_objects+1];
 			nb_objects = nb_objects+1;
