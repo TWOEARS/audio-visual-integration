@@ -80,7 +80,7 @@ function execute (obj)
 
     obj.computeSHM();
 
-    obj.robot.rotateHead(theta, 'relative');
+    % obj.robot.rotateHead(theta, 'relative');
 
     disp(['motorOrder: ', num2str(theta)]);
     disp(['headOrientation: ', num2str(currentHeadOrientation)]);
