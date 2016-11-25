@@ -15,6 +15,8 @@ properties (SetAccess = public, GetAccess = public)
 	MOKS;
 	
 	hypotheses;
+
+	detected_sources;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -39,6 +41,7 @@ function execute (obj)
     else
         obj.hypotheses(end+1) = -1;
     end
+    % if isempty()
 end
 
 % ===================== %

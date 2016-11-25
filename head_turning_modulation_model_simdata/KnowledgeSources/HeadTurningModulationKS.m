@@ -204,10 +204,10 @@ function run (obj)
         obj.ODKS.execute();
 
         streams = getLastHypothesis(obj, 'SSKS');
+        id_objects = getLastHypothesis(obj, 'ODKS', 'id_object');
         for iSource = 1:numel(streams)
             % if streams(iSource) ~= 0
                 % --- Processing the ObjectDetectionKS output for time step iStep
-                id_objects = getLastHypothesis(obj, 'ODKS', 'id_object');
                 if id_objects(iSource) == 0
                     if obj.RIR.nb_objects ~= 0
                         s = getObject(obj, 'all', 'source');
@@ -216,22 +216,18 @@ function run (obj)
                         if ~isempty(s)
                             setObject(obj, s, 'presence', false);
                         end
-                        % obj.RIR.updateData(iSource);
                     end
                 else
                     obj.degradeData(iSource); % --- Remove visual components if object is NOT in field of view
-                    % obj.RIR.updateData(iSource); % --- Updating the RIR observed data
                     if obj.createNew(iSource)
                         obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
                         obj.RIR.addObject(iSource); % --- Add the object
-                        % obj.detected_objects(end+1) = id_objects(iSource);
                     elseif obj.updateObject(iSource)
                         % === TO CHANGE!!!!!
                         obj.MSOM.idx_data = obj.MSOM.idx_data+1;
                         % === TO CHANGE!!!!!
                         obj.RIR.updateObject(iSource); % --- Update the current object
                     end
-                    % obj.setPresence(id_objects(iSource), true);
                     setObject(obj, id_objects(iSource), 'presence', true);
                 end
             % end
