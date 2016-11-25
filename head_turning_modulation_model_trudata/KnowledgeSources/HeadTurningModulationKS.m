@@ -78,7 +78,7 @@ end
 function execute (obj)
     
     fprintf('\nHead Turning Modulation KS evaluation\n');
-    obj.updateAngles();
+    % obj.updateAngles();
 
     obj.iStep = obj.iStep + 1;
 
