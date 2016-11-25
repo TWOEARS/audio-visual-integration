@@ -47,23 +47,23 @@ end
 
 function execute (obj)
     
-    focus = obj.blackboard.getLastData('FocusedObject');
-    focus = focus.data('focus');
+    focus = obj.blackboard.getLastData('FocusedObject').data;
+    focus = focus('focus');
 
     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data;
 
     if focus > 0
         theta = getObject(obj, focus, 'theta');
         theta = theta(end);
-        d = obj.blackboard.getLastData('visualLocationHypotheses').data;
-        detected_sources = d('detected_sources');
-        if ~isempty(detected_sources)
-            dif = abs(theta-detected_sources);
-            pos = find(dif <= obj.sensitivity);
-            if ~isempty(pos)
-                theta = detected_sources(pos);
-            end
-        end
+        % d = obj.blackboard.getLastData('visualLocationHypotheses').data;
+        % detected_sources = d('detected_sources');
+        % if ~isempty(detected_sources)
+        %     dif = abs(theta-detected_sources);
+        %     pos = find(dif <= obj.sensitivity);
+        %     if ~isempty(pos)
+        %         theta = detected_sources(pos);
+        %     end
+        % end
     else
         theta = 0;
     end
