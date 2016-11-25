@@ -11,6 +11,7 @@ properties (SetAccess = private)
     robot; % the robot environment interface
     detected_sources = [];
     sensitivity = 10;
+    fov=45;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -48,15 +49,18 @@ function execute (obj)
 
     head_orientation = obj.robot.getCurrentHeadOrientation();
     for iTheta = 1:numel(theta)
-    	theta = mod(head_orientation, 360) + theta;
+    	theta(iTheta) = mod(head_orientation+theta, 360);
         if isempty(obj.detected_sources)
-            obj.detected_sources = theta;
+            obj.detected_sources = theta(iTheta);
         else
-            dif = obj.detected_sources - theta;
-            tmp = find(dif <= obj.sensitivity)
-            if isempty(tmp)
-                obj.detected_sources(end+1) = theta;
+            if isInFieldOfView(theta(iTheta))
+                obj.detected_sources(end+1) = theta(iTheta);
             end
+            % dif = obj.detected_sources - theta;
+            % tmp = find(dif <= obj.sensitivity)
+            % if isempty(tmp)
+            %     obj.detected_sources(end+1) = theta;
+            % end
         end
     end
 
