@@ -46,27 +46,23 @@ function execute (obj)
     present_objects = data('present_objects');
 
     theta = arrayfun(@(x) visual_data.triangulation{x}.coordinates.azimuth, present_objects);
-    theta = round(theta);
-    if numel(theta) == 2
-        if theta(1)-theta(2) < 10
-            theta = theta(1);
-        end
-    end
 
     head_orientation = obj.robot.getCurrentHeadOrientation();
-    for iTheta = 1:numel(theta)
-    	theta(iTheta) = mod(head_orientation+theta(iTheta), 360);
+    
+    theta = round(mod(head_orientation+theta, 360));
+    
+    % if numel(theta) == 2
+    %     if abs(theta(1)-theta(2)) < 10
+    %         theta = theta(1);
+    %     end
+    % end
+
+    for iTheta = 1:data('nb_objects')
+        % theta(iTheta) = mod(head_orientation+theta(iTheta), 360);
         if isempty(obj.detected_sources)
             obj.detected_sources = theta(iTheta);
         else
-            if isInFieldOfView(theta(iTheta))
-                obj.detected_sources(end+1) = theta(iTheta);
-            end
-            % dif = obj.detected_sources - theta;
-            % tmp = find(dif <= obj.sensitivity)
-            % if isempty(tmp)
-            %     obj.detected_sources(end+1) = theta;
-            % end
+            obj.detected_sources(end+1) = theta(iTheta);
         end
     end
 
