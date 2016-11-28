@@ -7,6 +7,10 @@ function data = getClassifiersOutput (obj)
     present_objects = obj.blackboard.getLastData('visualStreamsHypotheses').data;
     present_objects = cell2mat(present_objects('present_objects'));
 
+    if numel(present_objects) > 1
+    	present_objects = cell2mat(present_objects);
+    end
+
     visual_vec = zeros(getInfo('nb_visual_labels'), 1);
 
     visual_vec(present_objects) = data('visual_labels');
