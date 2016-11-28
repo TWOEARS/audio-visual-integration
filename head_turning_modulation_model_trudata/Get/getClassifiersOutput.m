@@ -5,7 +5,7 @@ function data = getClassifiersOutput (obj)
     data = obj.blackboard.getLastData('visualIdentityHypotheses').data;
     
     present_objects = obj.blackboard.getLastData('visualStreamsHypotheses').data;
-    present_objects = cell2mat(present_objects('present_objects'));
+    present_objects = present_objects('present_objects');
 
     if numel(present_objects) > 1
     	present_objects = cell2mat(present_objects);
