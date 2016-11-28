@@ -46,7 +46,10 @@ function addObject (obj)
 	theta_a = getLocalisationOutput(obj.htm);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
-	data = getClassifiersOutput(obj.htm);
+	% data = getClassifiersOutput(obj.htm);
+	audio_data = getAudioClassifiersOutput(obj.htm);
+	visual_data = obj.htm.blackboard.getLastData('visualIdentityHypotheses').data;
+	visual_data = 
 	% --- Create a new PERCEIVEDOBJECT object
     obj.objects{end+1} = PerceivedObject(data,...
     									 theta_a,...

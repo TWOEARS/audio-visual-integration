@@ -55,7 +55,7 @@ function execute (obj)
 
     head_orientation = obj.robot.getCurrentHeadOrientation();
     for iTheta = 1:numel(theta)
-    	theta(iTheta) = mod(head_orientation+theta, 360);
+    	theta(iTheta) = mod(head_orientation+theta(iTheta), 360);
         if isempty(obj.detected_sources)
             obj.detected_sources = theta(iTheta);
         else

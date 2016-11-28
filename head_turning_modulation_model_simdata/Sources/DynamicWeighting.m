@@ -77,7 +77,7 @@ function computeAposterioriProbabilities (obj)
 	classes = unique(av_cats);
 	for iCat = classes'
 		if iCat ~= 0 && isPerformant(obj, iCat)
-			obj.observed_categories{iCat}.cpt = numel(sum(av_cats == iCat));
+			obj.observed_categories{iCat}.cpt = sum(av_cats == iCat);
 			obj.observed_categories{iCat}.proba = obj.observed_categories{iCat}.cpt/obj.htm.RIR.nb_objects;
 		end
 	end
@@ -93,6 +93,10 @@ function computePerformance (obj)
 			obj.observed_categories{iCat}.perf = obj.observed_categories{iCat}.nb_goodInf/obj.observed_categories{iCat}.nb_inf;
 			if isnan(obj.observed_categories{iCat}.perf) || isinf(obj.observed_categories{iCat}.perf)
 				obj.observed_categories{iCat}.perf = 0;
+			end
+			if obj.observed_categories{iCat}.perf > 1
+				obj.observed_categories{iCat}.perf = 1;
+				obj.observed_categories{iCat}.nb_inf = obj.observed_categories{iCat}.nb_goodInf;
 			end
 		% end
 	end

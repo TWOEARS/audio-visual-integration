@@ -56,7 +56,7 @@ function execute (obj)
 		else
 			putative_audio_object = [];
 			% --- Look for an object that has already been observed
-			for iObject = 1:obj.obj.RIR.nb_objects
+			for iObject = 1:obj.RIR.nb_objects
                     theta_o = getObject(obj.htm, iObject, 'theta');
                     theta_o = theta_o(end);
                     % theta_diff_a = abs(theta_o - theta_a);
