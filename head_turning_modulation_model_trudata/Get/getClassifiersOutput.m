@@ -5,7 +5,7 @@ function data = getClassifiersOutput (obj)
     data = obj.blackboard.getLastData('visualIdentityHypotheses').data;
     
     present_objects = obj.blackboard.getLastData('visualStreamsHypotheses').data;
-    present_objects = present_objects('present_objects');
+    present_objects = cell2mat(present_objects('present_objects'));
 
     visual_vec = zeros(getInfo('nb_visual_labels'), 1);
 
