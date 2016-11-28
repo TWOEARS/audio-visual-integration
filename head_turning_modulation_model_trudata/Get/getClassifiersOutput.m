@@ -13,6 +13,6 @@ function data = getClassifiersOutput (obj)
 
     visual_vec = zeros(getInfo('nb_visual_labels'), 1);
 
-    visual_vec(present_objects) = data('visual_labels');
+    visual_vec(present_objects) = 1;
 
 end
