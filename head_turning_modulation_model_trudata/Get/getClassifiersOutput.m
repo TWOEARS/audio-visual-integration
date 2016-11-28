@@ -15,4 +15,6 @@ function data = getClassifiersOutput (obj)
 
     visual_vec(present_objects) = 1;
 
+    data = [audio_vec ; visual_vec];
+
 end
