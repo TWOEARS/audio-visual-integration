@@ -57,6 +57,7 @@ function execute (obj)
         theta = theta(end);
         if theta == -1
             theta = getObject(obj, focus, 'theta');
+            theta = theta(theta ~= -1);
             unique_values = unique(theta);
             tmp = histc(theta, unique_values);
             theta = unique_values(find(max(tmp)));
