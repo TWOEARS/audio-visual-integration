@@ -59,7 +59,7 @@ function execute (obj)
             theta = getObject(obj, focus, 'theta_a');
             unique_values = unique(theta);
             tmp = histc(theta, unique_values);
-            theta = unique_values(find(max(tmp));
+            theta = unique_values(find(max(tmp)));
         end
         % d = obj.blackboard.getLastData('visualLocationHypotheses').data;
         % detected_sources = d('detected_sources');
