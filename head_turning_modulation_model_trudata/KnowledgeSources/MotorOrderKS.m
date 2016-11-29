@@ -71,7 +71,8 @@ function execute (obj)
         %     end
         % end
     else
-        theta = 0;
+        % theta = 0;
+        theta = getLocalisationOutput(obj);
     end
 
     obj.motor_order(end+1) = theta;
