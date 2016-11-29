@@ -48,7 +48,7 @@ end
 
 function execute (obj)
 
-    theta_a = getLocalisationOutput(obj.blackboard);
+    theta_a = getLocalisationOutput(obj);
 
     if theta_a == -1
         hyp = [0, 0, 0];
