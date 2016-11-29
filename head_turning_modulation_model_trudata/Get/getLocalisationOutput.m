@@ -3,7 +3,7 @@ function request = getLocalisationOutput (obj)
         loc_KS = obj.getLastData('sourcesAzimuthsDistributionHypotheses').data;
     else
         loc_KS = obj.blackboard.getLastData('sourcesAzimuthsDistributionHypotheses').data;
-        head_position = obj.bbs.getCurrentHeadOrientation;
+        head_position = obj.robot.getCurrentHeadOrientation;
     end
     if ~isempty(loc_KS)
 
