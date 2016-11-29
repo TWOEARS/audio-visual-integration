@@ -78,6 +78,9 @@ function updateObjectData (obj)
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
 
+	if abs(theta_v - obj.objects{iObj}.theta_v(end)) > 15
+		theta_v = obj.objects{iObj}.theta_v(end);
+	end
 	obj.objects{iObj}.updateData(data,...
 								 theta_a,...
 								 theta_v);

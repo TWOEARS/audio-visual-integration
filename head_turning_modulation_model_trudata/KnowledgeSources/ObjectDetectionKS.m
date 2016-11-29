@@ -70,6 +70,7 @@ function execute (obj)
             theta_o = getObject(obj.htm, iObject, 'theta');
             theta_o = theta_o(end);
             theta_diff_a = abs(theta_o - theta_a);
+            % theta_diff_v = abs(theta_v - theta_
             if theta_diff_a <= obj.thr_theta
                 putative_audio_object(end+1) = iObject;
             end
