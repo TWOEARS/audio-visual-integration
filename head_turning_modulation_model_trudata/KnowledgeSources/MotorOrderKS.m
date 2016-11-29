@@ -78,10 +78,10 @@ function execute (obj)
             theta = theta(end);
         elseif all(perfs == 1)
             theta = 0;
-        else
-        % theta = 0;
-            theta = getLocalisationOutput(obj);
         end
+    else
+    % theta = 0;
+        theta = getLocalisationOutput(obj);
     end
 
     obj.motor_order(end+1) = theta;
