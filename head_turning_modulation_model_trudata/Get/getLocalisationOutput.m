@@ -1,7 +1,7 @@
 function request = getLocalisationOutput (obj)
     if isa(obj, 'Blackboard')
         loc_KS = obj.getLastData('sourcesAzimuthsDistributionHypotheses').data;
-    elseif isa(obj, 'ObjectDetectionKS') || isa(obj, 'HeadTurningModulationKS')
+    elseif isa(obj, 'ObjectDetectionKS') || isa(obj, 'HeadTurningModulationKS')
         loc_KS = obj.blackboard.getLastData('sourcesAzimuthsDistributionHypotheses').data;
         head_position = obj.blackboardSystem.robotConnect.getCurrentHeadOrientation();
     else
