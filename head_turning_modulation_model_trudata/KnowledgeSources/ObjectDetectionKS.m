@@ -49,23 +49,33 @@ end
 function execute (obj)
 
     theta_a = getLocalisationOutput(obj.blackboard);
+
     if theta_a == -1
         hyp = [0, 0, 0];
     else
+        theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
+        theta_v = theta_v('theta');
+        if numel(theta_v) > 1
+            theta_v = theta_v(1);
+        end
         putative_audio_object = [];
         nb_objects = obj.RIR.nb_objects;
         % --- Look for an object that has already been observed
         for iObject = 1:nb_objects
             theta_o = getObject(obj.htm, iObject, 'theta');
             theta_o = theta_o(end);
-            theta_diff_a = theta_o - theta_a;
-            if theta_diff_a <= obj.thr_theta  && theta_diff_a >= -obj.thr_theta %&& obj.htm.sources(obj.htm.iStep) ~= 0
+            theta_diff_a = abs(theta_o - theta_a);
+            if theta_diff_a <= obj.thr_theta
                 putative_audio_object(end+1) = iObject;
             end
         end
 
         if isempty(putative_audio_object)
-            hyp = [1, 0, nb_objects+1];
+            if abs(theta_a - theta_v) <= obj.thr_theta
+                hyp = [1, 0, nb_objects+1];
+            else
+                hyp = [0, 0, 0];
+            end
         else
             hyp = [0, 1, putative_audio_object(1)];
         end

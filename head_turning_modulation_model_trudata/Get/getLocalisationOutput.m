@@ -13,6 +13,6 @@ function request = getLocalisationOutput (obj)
         %     request = 0;
         % end
     else
-        request = 0;
+        request = -1;
     end
 end
