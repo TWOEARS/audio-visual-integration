@@ -14,8 +14,8 @@ function request = getLocalisationOutput (obj)
         [value, idx] = max(hyp_loc);
         % if value > 0.5
         theta = loc_KS.azimuths(idx);
-        if request <= 195 || request >= 165
-            request = theta - 180;
+        if theta <= 195 && theta >= 165
+            theta = theta - 180;
         end
         request = mod(theta+head_position, 360);
         % else
