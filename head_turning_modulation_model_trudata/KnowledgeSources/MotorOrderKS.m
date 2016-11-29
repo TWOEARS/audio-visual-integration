@@ -71,9 +71,17 @@ function execute (obj)
         %         theta = detected_sources(pos);
         %     end
         % end
-    else
+    elseif obj.RIR.nb_objects > 0
+        perfs = find(arrayfun(@(x) isPerformant(obj, x, 'Object'), 1:obj.RIR.nb_objects));
+        if ~isempty(perfs)
+            theta = getObject(obj, perfs(1), 'theta');
+            theta = theta(end);
+        elseif all(perfs == 1)
+            theta = 0;
+        else
         % theta = 0;
-        theta = getLocalisationOutput(obj);
+            theta = getLocalisationOutput(obj);
+        end
     end
 
     obj.motor_order(end+1) = theta;
