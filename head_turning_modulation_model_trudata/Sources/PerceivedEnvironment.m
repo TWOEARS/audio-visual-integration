@@ -74,7 +74,7 @@ function updateObjectData (obj)
 
 	data = getClassifiersOutput(obj.htm);
 
-	theta_a = getLocalisationOutput(obj.htm.blackboard);
+	theta_a = getLocalisationOutput(obj.htm);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
 
