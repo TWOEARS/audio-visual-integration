@@ -14,10 +14,15 @@ properties (SetAccess = public, GetAccess = public)
     RIR; % Robot Internal Representation
 
     bbs % --- Black Board System
+
+    id_object = [];
+    create_new = [];
+    update_object = [];
 end
 
 properties (SetAccess = private, GetAccess = private)
     thr_theta;
+
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -93,6 +98,9 @@ function hypotheses = setHypotheses (obj, hyp)
     hypotheses.create_new = hyp(1);
     hypotheses.update_object = hyp(2);
     hypotheses.id_object = hyp(3);
+    obj.create_new(end+1) = hyp(1);
+    obj.update_object(end+1) = hyp(2);
+    obj.id_object(end+1) = hyp(3);
 end
 
 % ===================== %

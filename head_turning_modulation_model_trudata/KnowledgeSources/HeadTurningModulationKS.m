@@ -87,7 +87,7 @@ function execute (obj)
     if ~obj.createNew() && ~obj.updateObject()
         obj.setPresence(false);
     else
-        obj.degradeData(); % --- Remove visual components if object is NOT in field of view
+        % obj.degradeData(); % --- Remove visual components if object is NOT in field of view
         if obj.createNew()
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
             obj.RIR.addObject(); % --- Add the object
