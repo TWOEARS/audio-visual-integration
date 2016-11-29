@@ -2,11 +2,10 @@ function request = getLocalisationOutput (obj)
     if isa(obj, 'Blackboard')
         loc_KS = obj.getLastData('sourcesAzimuthsDistributionHypotheses').data;
     else
-        obj = obj.blackboard;
-        loc_KS = obj.getLastData('sourcesAzimuthsDistributionHypotheses').data;
+        loc_KS = obj.blackboard.getLastData('sourcesAzimuthsDistributionHypotheses').data;
+        head_position = obj.bbs.getCurrentHeadOrientation;
     end
     if ~isempty(loc_KS)
-        head_position = obj.bbs.getCurrentHeadOrientation;
 
         hyp_loc = loc_KS.sourcesDistribution;
         [value, idx] = max(hyp_loc);
