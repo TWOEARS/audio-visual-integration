@@ -160,10 +160,10 @@ end
 
 function highTrainingPhase (obj)
 	% --- Change the number of iterations of the MSOM
-	obj.MFI.MSOM.setParameters(10);
-	% --- Train again the MSOM with last data
-	obj.MFI.trainMSOM();
-	obj.MFI.MSOM.setParameters(1);
+	% obj.MFI.MSOM.setParameters(20);
+	% % --- Train again the MSOM with last data
+	% obj.MFI.trainMSOM();
+	% obj.MFI.MSOM.setParameters(10);
 end
 
 function computePresence (obj)
