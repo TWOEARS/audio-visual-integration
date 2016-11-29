@@ -53,8 +53,14 @@ function execute (obj)
     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data;
 
     if focus > 0
-        theta = getObject(obj, focus, 'theta');
+        theta = getObject(obj, focus, 'theta_v');
         theta = theta(end);
+        if theta == -1
+            theta = getObject(obj, focus, 'theta_a');
+            unique_values = unique(theta);
+            tmp = histc(theta, unique_values);
+            theta = unique_values(find(max(tmp));
+        end
         % d = obj.blackboard.getLastData('visualLocationHypotheses').data;
         % detected_sources = d('detected_sources');
         % if ~isempty(detected_sources)
@@ -80,7 +86,7 @@ function execute (obj)
 
     obj.computeSHM();
 
-    %obj.robot.rotateHead(theta, 'relative');
+    obj.robot.rotateHead(theta, 'relative');
 
     disp(['motorOrder: ', num2str(theta)]);
     disp(['headOrientation: ', num2str(currentHeadOrientation)]);
