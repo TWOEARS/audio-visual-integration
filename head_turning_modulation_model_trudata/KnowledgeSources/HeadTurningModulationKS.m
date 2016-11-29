@@ -139,16 +139,23 @@ function setPresence (obj, bool)
     if ~bool 
         if obj.RIR.nb_objects > 0 
             object_detection = obj.blackboard.getData('objectDetectionHypotheses').data;
-            idx = object_detection.id_object(end-1);
-            if idx ~= 0 && getObject(obj, idx, 'presence')
-                setObject(obj, idx, 'presence', false);
-                setObject(obj, idx, 'requests', 'init');
+            % idx = object_detection.id_object(end-1);
+            idx = find(obj.RIR.nb_objects == object_detection.id_object(end));
+            if ~isempty(idx)
+                for iIdx = 1:numel(idx)
+                    setObject(obj, idx(iIdx), 'presence', false);
+                    setObject(obj, idx(iIdx), 'requests', 'init');
+                end
             end
         end
     else
         object_detection = obj.blackboard.getLastData('objectDetectionHypotheses').data;
-        idx = object_detection.id_object;
-        setObject(obj, idx, 'presence', true); % --- The object is present but not necessarily facing the robot
+        idx = find(obj.RIR.nb_objects == object_detection.id_object(end));
+        if ~isempty(idx)
+            for iIdx = 1:numel(idx)
+                setObject(obj, idx(iIdx), 'presence', true); % --- The object is present but not necessarily facing the robot
+            end
+        end
     end
 end
 
