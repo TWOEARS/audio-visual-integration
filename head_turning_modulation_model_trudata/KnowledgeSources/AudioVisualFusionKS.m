@@ -47,7 +47,7 @@ function execute (obj)
     visual_angles = v('theta');
 
     d = v('d');
-    audio_angles = getLocalisationOutput(obj.blackboard);
+    audio_angles = getLocalisationOutput(obj);
 
     dif = visual_angles - audio_angles;
     tmp = find(dif < obj.sensitivity)
