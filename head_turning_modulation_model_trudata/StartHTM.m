@@ -1,29 +1,21 @@
 
-% clear all;
-% pause(1);
-% clear all;
+clear all;
+pause(1);
+clear all;
 
-%disp( 'Initializing Two!Ears, setting up binaural simulator...' );
+disp( 'Initializing Two!Ears, setting up binaural simulator...' );
 
-% === TO BE CHANGED BY A OMRE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
-%p = '/home/twoears/AuditoryModel/TwoEars-1.2/';
-p = '/home/tforgue/mystuff/work/laas/twoears/';
-addpath(genpath(p));
-% addpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_trudata']));
-% addpath(genpath([p, 'blackboard-system']));
-% addpath(genpath([p, 'main']));
-% addpath(genpath([p, 'auditory-front-end']));
-% addpath(genpath([p, 'examples']));
+setupPaths();
 
-rmpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_simdata']));
-rmpath(genpath([p, 'audio-visual-integration/LVTE']));
-rmpath(genpath([p, 'TwoEars']));
-% addpath(genpath(p));
-% === TO BE CHANGED BY A MORE ELEGANT WAY TO INCLUDE THE NEEDED FOLDERS... === %
+global ROBOT_PLATFORM;
+ROBOT_PLATFORM = 'ODI';
 
-pathToGenomix = getGenomixPath();
-% --- OdiInterface: class making the interface between the robot and the system
-Jido = JidoInterface(pathToGenomix);
+if strcmp(ROBOT_PLATFORM, 'JIDO')
+   pathToGenomix = getGenomixPath();
+   Jido = JidoInterface(pathToGenomix);
+elseif strcmp(ROBOT_PLATFORM, 'ODI')
+   Jido = OdiInterface();
+end
 
 % === Initialise and run model
 disp( 'Building blackboard system...' );
@@ -42,7 +34,11 @@ VIKS  = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
 
 VSSKS = bbs.createKS('VisualStreamSegregationKS', {bbs.robotConnect});
 
-VLKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
+if strcmp(ROBOT_PLATFORM, 'JIDO')
+   VLKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
+elseif strcmp(ROBOT_PLATFORM, 'ODI')
+   VLKS = bbs.createKS('VisualLocationQRKS', {bbs.robotConnect});
+end
 
 AVFKS = bbs.createKS('AudioVisualFusionKS', {bbs.robotConnect});
 
