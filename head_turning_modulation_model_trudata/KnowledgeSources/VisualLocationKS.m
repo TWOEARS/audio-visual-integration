@@ -12,6 +12,7 @@ properties (SetAccess = private)
     detected_sources = [];
     sensitivity = 10;
     fov=45;
+    robot_platform;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -24,7 +25,13 @@ methods
 
 % === CONSTRUCTOR [BEG] === %
 function obj = VisualLocationKS (robot)
-    obj = obj@AbstractKS(); 
+    obj = obj@AbstractKS();
+    global ROBOT_PLATFORM;
+    if strcmp(ROBOT_PLATFORM, 'JIDO')
+        obj.robot_platform = 1;
+    else
+        obj.robot_platform = 2;
+    end
     % initialize class members
     obj.robot = robot;
     % run continuously
@@ -44,29 +51,32 @@ function execute (obj)
 
     data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
     present_objects = data('present_objects');
+    switch case obj.robot_platform
+    case 1
+        theta = arrayfun(@(x) visual_data.triangulation{x}.coordinates.azimuth, present_objects);
+        head_orientation = obj.robot.getCurrentHeadOrientation();
+        
+        theta = round(mod(head_orientation+theta, 360));
+        
+        % if numel(theta) == 2
+        %     if abs(theta(1)-theta(2)) < 10
+        %         theta = theta(1);
+        %     end
+        % end
 
-    theta = arrayfun(@(x) visual_data.triangulation{x}.coordinates.azimuth, present_objects);
-
-    head_orientation = obj.robot.getCurrentHeadOrientation();
-    
-    theta = round(mod(head_orientation+theta, 360));
-    
-    % if numel(theta) == 2
-    %     if abs(theta(1)-theta(2)) < 10
-    %         theta = theta(1);
-    %     end
-    % end
-
-    for iTheta = 1:data('nb_objects')
-        % theta(iTheta) = mod(head_orientation+theta(iTheta), 360);
-        if isempty(obj.detected_sources)
-            obj.detected_sources = theta(iTheta);
-        else
-            obj.detected_sources(end+1) = theta(iTheta);
+        for iTheta = 1:data('nb_objects')
+            % theta(iTheta) = mod(head_orientation+theta(iTheta), 360);
+            if isempty(obj.detected_sources)
+                obj.detected_sources = theta(iTheta);
+            else
+                obj.detected_sources(end+1) = theta(iTheta);
+            end
         end
-    end
 
-    d = arrayfun(@(x) visual_data.triangulation{x}.coordinates.z*(-1), present_objects);
+        d = arrayfun(@(x) visual_data.triangulation{x}.coordinates.z*(-1), present_objects);
+    case 2
+        theta = 0;
+    end
 
     keySet = {'present_objects', 'theta', 'd', 'detected_sources'};
     valueSet = {present_objects, theta, d, obj.detected_sources};

@@ -9,6 +9,7 @@ classdef VisualStreamSegregationKS < AbstractKS
 % ======================== %
 properties (SetAccess = private)
     robot; % the robot environment interface
+    robot_platform;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -21,7 +22,13 @@ methods
 
 % === CONSTRUCTOR [BEG] === %
 function obj = VisualStreamSegregationKS (robot)
-    obj = obj@AbstractKS(); 
+    obj = obj@AbstractKS();
+    global ROBOT_PLATFORM;
+    if strcmp(ROBOT_PLATFORM, 'JIDO')
+        obj.robot_platform = 1;
+    elseif strcmp(ROBOT_PLATFORM, 'ODI')
+        obj.robot_platform = 2;
+    end
     % initialize class members
     obj.robot = robot;
     % run continuously
@@ -42,7 +49,12 @@ function execute (obj)
     % visual_labels = getInfo('visual_labels');
     data = obj.robot.getVisualData();
 
-    present_objects = find(arrayfun(@(x) data.triangulation{x}.triangulated, 1:getInfo('nb_visual_labels')));
+    switch case obj.robot_platform
+    case 1
+        present_objects = find(arrayfun(@(x) data.triangulation{x}.triangulated, 1:getInfo('nb_visual_labels')));
+    case 2
+        present_objects = 1;
+    end
 
     % push the visual identity hypothesis to the blackboard
     % visualStreamsHypotheses = containers.Map(present_objects, numel(present_objects));
