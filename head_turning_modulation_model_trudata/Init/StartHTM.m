@@ -32,9 +32,10 @@ signalLevelKS = bbs.createKS('SignalLevelKS');
 
 VLKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
 
+VSSKS = bbs.createKS('VisualStreamSegregationKS', {bbs.robotConnect});
+
 if strcmp(ROBOT_PLATFORM, 'JIDO')
-   VIKS  = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
-   VSSKS = bbs.createKS('VisualStreamSegregationKS', {bbs.robotConnect});
+   VIKS  = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
 elseif strcmp(ROBOT_PLATFORM, 'ODI')
    VIKS  = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
 end
@@ -74,7 +75,7 @@ for iClassifier = 2:numel(auditoryClassifiersKS)
                            'replaceOld' );
 end
 
-if strcmp(ROBOT_PLATFORM, 'JIDO')
+% if strcmp(ROBOT_PLATFORM, 'JIDO')
    bbs.blackboardMonitor.bind({auditoryClassifiersKS{end}},...
                               {VSSKS},...
                               'replaceOld' );
@@ -82,11 +83,11 @@ if strcmp(ROBOT_PLATFORM, 'JIDO')
    bbs.blackboardMonitor.bind({VSSKS},...
                               {VLKS},...
                               'replaceOld');
-elseif strcmp(ROBOT_PLATFORM, 'ODI')
-   bbs.blackboardMonitor.bind({auditoryClassifiersKS{end}},...
-                              {VLKS},...
-                              'replaceOld' );
-end
+% elseif strcmp(ROBOT_PLATFORM, 'ODI')
+%    bbs.blackboardMonitor.bind({auditoryClassifiersKS{end}},...
+%                               {VLKS},...
+%                               'replaceOld' );
+% end
 
 bbs.blackboardMonitor.bind({VLKS},...
                            {AVFKS},...
