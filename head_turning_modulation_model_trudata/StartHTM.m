@@ -30,14 +30,13 @@ auditoryClassifiersKS = createAuditoryIdentityKS(bbs, models);
 
 signalLevelKS = bbs.createKS('SignalLevelKS');
 
-VIKS  = bbs.createKS('VisualIdentityKS', {bbs.robotConnect});
-
+VLKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
 
 if strcmp(ROBOT_PLATFORM, 'JIDO')
-   VLKS = bbs.createKS('VisualLocationKS', {bbs.robotConnect});
+   VIKS  = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
    VSSKS = bbs.createKS('VisualStreamSegregationKS', {bbs.robotConnect});
 elseif strcmp(ROBOT_PLATFORM, 'ODI')
-   VLKS = bbs.createKS('VisualLocationQRKS', {bbs.robotConnect});
+   VIKS  = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
 end
 
 AVFKS = bbs.createKS('AudioVisualFusionKS', {bbs.robotConnect});
