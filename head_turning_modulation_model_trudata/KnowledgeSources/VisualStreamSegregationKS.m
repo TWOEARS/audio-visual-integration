@@ -49,7 +49,7 @@ function execute (obj)
     % visual_labels = getInfo('visual_labels');
     data = obj.robot.getVisualData();
 
-    switch case obj.robot_platform
+    switch obj.robot_platform
     case 1
         present_objects = find(arrayfun(@(x) data.triangulation{x}.triangulated, 1:getInfo('nb_visual_labels')));
     case 2

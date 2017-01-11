@@ -51,7 +51,7 @@ function execute (obj)
 
     data = obj.blackboard.getLastData('visualStreamsHypotheses').data;
     present_objects = data('present_objects');
-    switch case obj.robot_platform
+    switch obj.robot_platform
     case 1
         theta = arrayfun(@(x) visual_data.triangulation{x}.coordinates.azimuth, present_objects);
         head_orientation = obj.robot.getCurrentHeadOrientation();
