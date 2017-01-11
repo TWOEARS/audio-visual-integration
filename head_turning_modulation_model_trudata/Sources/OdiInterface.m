@@ -1,172 +1,180 @@
-classdef OdiInterface < RobotInterface
+classdef OdiInterface < simulator.RobotInterface
     %JIDOINTERFACE Summary of this class goes here
     %   Detailed explanation goes here
-
-% ======================== %
-% === PROPERTIES [BEG] === %
-% ======================== %
-properties (GetAccess = public, SetAccess = private)
-    BlockSize               % Block size used by the audio stream 
-                            % server in samples.
-    SampleRate              % Sample rate of the audio stream server 
-                            % in Hz.
-    bActive = true;
-
-    bIsFinished = false;
     
-    maxHeadLeft             % max head left turn
-    maxHeadRight            % max head right turn
-end
-
-properties (Access = public)
-    client                  % Handle to the genomix client.
-    client_vision
-    kemar                   % KEMAR control interface.
-    jido                    % Jido interface.
-    bass                    % Interface to the audio stream server.
-    finished  %% added to stop bbs.run()
-    object_detection;
-end
-% ======================== %
-% === PROPERTIES [END] === %
-% ======================== %
-
-% ===================== %
-% === METHODS [BEG] === %
-% ===================== %
-methods (Access = public)
-
-% === CONSTRUCTOR [BEG] === %
-function obj = OdiInterface()
-
-    pathToGenomix = '~/openrobots/lib/matlab';
-    addpath(genpath(pathToGenomix));
+    properties (GetAccess = public, SetAccess = private)
+        BlockSize               % Block size used by the audio stream 
+                                % server in samples.
+        SampleRate              % Sample rate of the audio stream server 
+                                % in Hz.
+        bIsFinished = false;    
+        
+        
+        maxHeadLeft             % max head left turn
+        maxHeadRight            % max head right turn
+        
+    end
     
-    % Set up genomix client
-    % odi_base = '192.168.11.100:8080';
-    % obj.client = genomix.client(odi_base);
-    obj.client = genomix.client('jido-base:8080');
-    obj.client_vision = genomix.client('cochlee:8080');
-
-    % --- Load KEMAR module
-    obj.kemar = obj.client.load('kemar');
-    % --- Load JIDO module
-    obj.jido = obj.client.load('sendPosition');
-    % --- Load BASS module
-    obj.bass = obj.client.load('bass');
-    % --- Load OBJECTDETECTION module
-    obj.object_detection = obj.client_vision.load('objectdetection');
-    % --- Connect ports for jido
-    currentPositionPort = obj.jido.connect_port('currentPosition', 'currentPosition');
-    goalStatusArray = obj.jido.connect_port('GoalStatus', 'move_base/status');
-
+    properties (Access = public)
+        client                  % Handle to the genomix client.
+        kemar                   % KEMAR control interface.
+        jido                    % Jido interface.
+        bass                    % Interface to the audio stream server.
+        qr_vision
+    end
+    properties (Access = private)
+        headOrientation
+        sampleIndex
+	end
     
+    methods (Access = public)
+        function obj = OdiInterface()
+            pathToGenomix = getGenomixPath();
+            % Check if path to genomix is valid
+            if ~exist(pathToGenomix, 'dir')
+                error('Wrong path to genomix.');
+            end
+            
+            % Add path to genomix
+            userpath(pathToGenomix);
+            
+            % Set up genomix client
+            odi_base = '192.168.11.100:8080';
+            obj.client = genomix.client(odi_base);
+            %obj.client = genomix.client('jido-base.laas.fr:8080');
+            
+            % Load KEMAR module
+            obj.kemar = obj.client.load('kemar');
+            obj.kemar.Homing();
+            
+            % Load JIDO module
+            obj.jido = obj.client.load('sendPosition'); % Il faut lier les ports
+            
+            % Load BASS module
+            obj.bass = obj.client.load('bass');
+            
+            obj.qr_vision = obj.client.load('QR2matlab');
+            
+            currentPositionPort = obj.jido.connect_port('currentPosition', 'currentPosition');
+            goalStatusArray = obj.jido.connect_port('GoalStatus', 'move_base/status');
+            
+            obj.qr_vision.connect_port('messageIn', '/visp_auto_tracker/code_message' );
+            obj.qr_vision.connect_port('poseIn', '/visp_auto_tracker/object_position' );
+            
+            QR2 = obj.qr_vision.Publish('-a');
+               
+            hardware        = 'hw:2,0';
+            obj.SampleRate  = 44100;
+            nFramesPerChunk = 2205;
+            nChunksOnPort   = 20*0.5;
+            obj.bass.Acquire('-a', hardware, obj.SampleRate, nFramesPerChunk, nChunksOnPort);
+            
             % Get BASS status info
             audioObj = obj.bass.Audio();
             obj.SampleRate = audioObj.Audio.sampleRate;
             obj.BlockSize = audioObj.Audio.nFramesPerChunk * ...
-               audioObj.Audio.nChunksOnPort;
-    % --- Used for QRcode recognition
-    % obj.qr_vision.connect_port('messageIn', '/visp_auto_tracker/code_message' );
-    % obj.qr_vision.connect_port('poseIn', '/visp_auto_tracker/object_position' );
-    
-    % Get KEMAR properties
-    [obj.maxHeadLeft, obj.maxHeadRight] = getHeadTurnLimits(obj);
-    obj.maxHeadLeft = obj.maxHeadLeft - rem(obj.maxHeadLeft,5);
-    obj.maxHeadRight = obj.maxHeadRight - rem(obj.maxHeadRight,5);
-
-    obj.finished = false;
-end
-% === CONSTRUCTOR [END] === %
-
-        function configureAudioStreamServer(obj, sampleRate, frameSize, ...
-                bufferSizeSec)
-            % CONFIGUREAUDIOSTREAMSERVER
+                audioObj.Audio.nChunksOnPort;
+            obj.sampleIndex = audioObj.Audio.lastFrameIndex;
             
-            % Check input arguments
-            p = inputParser();
+            % Get KEMAR properties
+            [obj.maxHeadLeft, obj.maxHeadRight] = getHeadTurnLimits(obj);
+            obj.maxHeadLeft = obj.maxHeadLeft - rem(obj.maxHeadLeft,5);
+            obj.maxHeadRight = obj.maxHeadRight - rem(obj.maxHeadRight,5);
+            obj.headOrientation = obj.getCurrentHeadOrientation();
             
-            p.addRequired('SampleRate', @(x) validateattributes(x, ...
-                {'numeric'}, {'scalar', 'real'}));
-            p.addRequired('FrameSize', @(x) validateattributes(x, ...
-                {'numeric'}, {'scalar', 'integer'}));
-            p.addRequired('BufferSizeSec', @(x) validateattributes(x, ...
-                {'numeric'}, {'scalar', 'real'}));
-            p.parse(sampleRate, frameSize, bufferSizeSec);
-            
-            % Compute number of frames per chunk
-            numFramesPerChunk = ceil(p.Results.BufferSizeSec * ...
-                p.Results.SampleRate / p.Results.FrameSize);
-            
-            % Setup audio stream server
-            obj.bass.Acquire('-a', 'hw:1,0', p.Results.SampleRate, ...
-                p.Results.FrameSize, numFramesPerChunk);
-            
-            % Update block size
-            obj.BlockSize = round(numFramesPerChunk * p.Results.FrameSize);
+            % Set robot active
+            obj.bActive = true;
         end
+        
+%         function configureAudioStreamServer(obj, sampleRate, frameSize, ...
+%                 bufferSizeSec)
+%             % CONFIGUREAUDIOSTREAMSERVER
+%             
+%             % Check input arguments
+%             p = inputParser();
+%             
+%             p.addRequired('SampleRate', @(x) validateattributes(x, ...
+%                 {'numeric'}, {'scalar', 'real'}));
+%             p.addRequired('FrameSize', @(x) validateattributes(x, ...
+%                 {'numeric'}, {'scalar', 'integer'}));
+%             p.addRequired('BufferSizeSec', @(x) validateattributes(x, ...
+%                 {'numeric'}, {'scalar', 'real'}));
+%             p.parse(sampleRate, frameSize, bufferSizeSec);
+%             
+%             % Compute number of frames per chunk
+%             numFramesPerChunk = ceil(p.Results.BufferSizeSec * ...
+%                 p.Results.SampleRate / p.Results.FrameSize);
+%             
+%             % Setup audio stream server
+%             obj.bass.Acquire('-a', 'hw:1,0', p.Results.SampleRate, ...
+%                 p.Results.FrameSize, numFramesPerChunk);
+%             
+%             % Update block size
+%             obj.BlockSize = round(numFramesPerChunk * p.Results.FrameSize);
+%         end
 
-       %% Grab binaural audio of a specified length
-        function [sig, durSec, durSamples] = getSignal(obj, durSec)
-        %
-        % Due to the frame-wise processing length of the output signal can
-        % vary from the requested signal length
-        %
-        % Input Parameters
-        %       durSec : length of signal in seconds @type double
-        %
-        % Output Parameters
-        %          sig : audio signal [durSamples x 2]
-        %       durSec : length of signal in seconds @type double
-        %   durSamples : length of signal in samples @type integer
 
+        %% Grab binaural audio of a specified length
+        function [earSignals, durSec, durSamples, orientationTrajectory] = ...
+                getSignal(obj, durSec)
+            %
+            % Due to the frame-wise processing length of the output signal can
+            % vary from the requested signal length
+            %
+            % Input Parameters
+            %       durSec : length of signal in seconds @type double
+            %
+            % Output Parameters
+            %          sig : audio signal [durSamples x 2]
+            %       durSec : length of signal in seconds @type double
+            %   durSamples : length of signal in samples @type integer
+            
             % Read audio buffer
             audioBuffer = obj.bass.Audio();
             
             % Get binaural signals
-%             % Sclaing factor estimated empirically
-%             earSignals = [cell2mat(audioBuffer.Audio.left) ./ (2^31); ...
-%                 0.7612 .* (cell2mat(audioBuffer.Audio.right) ./ (2^31))]';
-            sig = [cell2mat(audioBuffer.Audio.left); ...
-                   cell2mat(audioBuffer.Audio.right)]';
-            %sig = sig ./ (2^31);
-
-            % Get default buffer size of the audio stream server
-            bufferSize = size(sig, 1);
+            earSignals = [cell2mat(audioBuffer.Audio.left); ...
+                cell2mat(audioBuffer.Audio.right)]';
+            earSignals = earSignals ./ (2^31);
             
-            % Convert desired chunk length into samples
-            if nargin == 2
-                chunkLength = round(durSec * obj.SampleRate);
-            else
-                chunkLength = bufferSize;
+            % Get default buffer size of the audio stream server and
+            % compute block size in samples.
+            blockSizeSamples = round(durSec * obj.SampleRate);
+            
+            % Get difference of current time stamp.
+            sampleDifference = audioBuffer.Audio.lastFrameIndex - ...
+                obj.sampleIndex;
+            obj.sampleIndex = audioBuffer.Audio.lastFrameIndex;
+            
+            if sampleDifference == 0
+                error(['Zero sample difference. Please check if ', ...
+                    'BASS is running correctly.']);
             end
             
-            % Check if chunk length is smaller than buffer length
-            if chunkLength > bufferSize
-                error(['Desired chunk length exceeds length of the ', ...
-                    'audio buffer.']);
-            end
-            
-            % Get corresponding signal chunk
-            sig = sig(bufferSize - chunkLength + 1 : end, :);
+            % Get truncated signals as new signal block.
+            signalLengthSamples = min(sampleDifference, ...
+                blockSizeSamples);
+            earSignals = earSignals(end - signalLengthSamples + 1 : end, :);
             
             % Get signal length
-            durSamples = size(sig,1);
-            durSec = durSamples / audioBuffer.Audio.sampleRate;
+            durSamples = size(earSignals, 1);
+            durSec = durSamples / obj.SampleRate;
+            
+            % Interpolate head orientation within frame.
+            orientationTrajectory = linspace(obj.headOrientation, ...
+                obj.getCurrentHeadOrientation(), durSamples);
+            obj.headOrientation = obj.getCurrentHeadOrientation();
         end
-  
         
+        %% Get QR code
+        function output = getVisualData (obj)
+            
+            output = obj.qr_vision.dataOut();
+            output = output.dataOut().message;
+            
+        end
 
-function output = getData (obj)
-    output = obj.object_detection.Detections();
-    output = output.Detections;
-end
-
-% === Returns true if robot is active
-function b = isActive(obj)
-    b = obj.bActive;
-end
-     %% Rotate the head with mode = {'absolute', 'relative'}
+        %% Rotate the head with mode = {'absolute', 'relative'}
         function rotateHead(obj, angleDeg, mode)
         %
         % 1) mode = ?absolute?
@@ -207,9 +215,8 @@ end
                 absoluteAngle = obj.maxHeadRight;
             end
 
-            obj.kemar.MoveAbsolutePosition(absoluteAngle);
+            obj.kemar.MoveAbsolutePosition('-a', absoluteAngle);
         end
-        
         
         %% Get the head orientation relative to the base orientation
         function azimuth = getCurrentHeadOrientation(obj)
@@ -224,7 +231,6 @@ end
             kemarState = obj.kemar.currentState();
             azimuth = kemarState.currentState.position;
         end
-        
         
         %% Get the maximum head orientation relative to the base orientation
         function [maxLeft, maxRight] = getHeadTurnLimits(obj)
@@ -280,39 +286,44 @@ end
         %         posY : y position
         %        theta : robot base orientation in the world frame
         
-            % NEED UPDATING
-            error('NOT IMPLEMENTED YET');
+            p = obj.jido.NavigationState();
+            posX = p.NavigationState.position.x;
+            posY = p.NavigationState.position.y;
+            theta = p.NavigationState.position.orientation;
         end
-   
-function delete(obj)
-    % DELETE Destructor
-    
-    % Shut down the audio stream server
-    delete(obj.bass);
-    clear obj.bass;
-    
-    % Disconnect and shut down Jido interface
-    delete(obj.jido);
-    clear obj.jido;
-    
-    % Disconnect and shut down KEMAR interface
-    delete(obj.kemar);
-    clear obj.kemar;
-    
-    % Shut down genomix client
-    delete(obj.client);
-    clear obj.client;
+        
+        %% Returns the current state of the robot navigation system
+        function [message, statusId] = getNavigationState(obj)
+            navigationState = obj.jido.NavigationState();
+            message = navigationState.NavigationState.goal.text;
+            statusId = navigationState.NavigationState.goal.status;
+        end
+        
+        %% Returns true if robot is active
+        function b = isActive(obj)
+            b = obj.bActive;
+        end
+        
+        
+        %% 
+        function delete(obj)
+            % DELETE Destructor
+            
+            % Shut down the audio stream server
+            delete(obj.bass);
+            clear obj.bass;
+            
+            % Disconnect and shut down Jido interface
+            delete(obj.jido);
+            clear obj.jido;
+            
+            % Disconnect and shut down KEMAR interface
+            delete(obj.kemar);
+            clear obj.kemar;
+            
+            % Shut down genomix client
+            delete(obj.client);
+            clear obj.client;
+        end
+    end
 end
-
-function result = isFinished(obj)
-    result = obj.finished;
-end
-
-end
-% ===================== %
-% === METHODS [END] === % 
-% ===================== %
-end
-% =================== %
-% === END OF FILE === %
-% =================== %

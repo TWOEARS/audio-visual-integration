@@ -3,7 +3,7 @@
 % 'VisualIdentityKS' class
 % Author: Benjamin Cohen-Lhyver
 % Date: 01.06.16
-% Rev. 1.0
+% Rev. 2.0
 
 classdef VisualIdentityQRKS < AbstractKS
     
