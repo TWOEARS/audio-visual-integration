@@ -63,20 +63,21 @@ function execute (obj)
         %         theta = theta(1);
         %     end
         % end
-
-        for iTheta = 1:data('nb_objects')
-            % theta(iTheta) = mod(head_orientation+theta(iTheta), 360);
-            if isempty(obj.detected_sources)
-                obj.detected_sources = theta(iTheta);
-            else
-                obj.detected_sources(end+1) = theta(iTheta);
-            end
-        end
-
         d = arrayfun(@(x) visual_data.triangulation{x}.coordinates.z*(-1), present_objects);
     case 2
-        theta = 0;
+        theta = obj.robot.getCurrentHeadOrientation();
+        d = 1;
     end
+
+    for iTheta = 1:data('nb_objects')
+        % theta(iTheta) = mod(head_orientation+theta(iTheta), 360);
+        if isempty(obj.detected_sources)
+            obj.detected_sources = theta(iTheta);
+        else
+            obj.detected_sources(end+1) = theta(iTheta);
+        end
+    end
+
 
     keySet = {'present_objects', 'theta', 'd', 'detected_sources'};
     valueSet = {present_objects, theta, d, obj.detected_sources};
