@@ -32,7 +32,7 @@ classdef VisualIdentityQRKS < AbstractKS
             visual_vec = zeros(getInfo('nb_visual_labels'), 1);
 
             visual_labels = getInfo('visual_labels');
-            perceived_data = obj.robot.getQR();
+            perceived_data = obj.robot.getVisualData();
 
             tmp = find(strcmp(perceived_data, visual_labels));
             if ~isempty(tmp)
