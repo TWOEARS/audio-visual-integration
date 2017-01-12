@@ -50,11 +50,13 @@ end
 % --- 'AVPairs.xml' can be edited
 % [AVPairs, audio_labels, visual_labels] = retrieveAudioVisualLabels();
 
-audio_labels = retrieveAudioIdentityModels(htm);
+%audio_labels = retrieveAudioIdentityModels(htm);
+
+[AVPairs, audio_labels, visual_labels] = retrieveAudioVisualLabels();
 
 % visual_labels = retrieveVisualIdentityModels(htm);
 % visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};
-visual_labels = {'mag7', 'mag2', 'mag1', 'mag5', 'mag4', 'mag8', 'mag6', 'mag3'};
+%visual_labels = {'mag7', 'mag2', 'mag1', 'mag5', 'mag4', 'mag8', 'mag6', 'mag3'};
 % visual_labels = {'siren', 'dog', 'female', 'baby', 'engine', 'door', 'male', 'phone', 'female'};
 
 information.audio_labels    = audio_labels;

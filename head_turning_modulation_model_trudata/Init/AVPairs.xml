@@ -1,0 +1,17 @@
+
+<categoryStructure>    
+        <pair A="alarm" B="alarm"> </pair>
+        <pair A="baby" B="baby"> </pair>
+        <pair A="car" B="crash"> </pair>
+        <pair A="dog" B="dog"> </pair>
+        <pair A="motor" B="engine"> </pair>
+        <pair A="female" B="femaleScreaming"> </pair>
+        <pair A="female" B="femaleSpeech"> </pair>
+
+        <pair A="fire" B="fire"> </pair>
+        <pair A="male" B="footsteps"> </pair>
+        <pair A="door" B="knock"> </pair>
+        <pair A="male" B="maleSpeech"> </pair>
+        <pair A="telephone" B="phone"> </pair>
+        <pair A="male" B="piano"> </pair>
+</categoryStructure>
