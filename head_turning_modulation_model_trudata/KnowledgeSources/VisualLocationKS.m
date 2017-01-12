@@ -65,7 +65,8 @@ function execute (obj)
         % end
         d = arrayfun(@(x) visual_data.triangulation{x}.coordinates.z*(-1), present_objects);
     case 2
-        theta = obj.robot.getCurrentHeadOrientation();
+        % theta = obj.robot.getCurrentHeadOrientation();
+        theta = round(mod(obj.robot.getCurrentHeadOrientation(), 360));
         d = 1;
     end
 
