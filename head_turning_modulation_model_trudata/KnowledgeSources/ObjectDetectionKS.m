@@ -60,6 +60,11 @@ function execute (obj)
     else
         theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
         theta_v = theta_v('theta');
+        visual_vec = obj.htm.blackboard.getLastData('visual_identityHypotheses').data;
+        visual_vec = visual_vec('visual_vec');
+        if all(visual_vec == 0)
+            theta_v = -1;
+        end
         if numel(theta_v) > 1
             theta_v = theta_v(1);
         end
@@ -78,7 +83,9 @@ function execute (obj)
 
         if isempty(putative_audio_object)
             % if abs(theta_a - theta_v) <= obj.thr_theta
-            if mod(abs(theta_a-theta_v), 360) <= obj.thr_theta
+            if theta_v == -1
+                hyp = [1, 0, nb_objects+1];
+            elseif mod(abs(theta_a-theta_v), 360) <= obj.thr_theta
                 hyp = [1, 0, nb_objects+1];
             else
                 hyp = [0, 0, 0];
