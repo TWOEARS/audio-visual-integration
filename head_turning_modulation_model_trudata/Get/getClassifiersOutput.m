@@ -11,9 +11,9 @@ function data = getClassifiersOutput (obj)
     % 	present_objects = cell2mat(present_objects);
     % end
 
-    visual_vec = zeros(getInfo('nb_visual_labels'), 1);
+    % visual_vec = zeros(getInfo('nb_visual_labels'), 1);
 
-    visual_vec(present_objects) = 1;
+    % visual_vec(present_objects) = 1;
 
     data = [audio_vec ; visual_vec];
 
