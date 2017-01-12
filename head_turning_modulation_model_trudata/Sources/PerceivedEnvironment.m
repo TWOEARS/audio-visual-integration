@@ -49,6 +49,10 @@ function addObject (obj)
 	% data = getClassifiersOutput(obj.htm);
 	data = getClassifiersOutput(obj.htm);
 
+	if all(data(getInfo('nb_audio_labels')+1:end) == 0)
+		theta_v = -1;
+	end
+
 	% --- Create a new PERCEIVEDOBJECT object
     obj.objects{end+1} = PerceivedObject(data,...
     									 theta_a,...
