@@ -39,7 +39,7 @@ function execute (obj)
     visual_vec = zeros(getInfo('nb_visual_labels'), 1);
 
     visual_labels = getInfo('visual_labels');
-    perceived_data = obj.robot.getVisualData();
+    perceived_data = obj.robot.getVisualData().data;
 
     tmp = find(strcmp(perceived_data, visual_labels));
     if ~isempty(tmp)
