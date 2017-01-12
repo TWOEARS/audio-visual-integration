@@ -1,6 +1,4 @@
-
-
-% 'VisualIdentityKS' class
+% VisualIdentityQRKS class
 % Author: Benjamin Cohen-Lhyver
 % Date: 01.06.16
 % Rev. 2.0
@@ -36,7 +34,7 @@ classdef VisualIdentityQRKS < AbstractKS
 
             tmp = find(strcmp(perceived_data, visual_labels));
             if ~isempty(tmp)
-                visual_vec(tmp) == 1;
+                visual_vec(tmp) = 1;
             end
             % push the visual identity hypothesis to the blackboard
             visualIdentityHypotheses = containers.Map(visual_labels,...
