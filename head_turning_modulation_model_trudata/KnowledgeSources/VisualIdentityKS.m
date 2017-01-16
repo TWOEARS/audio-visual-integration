@@ -47,8 +47,10 @@ function execute (obj)
 
     visual_vec(present_objects) = 1;
 
-    keySet = {'present_objects', 'visual_labels'};
-    valueSet = {present_objects, visual_labels(present_objects)};
+    % keySet = {'present_objects', 'visual_labels'};
+    keySet = {'present_objects', 'visual_vec'};
+    % valueSet = {present_objects, visual_labels(present_objects)};
+    valueSet = {present_objects, visual_vec};
 
     visualIdentityHypotheses = containers.Map(keySet, valueSet);
 
