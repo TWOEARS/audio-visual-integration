@@ -8,7 +8,7 @@ disp( 'Initializing Two!Ears, setting up binaural simulator...' );
 setupPaths();
 
 global ROBOT_PLATFORM;
-ROBOT_PLATFORM = 'ODI';
+ROBOT_PLATFORM = 'JIDO';
 
 if strcmp(ROBOT_PLATFORM, 'JIDO')
    % pathToGenomix = getGenomixPath();
