@@ -188,7 +188,9 @@ end
 
 setappdata(0, 'information', information);
 
-initializeScenario(htm);
+if ~htm.load
+    initializeScenario(htm);
+end
 
 pause(0.1);
 disp('PARAMETERS OF CURRENT SIMULATION:');

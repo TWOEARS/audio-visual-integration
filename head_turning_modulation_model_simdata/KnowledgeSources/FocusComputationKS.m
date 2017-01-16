@@ -60,7 +60,6 @@ function execute (obj)
     else
         % --- DWmod-based focus computing
         dwmod_focus = obj.computeDWmodFocus();
-        % dwmod_focus = 0;
 
         % --- MFI-based focus computing
         mfi_focus = obj.computeMFImodFocus();
@@ -70,21 +69,9 @@ function execute (obj)
             focus = dwmod_focus;
             focus_origin = 1;
         elseif mfi_focus == 0 && dwmod_focus == 0  % --- No focused object
-            % if obj.focus(end) ~= 0 && getObject(obj, obj.focus(end), 'audiovisual_category') ~= 1
-                % if ~isPerformant(obj, obj.focus(end)) && getObject(obj, obj.focus(end), 'presence')
-                %     % focus = obj.focus(end);
-                %     % focus = 0;
-                %     focus = obj.focus(end);
-                %     focus_origin = obj.focus_origin(end);
-                % else
-                    focus = 0;
-                    focus_origin = 0;
-                % end
-            % else
-            %     focus = 0;
-            % end
+            focus = 0;
+            focus_origin = 0;
         elseif mfi_focus == 0 && dwmod_focus == -1 % --- DWmod focus but AV category not performant
-            % focus = obj.focus(end);
             focus = 0;
             focus_origin = 0;
         else                                       % --- MFImod takes the lead over the DWmod
@@ -103,18 +90,6 @@ function execute (obj)
             focus = objects(p(idx));
         end
     end
-
-    % % === USEFUL??? === %
-    % if ~obj.isPresent(focus)
-%     if ~getObject(obj, focus, 'presence')
-%         focus = 0;
-%     end
-    % % === USEFUL??? === %
-
-%     keySet = {'focus', 'focus_origin'};
-%     valueSet = {focus, focus_origin};
-% 
-%     obj.hypotheses{end+1} = containers.Map(keySet, valueSet);
 
     obj.focus_origin(end+1) = focus_origin;
     obj.focus(end+1) = focus;

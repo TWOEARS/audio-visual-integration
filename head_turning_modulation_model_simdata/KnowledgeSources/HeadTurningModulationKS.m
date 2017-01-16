@@ -80,7 +80,7 @@ function obj = HeadTurningModulationKS (varargin)
     obj.load = p.Load;
 
     if p.Load
-        initializeParameters();
+        initializeParameters(obj);
         disp('HTM: loading simulation');
         [filename, pathname] = uigetfile('~/SciWork/Dat/HTM');
         data = load([pathname, filename]);
@@ -96,7 +96,12 @@ function obj = HeadTurningModulationKS (varargin)
         obj.data = obj.gtruth_data;
         obj.sources = data.htm.sources;
         obj.statistics = data.htm.statistics;
-        obj.classif_mfi = repmat({'none_none'}, getInfo('nb_steps'), 1);
+        obj.classif_mfi = cell(1, 5);
+        for iSource = 1:getInfo('nb_sources')
+            obj.classif_mfi{iSource} = repmat({'none_none'}, getInfo('nb_steps'), 1);
+        end
+        setInfo('timeline', data.info.timeline);
+        % obj.classif_mfi = repmat({'none_none'}, getInfo('nb_steps'), 1);
     else
         disp('HTM: creating simulation');
         initializeParameters(obj);
