@@ -17,8 +17,8 @@ function request = getLocalisationOutput (obj)
         if theta <= 195 && theta >= 165
             theta = theta - 180;
         end
-        % request = mod(theta+head_position, 360);
-        request = theta;
+        request = mod(theta+head_position, 360);
+        % request = theta;
         % else
         %     request = 0;
         % end
