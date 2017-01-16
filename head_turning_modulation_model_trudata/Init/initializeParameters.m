@@ -1,5 +1,7 @@
 function initializeParameters (htm)
 
+global ROBOT_PLATFORM;
+
 disp('HTM: initialization of parameters');
 pause(0.25);
 disp('..................................................');
@@ -56,7 +58,9 @@ end
 
 % visual_labels = retrieveVisualIdentityModels(htm);
 % visual_labels = {'siren', 'male', 'female', 'door', 'drawer', 'phone', 'book'};
-%visual_labels = {'mag7', 'mag2', 'mag1', 'mag5', 'mag4', 'mag8', 'mag6', 'mag3'};
+if strcmp(ROBOT_PLATFORM, 'JIDO')
+    visual_labels = {'mag7', 'mag2', 'mag1', 'mag5', 'mag4', 'mag8', 'mag6', 'mag3'};
+end
 % visual_labels = {'siren', 'dog', 'female', 'baby', 'engine', 'door', 'male', 'phone', 'female'};
 
 information.audio_labels    = audio_labels;
