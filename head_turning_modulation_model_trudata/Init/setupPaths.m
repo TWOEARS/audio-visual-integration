@@ -19,3 +19,4 @@ rmpath(genpath([p, 'audio-visual-integration/head_turning_modulation_model_simda
 rmpath(genpath([p, 'audio-visual-integration/LVTE']));
 rmpath(genpath([p, 'TwoEars']));
 rmpath(genpath([p, 'audio-visual-integration/htm_v2']));
+rmpath(genpath([p, '_old']));
