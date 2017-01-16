@@ -18,6 +18,9 @@ properties (SetAccess = public, GetAccess = public)
     id_object = [];
     create_new = [];
     update_object = [];
+
+    audio_angles = [];
+    visual_angles = [];
 end
 
 properties (SetAccess = private, GetAccess = private)
@@ -54,12 +57,14 @@ end
 function execute (obj)
 
     theta_a = getLocalisationOutput(obj);
+    obj.audio_angles(end+1) = theta_a;
 
     if theta_a == -1
         hyp = [0, 0, 0];
     else
         theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
         theta_v = theta_v('theta');
+        obj.visual_angles(end+1) = theta_v;
         visual_vec = obj.htm.blackboard.getLastData('visualIdentityHypotheses').data;
         visual_vec = visual_vec('visual_vec');
         if all(visual_vec == 0)
