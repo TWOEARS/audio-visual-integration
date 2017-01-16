@@ -31,14 +31,9 @@ function newInput (obj, input_vector)
 	obj.inputs = [obj.inputs, input_vector];
 	obj.trainMSOM();
 	obj.setCategories();
-	% obj.labels = [obj.labels ; obj.inferCategory(input_vector)] ;
 end
 
 function setCategories (obj)
-	p = getInfo('audio_labels',...
-				'visual_labels'...
-			   );
-
 	MSOM_categories = obj.MSOM.categories;
 
 	obj.categories = arrayfun(@(x) mergeLabels(MSOM_categories(x, 1) ,...
@@ -47,13 +42,10 @@ function setCategories (obj)
 							  'UniformOutput', false	 			  ...
 							 );
 
-	obj.nb_categories = numel(obj.categories) ;
-	% obj.assignNodesToCategories() ;
-	% obj.contributions_of_nodes = obj.MSOM.cat ;
+	obj.nb_categories = numel(obj.categories);
 end
 
 function trainMSOM (obj)
-	% obj.MSOM.feed(obj.inputs);
 	obj.MSOM.feed(obj.inputs(:, end));
 end
 
@@ -73,9 +65,9 @@ function AVCategory = inferCategory (obj, input_vector)
 		AVCategory = 'none_none';
 	   	return;
 	case 3
-		bmu = obj.MSOM.findBestBMU(data);
+		bmu = obj.MSOM.getCombinedBMU(data);
 	otherwise
-		bmu = obj.MSOM.findBMU(data, value);
+		bmu = obj.MSOM.getBMU(data, value);
 	end
 	
 	[alabel, vlabel] = obj.findLabels(bmu);
@@ -119,7 +111,11 @@ function request = getCategories (obj)
 	request = obj.categories ;
 end
 
-% --- END PROPERTIES
 end
-% --- END OBJECT
+% ===================== %
+% === METHODS [END] === % 
+% ===================== %
 end
+% =================== %
+% === END OF FILE === %
+% =================== %
