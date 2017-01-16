@@ -13,7 +13,6 @@ classdef MultimodalSelfOrganizingMap < handle
 % === PROPERTIES [BEG] === %
 % ======================== %
 properties (SetAccess = public, GetAccess = public)
-   
     weights_vectors = cell(0);
     connections = [];
 
@@ -24,9 +23,7 @@ properties (SetAccess = public, GetAccess = public)
 
     nb_nodes = 0;
     som_dimension = [0, 0];
-
-    % INIT = false;
-
+    
     nb_iterations = 0;
 
     categories = cell(0);
@@ -80,8 +77,6 @@ function obj = MultimodalSelfOrganizingMap (varargin)
 	obj.modalities = [na, nv];
 
 	obj.idx_mod = cumsum([1, obj.modalities]);
-
-	% obj.weights_vectors = cell(1, obj.nb_modalities) ;
 	
 	obj.nb_nodes = obj.som_dimension(1)*obj.som_dimension(2);
 
@@ -103,20 +98,20 @@ end
 
 function setParameters (obj, nb_iterations)
 
-	obj.mu = zeros(1, nb_iterations) ;
-	obj.sig = zeros(1, nb_iterations) ;
+	obj.mu = zeros(1, nb_iterations);
+	obj.sig = zeros(1, nb_iterations);
 	% === Initializing parameters of learning
 	for iStep = 1:nb_iterations
-		tfrac = iStep / nb_iterations ; 
-		obj.mu(iStep) = obj.lrates.initial + tfrac * (obj.lrates.final - obj.lrates.initial) ;
-		obj.sig(iStep) = obj.sigmas.initial + tfrac * (obj.sigmas.final - obj.sigmas.initial) ;
+		tfrac = iStep / nb_iterations;
+		obj.mu(iStep) = obj.lrates.initial + tfrac * (obj.lrates.final - obj.lrates.initial);
+		obj.sig(iStep) = obj.sigmas.initial + tfrac * (obj.sigmas.final - obj.sigmas.initial);
 	end
 	
-	obj.aleph = cell(obj.nb_nodes, nb_iterations) ;
+	obj.aleph = cell(obj.nb_nodes, nb_iterations);
 
 	for iNode = 1:obj.nb_nodes
 		for iStep = 1:nb_iterations
-			obj.aleph{iNode, iStep} = exp(-sum((bsxfun(@minus, obj.connections(iNode, :), obj.connections).^2), 2) / (2*obj.sig(iStep).^2)) ;
+			obj.aleph{iNode, iStep} = exp(-sum((bsxfun(@minus, obj.connections(iNode, :), obj.connections).^2), 2) / (2*obj.sig(iStep).^2));
 		end
 	end
 end
@@ -153,8 +148,6 @@ function best_matching_unit = getCombinedBMU (obj, vector)
 	% --- Euclidian distance
 	audio_distance = obj.euclidianDistance(vector(1:na), 1);
 	visual_distance = obj.euclidianDistance(vector(na+1:end), 2);
-	% audio_distance = sqrt(sum(bsxfun(@minus, vector(1:getInfo('nb_audio_labels'))', obj.weights_vectors{1}).^2, 2));
-	% visual_distance = sqrt(sum(bsxfun(@minus, vector(getInfo('nb_audio_labels')+1:end)', obj.weights_vectors{2}).^2, 2));
 	combined_distance = audio_distance.*visual_distance;
 	[~, best_matching_unit] = min(combined_distance);
 end
@@ -216,8 +209,6 @@ function request = getDistances (obj, data)
 		request = [request, tmp] ;
 	end
 end
-
-
 % ===================== %
 % === METHODS [END] === %
 % ===================== %
