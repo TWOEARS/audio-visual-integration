@@ -64,6 +64,9 @@ function execute (obj)
     else
         theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
         theta_v = theta_v('theta');
+        if isempty(theta_v)
+            theta_v = -600;
+        end
         obj.visual_angles(end+1) = theta_v';
         visual_vec = obj.htm.blackboard.getLastData('visualIdentityHypotheses').data;
         visual_vec = visual_vec('visual_vec');
