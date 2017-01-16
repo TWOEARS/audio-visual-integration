@@ -53,15 +53,16 @@ function execute (obj)
     currentHeadOrientation = obj.blackboard.getLastData('headOrientation').data;
 
     if focus > 0
-        theta = getObject(obj, focus, 'theta_v');
-        theta = theta(end);
-        if theta == -1
+        % theta = getObject(obj, focus, 'theta_v');
+        % theta = theta(end);
+        % if theta == -1
             theta = getObject(obj, focus, 'theta');
             theta = theta(theta ~= -1);
             unique_values = unique(theta);
             tmp = histc(theta, unique_values);
             theta = unique_values(find(max(tmp)));
-        end
+        % end
+        
         % d = obj.blackboard.getLastData('visualLocationHypotheses').data;
         % detected_sources = d('detected_sources');
         % if ~isempty(detected_sources)
