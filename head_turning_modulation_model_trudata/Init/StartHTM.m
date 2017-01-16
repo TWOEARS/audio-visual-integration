@@ -11,7 +11,8 @@ global ROBOT_PLATFORM;
 ROBOT_PLATFORM = 'ODI';
 
 if strcmp(ROBOT_PLATFORM, 'JIDO')
-   pathToGenomix = getGenomixPath();
+   % pathToGenomix = getGenomixPath();
+   pathToGenomix = '/home/tforgue/openrobots/lib/matlab';
    Jido = JidoInterface(pathToGenomix);
 elseif strcmp(ROBOT_PLATFORM, 'ODI')
    Jido = OdiInterface();
