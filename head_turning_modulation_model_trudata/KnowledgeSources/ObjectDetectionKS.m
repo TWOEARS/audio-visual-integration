@@ -88,13 +88,13 @@ function execute (obj)
 
         if isempty(putative_audio_object)
             % if abs(theta_a - theta_v) <= obj.thr_theta
-            if theta_v == -1
+            % if theta_v == -1
                 hyp = [1, 0, nb_objects+1];
-            elseif mod(abs(theta_a-theta_v), 360) <= obj.thr_theta
-                hyp = [1, 0, nb_objects+1];
-            else
-                hyp = [0, 0, 0];
-            end
+            % elseif mod(abs(theta_a-theta_v), 360) <= obj.thr_theta
+            %     hyp = [1, 0, nb_objects+1];
+            % else
+            %     hyp = [0, 0, 0];
+            % end
         else
             hyp = [0, 1, putative_audio_object(1)];
         end
