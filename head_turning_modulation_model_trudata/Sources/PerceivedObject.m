@@ -35,7 +35,7 @@ properties (SetAccess = public, GetAccess = public)
 
     missing_hist = [];
 
-    theta_a;
+    theta_a = [];
 
 end
 properties (SetAccess = public, GetAccess = public)
@@ -133,7 +133,7 @@ function updateData (obj, data, theta, theta_v)
 		theta_v = -1;
 	end
 	obj.theta_v(end+1) = theta_v;
-	
+
 	unique_values = unique(obj.theta);
     tmp = histc(theta, unique_values);
     theta = unique_values(find(max(tmp)));
