@@ -10,5 +10,7 @@
         <pair parameter="nb_sources" value="1"> </pair>
 
         <pair parameter="loca_sensitivity" value="5"> </pair>
+
+        <pair parameter="load_msom" value="false"> </pair>
         
 </categoryStructure>
