@@ -6,7 +6,7 @@ function KS = createAuditoryIdentityKS (bbs, models)
 	if strcmp(ROBOT_PLATFORM, 'ODI')
     	folder = '/home/bcl/AuditoryModel/TwoEars-1.2/database-internal/learned_models/IdentityKS/mc3_fc3_segmented_nsGroundtruth_models_dataset_1/x';
     elseif strcmp(ROBOT_PLATFORM, 'JIDO')
-    	folder = '/home/tforgue/mystuff/work/laas/twoears/database-internal/learned_models/IdentityKS/mc3_fc3_segmented_nsGroundtruth_models_dataset_1';
+    	folder = '/home/tforgue/mystuff/work/laas/twoears/database-internal/learned_models/IdentityKS/mc3_fc3_segmented_nsGroundtruth_models_dataset_1/x';
     end
 	% folder = '/home/twoears/AuditoryModel/TwoEars-1.2/twoears-demos/identification_distractor_NIGENS/models.0db';
 	KS = arrayfun(@(x) bbs.createKS('IdentityKS', {models{x}, folder, false}),...

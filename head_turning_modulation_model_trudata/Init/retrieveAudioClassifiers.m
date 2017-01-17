@@ -8,7 +8,7 @@ function [model_names, file_names] = retrieveAudioClassifiers ()
     if strcmp(ROBOT_PLATFORM, 'ODI')
         folder = '/home/bcl/AuditoryModel/TwoEars-1.2/database-internal/learned_models/IdentityKS/mc3_fc3_segmented_nsGroundtruth_models_dataset_1/x';
     elseif strcmp(ROBOT_PLATFORM, 'JIDO')
-        folder = '/home/tforgue/mystuff/work/laas/twoears/database-internal/learned_models/IdentityKS/mc3_fc3_segmented_nsGroundtruth_models_dataset_1';
+        folder = '/home/tforgue/mystuff/work/laas/twoears/database-internal/learned_models/IdentityKS/mc3_fc3_segmented_nsGroundtruth_models_dataset_1/x';
     end
 
     d = dir(folder);
