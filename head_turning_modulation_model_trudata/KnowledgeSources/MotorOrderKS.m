@@ -72,8 +72,9 @@ function execute (obj)
         %         theta = detected_sources(pos);
         %     end
         % end
-    elseif obj.RIR.nb_objects > 0
-        perfs = find(arrayfun(@(x) ~isPerformant(obj, x, 'Object'), 1:obj.RIR.nb_objects));
+    elseif obj.RIR.nb_objects > 0 && ~isempty(obj.RIR.environments{end}.present_objects)
+        % perfs = find(arrayfun(@(x) ~isPerformant(obj, x, 'Object'), 1:obj.RIR.nb_objects));
+        perfs = find(arrayfun(@(x) ~isPerformant(obj, x, 'Object'), obj.RIR.environments{end}.present_objects));
         if ~isempty(perfs)
             theta = getObject(obj, perfs(1), 'theta');
             theta = theta(end);
