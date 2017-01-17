@@ -35,6 +35,8 @@ properties (SetAccess = public, GetAccess = public)
 
     missing_hist = [];
 
+    theta_a;
+
 end
 properties (SetAccess = public, GetAccess = public)
     focus = 0;
