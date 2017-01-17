@@ -20,8 +20,6 @@ information = struct('audio_labels'    , [],...
                      'thr_theta'       , 20,...
                      'visual_labels'   , []);
 
-
-% path_to_folder = '../../examples/attention_jido';
 path_to_folder = '';
 
 config_file = xmlread([path_to_folder, filesep, 'Config.xml']);
@@ -75,6 +73,8 @@ information.nb_visual_labels = numel(information.visual_labels);
 % information.nb_AVPairs = numel(information.AVPairs);
 
 information.nb_labels = information.nb_audio_labels + information.nb_visual_labels;
+
+information.sources_position = [40, 5, 310, 275];
 
 information.obs_struct = struct('label'     , 'none_none',...
                                 'perf'      , 0,...

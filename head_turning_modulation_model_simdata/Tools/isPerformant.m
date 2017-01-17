@@ -15,9 +15,9 @@ function bool = isPerformant (obj, idx, varargin)
 	
     perf = getCategory(obj, idx, 'perf');
     
-    if perf >= getInfo('q') && perf < 1 && getCategory(obj, idx, 'nb_inf') >= 20
+    if perf >= getInfo('q') && perf < 1 && getCategory(obj, idx, 'nb_inf') >= 5
         bool = true;
-    elseif perf == 1 && getCategory(obj, idx, 'nb_inf') >= 30
+    elseif perf == 1 && getCategory(obj, idx, 'nb_inf') >= 5
     	bool = true;
     else
         bool = false;
