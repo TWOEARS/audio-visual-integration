@@ -85,7 +85,7 @@ function execute (obj)
             theta_o = theta_o(end);
             theta_diff_a = abs(theta_o - theta_a);
             % theta_diff_v = abs(theta_v - theta_
-            if theta_diff_a <= obj.thr_theta && abs(theta_a - theta_v) <= 20
+            if theta_diff_a <= obj.thr_theta 
                 putative_audio_object(end+1) = iObject;
             end
         end
@@ -93,7 +93,9 @@ function execute (obj)
         if isempty(putative_audio_object)
             % if abs(theta_a - theta_v) <= obj.thr_theta
             % if theta_v == -1
+            if abs(theta_a - theta_v) <= 20
                 hyp = [1, 0, nb_objects+1];
+            end
             % elseif mod(abs(theta_a-theta_v), 360) <= obj.thr_theta
             %     hyp = [1, 0, nb_objects+1];
             % else
