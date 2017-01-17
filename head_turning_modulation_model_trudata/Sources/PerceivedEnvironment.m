@@ -127,6 +127,10 @@ function checkInference (obj)
 			end
 		elseif ~missing % All data available
 			[AVClass, search] = obj.simulateAVInference(iObj);
+			obj.DW.updateInferenceCpt(AVClass, search);
+			if strcmp(AVClass, getObject(obj, iObj, 'label'))
+				obj.DW.updateGoodInferenceCpt(AVClass, search);
+			end
 			obj.objects{iObj}.setLabel(AVClass, search);
 			obj.objects{iObj}.requests.check = false;
 		end
