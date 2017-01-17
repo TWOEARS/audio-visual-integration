@@ -41,7 +41,7 @@ end
 % === 'execute' function
 function execute (obj)
 
-	obj.setClasses();
+	% obj.setClasses();
 
 	obj.computeAposterioriProbabilities();
 
@@ -94,6 +94,10 @@ function computePerformance (obj)
 			if isnan(obj.observed_categories{iCat}.perf) || isinf(obj.observed_categories{iCat}.perf)
 				obj.observed_categories{iCat}.perf = 0;
 			end
+			if obj.observed_categories{iCat}.perf > 1
+				obj.observed_categories{iCat}.perf = 1;
+				obj.observed_categories{iCat}.nb_inf = obj.observed_categories{iCat}.nb_goodInf;
+			end
 		% end
 	end
 end
@@ -138,33 +142,20 @@ function computeWeights (obj)
 	end
 end
 
-
-% function computeCategoryPerformance (obj)
-% 	env = getEnvironment(obj.htm, 0);
-% 	nb_objects = numel(env.objects);
-% 	for iClass = 1:numel(obj.observed_categories)
-% 		obj.observed_categories{iClass}.perf = obj.observed_categories{iClass}.nb_goodInf/...
-% 											   obj.observed_categories{iClass}.nb_inf;
-
-% 		if isnan(obj.observed_categories{iClass}.perf) || isinf(obj.observed_categories{iClass}.perf)
-% 			obj.observed_categories{iClass}.perf = 0;
-% 		end
-
-% 		if isPerformant(obj.htm, iClass)
-% 			obj.observed_categories{iClass}.proba = obj.observed_categories{iClass}.cpt/nb_objects;
-
-% 			if isnan(obj.observed_categories{iClass}.proba) || isinf(obj.observed_categories{iClass}.proba)
-% 				obj.observed_categories{iClass}.proba = 0;
-% 			end
-% 		end
-% 	end
-% end
-
-function updateGoodInferenceCpt (obj, search)
-	obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf + 1;
+function updateGoodInferenceCpt (obj, AVClass, search)
+    if isempty(search)
+        obj.createNewCategory(AVClass);
+        search = find(strcmp(obj.labels, AVClass));
+    else
+		obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf + 1;
+	end
 end
 
-function updateInferenceCpt (obj, search)
+function updateInferenceCpt (obj, AVClass, search)
+    if isempty(search)
+        obj.createNewCategory(AVClass);
+        search = find(strcmp(obj.labels, AVClass));
+    end
 	obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
 end
 

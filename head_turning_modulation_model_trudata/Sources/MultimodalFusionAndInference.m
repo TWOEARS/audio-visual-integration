@@ -31,6 +31,7 @@ function newInput (obj, input_vector)
 	theta_a = getLocalisationOutput(obj.htm);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
     theta_v = theta_v('theta');
+    theta_v = theta_v(1);
     if ~isempty(theta_v) && abs(theta_a-theta_v) <= 20
 		obj.inputs = [obj.inputs, input_vector];
 		obj.trainMSOM();
