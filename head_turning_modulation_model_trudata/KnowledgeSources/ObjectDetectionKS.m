@@ -95,6 +95,8 @@ function execute (obj)
             % if theta_v == -1
             if abs(theta_a - theta_v) <= 20
                 hyp = [1, 0, nb_objects+1];
+            else
+                hyp = [0, 0, 0];
             end
             % elseif mod(abs(theta_a-theta_v), 360) <= obj.thr_theta
             %     hyp = [1, 0, nb_objects+1];
