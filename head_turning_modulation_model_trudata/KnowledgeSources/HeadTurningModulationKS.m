@@ -84,10 +84,17 @@ function execute (obj)
 
     obj.data(:, end+1) = getClassifiersOutput(obj);
 
-    if ~obj.createNew() && ~obj.updateObject()
-        obj.setPresence(false);
-    else
+    if obj.RIR.nb_objects > 0
+        for iObject = 1:obj.RIR.nb_objects
+            setObject(obj, iObject, 'presence', false);
+        end
+    end
+    % if ~obj.createNew() && ~obj.updateObject()
+        % obj.setPresence(false);
+    % else
+    if obj.createNew() || obj.updateObject()
         % obj.degradeData(); % --- Remove visual components if object is NOT in field of view
+        obj.setPresence(true);
         if obj.createNew()
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
             obj.RIR.addObject(); % --- Add the object
@@ -95,7 +102,6 @@ function execute (obj)
             obj.MSOM.idx_data = obj.MSOM.idx_data+1;
             obj.RIR.updateObject(); % --- Update the current object
         end
-        obj.setPresence(true);
     end
 
     % --- Update all objects
