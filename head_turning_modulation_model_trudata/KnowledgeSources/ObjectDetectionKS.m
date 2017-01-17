@@ -59,15 +59,16 @@ function execute (obj)
     theta_a = getLocalisationOutput(obj);
     obj.audio_angles(end+1) = theta_a;
 
+    theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
+    theta_v = theta_v('theta');
     if theta_a == -1
         hyp = [0, 0, 0];
+    elseif isempty(theta_v)
+        hyp = [0, 0, 0];
     else
-        theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
-        theta_v = theta_v('theta');
-        if isempty(theta_v)
-            theta_v = -600;
-        end
-        obj.visual_angles(end+1) = theta_v';
+        % if isempty(theta_v)
+        %     theta_v = -600;
+        % end
         visual_vec = obj.htm.blackboard.getLastData('visualIdentityHypotheses').data;
         visual_vec = visual_vec('visual_vec');
         if all(visual_vec == 0)
@@ -84,7 +85,7 @@ function execute (obj)
             theta_o = theta_o(end);
             theta_diff_a = abs(theta_o - theta_a);
             % theta_diff_v = abs(theta_v - theta_
-            if theta_diff_a <= obj.thr_theta
+            if theta_diff_a <= obj.thr_theta && abs(theta_a - theta_v) <= 20
                 putative_audio_object(end+1) = iObject;
             end
         end
