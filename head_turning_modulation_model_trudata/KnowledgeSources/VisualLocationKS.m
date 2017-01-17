@@ -53,7 +53,7 @@ function execute (obj)
     present_objects = data('present_objects');
     switch obj.robot_platform
     case 1
-        theta = arrayfun(@(x) visual_data.triangulation{x}.coordinates.azimuth, present_objects, 'UniformOutput', false);
+        theta = cell2mat(arrayfun(@(x) visual_data.triangulation{x}.coordinates.azimuth, present_objects, 'UniformOutput', false));
         head_orientation = obj.robot.getCurrentHeadOrientation();
         
         theta = round(mod(head_orientation+theta, 360));
