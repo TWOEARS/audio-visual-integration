@@ -94,7 +94,10 @@ function execute (obj)
     % else
     if obj.createNew() || obj.updateObject()
         % obj.degradeData(); % --- Remove visual components if object is NOT in field of view
-        obj.setPresence(true);
+        object_detection = obj.blackboard.getLastData('objectDetectionHypotheses').data;
+        iObject = object_detection.id_object(end);
+        setObject(obj, iObject, 'presence', true);
+        % obj.setPresence(true);
         if obj.createNew()
             obj.MSOM.idx_data = 1; % --- Update status of MSOM learning
             obj.RIR.addObject(); % --- Add the object
