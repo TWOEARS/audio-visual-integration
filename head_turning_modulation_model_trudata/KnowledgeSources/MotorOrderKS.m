@@ -84,8 +84,8 @@ function execute (obj)
             theta = getLocalisationOutput(obj);
         end
     else
-    % theta = 0;
-        theta = getLocalisationOutput(obj);
+        theta = 0;
+        % theta = getLocalisationOutput(obj);
     end
 
     obj.motor_order(end+1) = theta;
