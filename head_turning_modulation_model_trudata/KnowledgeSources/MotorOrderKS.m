@@ -102,8 +102,8 @@ function execute (obj)
 
     obj.robot.rotateHead(theta, 'absolute');
 
-    disp(['motorOrder: ', num2str(theta)]);
-    disp(['headOrientation: ', num2str(currentHeadOrientation)]);
+    % disp(['motorOrder: ', num2str(theta)]);
+    % disp(['headOrientation: ', num2str(currentHeadOrientation)]);
     % disp(num2str(getLocalisationOutput(obj.bbs)));
     
     keySet = {'currentHeadOrientation', 'theta'};
