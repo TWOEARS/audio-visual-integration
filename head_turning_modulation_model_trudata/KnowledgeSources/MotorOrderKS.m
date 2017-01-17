@@ -62,7 +62,7 @@ function execute (obj)
             tmp = histc(theta, unique_values);
             theta = unique_values(find(max(tmp)));
         % end
-        
+
         % d = obj.blackboard.getLastData('visualLocationHypotheses').data;
         % detected_sources = d('detected_sources');
         % if ~isempty(detected_sources)
@@ -77,8 +77,10 @@ function execute (obj)
         if ~isempty(perfs)
             theta = getObject(obj, perfs(1), 'theta');
             theta = theta(end);
-        elseif all(perfs == 1)
+        elseif all(perfs == 1) && ~isempty(perfs)
             theta = 0;
+        else
+            theta = getLocalisationOutput(obj);
         end
     else
     % theta = 0;
