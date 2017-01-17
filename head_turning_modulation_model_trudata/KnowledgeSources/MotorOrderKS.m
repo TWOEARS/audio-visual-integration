@@ -78,14 +78,14 @@ function execute (obj)
         if ~isempty(perfs)
             theta = getObject(obj, perfs(1), 'theta');
             theta = theta(end);
-        elseif all(perfs == 1) && ~isempty(perfs)
-            theta = 0;
+        % elseif all(perfs == 1) && ~isempty(perfs)
         else
-            theta = getLocalisationOutput(obj);
+            theta = 0;
+        % else
+        %     theta = getLocalisationOutput(obj);
         end
     else
-        theta = 0;
-        % theta = getLocalisationOutput(obj);
+        theta = getLocalisationOutput(obj);
     end
 
     obj.motor_order(end+1) = theta;
