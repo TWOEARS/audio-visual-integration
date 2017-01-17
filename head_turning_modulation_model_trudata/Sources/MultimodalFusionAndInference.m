@@ -28,9 +28,14 @@ end
 
 % --- 
 function newInput (obj, input_vector)
-	obj.inputs = [obj.inputs, input_vector];
-	obj.trainMSOM();
-	obj.setCategories();
+	theta_a = getLocalisationOutput(obj.htm);
+	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
+    theta_v = theta_v('theta');
+    if ~isempty(theta_v) && abs(theta_a-theta_v) <= 20
+		obj.inputs = [obj.inputs, input_vector];
+		obj.trainMSOM();
+		obj.setCategories();
+	end
 end
 
 function setCategories (obj)
