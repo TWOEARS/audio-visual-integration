@@ -77,7 +77,7 @@ function computeAposterioriProbabilities (obj)
 	classes = unique(av_cats);
 	for iCat = classes'
 		if iCat ~= 0 && isPerformant(obj, iCat)
-			obj.observed_categories{iCat}.cpt = numel(sum(av_cats == iCat));
+			obj.observed_categories{iCat}.cpt = sum(av_cats == iCat);
 			obj.observed_categories{iCat}.proba = obj.observed_categories{iCat}.cpt/obj.htm.RIR.nb_objects;
 		end
 	end
@@ -130,7 +130,8 @@ function computeWeights (obj)
 			else
 			% --- Compute weights thanks to weighting functions
 				% --- Incongruent
-				if obj.observed_categories{obj_cat}.proba <= 1/obj.nb_classes
+				% if obj.observed_categories{obj_cat}.proba <= 1/obj.nb_classes
+				if obj.observed_categories{obj_cat}.congruence == -1
 					increaseObjectWeight(obj.htm, iObj);
 				% --- Congruent
 				else

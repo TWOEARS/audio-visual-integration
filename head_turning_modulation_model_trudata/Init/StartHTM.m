@@ -41,7 +41,7 @@ elseif strcmp(ROBOT_PLATFORM, 'ODI')
    VIKS  = bbs.createKS('VisualIdentityQRKS', {bbs.robotConnect});
 end
 
-AVFKS = bbs.createKS('AudioVisualFusionKS', {bbs.robotConnect});
+% AVFKS = bbs.createKS('AudioVisualFusionKS', {bbs.robotConnect});
 
 HTMKS = bbs.createKS('HeadTurningModulationKS', {bbs});
 
