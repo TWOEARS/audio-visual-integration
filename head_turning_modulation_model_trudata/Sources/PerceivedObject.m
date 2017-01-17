@@ -133,6 +133,11 @@ function updateData (obj, data, theta, theta_v)
 		theta_v = -1;
 	end
 	obj.theta_v(end+1) = theta_v;
+	
+	unique_values = unique(obj.theta);
+    tmp = histc(theta, unique_values);
+    theta = unique_values(find(max(tmp)));
+    obj.theta_a = theta;
 end
 
 function updateTime (obj, t)
