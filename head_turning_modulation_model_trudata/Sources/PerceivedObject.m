@@ -157,6 +157,10 @@ function updateAngle (obj, theta)
 		end
 	end
 	obj.theta(end+1) = theta;
+    unique_values = unique(obj.theta);
+    tmp = histc(theta, unique_values);
+    theta = unique_values(find(max(tmp)));
+    obj.theta_a = theta;
 end
 
 function initializeRequests (obj)

@@ -81,7 +81,7 @@ function execute (obj)
         nb_objects = obj.RIR.nb_objects;
         % --- Look for an object that has already been observed
         for iObject = 1:nb_objects
-            theta_o = getObject(obj.htm, iObject, 'theta');
+            theta_o = getObject(obj.htm, iObject, 'theta_a');
             theta_o = theta_o(end);
             theta_diff_a = abs(theta_o - theta_a);
             % theta_diff_v = abs(theta_v - theta_
