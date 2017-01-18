@@ -75,7 +75,9 @@ function execute (obj)
             theta_v = -1;
         end
         if numel(theta_v) > 1
-            theta_v = theta_v(1);
+            [~, m] = min(theta_a - theta_v);
+            theta_v = theta_v(m);
+            % theta_v = theta_v(1);
         end
         putative_audio_object = [];
         nb_objects = obj.RIR.nb_objects;

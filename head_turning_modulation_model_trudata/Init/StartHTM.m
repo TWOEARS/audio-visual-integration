@@ -53,6 +53,8 @@ dnnLocationKS = bbs.createKS('DnnLocationKS');
 
 MOKS = bbs.createKS('MotorOrderKS', {bbs, bbs.robotConnect});
 
+EMKS = bbs.createKS('EnvironmentalMapKS', {bbs, HTMKS})
+
 
 bbs.blackboardMonitor.bind({bbs.scheduler},...
                            {bbs.dataConnect},...
@@ -121,5 +123,8 @@ bbs.blackboardMonitor.bind({FCKS},...
 setInfo('duration', 60);
 
 disp( 'Starting blackboard system.' );
+
+global CHANGE_SCENARIO;
+CHANGE_SCENARIO = true;
 
 bbs.run();

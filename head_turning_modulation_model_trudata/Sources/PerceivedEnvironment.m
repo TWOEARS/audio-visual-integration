@@ -46,6 +46,10 @@ function addObject (obj)
 	theta_a = getLocalisationOutput(obj.htm);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
+	if numel(theta_v) > 1
+		[~, m] = min(theta_a - theta_v);
+		theta_v = theta_v(m);
+	end
 	% data = getClassifiersOutput(obj.htm);
 	data = getClassifiersOutput(obj.htm);
 
