@@ -134,6 +134,8 @@ function obj = HeadTurningModulationKS (varargin)
 
     obj.ODKS = ObjectDetectionKS(obj);
 
+    % k = waitforbuttonpress();
+
     obj.run();
 end
 % === CONSTRUCTOR [END] === %

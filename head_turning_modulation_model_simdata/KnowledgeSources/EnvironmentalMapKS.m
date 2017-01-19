@@ -250,8 +250,8 @@ function drawFocusOrigin (obj, k)
 	elseif strcmp(k, 'update')
 		data = get(obj.fo_handle(1), 'YData');
 		set(obj.fo_handle(1), 'YData', [data, getLastHypothesis(obj, 'FCKS', 'focus_origin')-2]);
-		data = get(obj.fo_handle(2), 'YData');
-		set(obj.fo_handle(2), 'YData', [data, getLastHypothesis(obj, 'FCKS', 'focus')]);
+		% data = get(obj.fo_handle(2), 'YData');
+		% set(obj.fo_handle(2), 'YData', [data, getLastHypothesis(obj, 'FCKS', 'focus')]);
 	end
 
 end
@@ -299,6 +299,10 @@ function writeClassification (obj, k)
 		if obj.htm.RIR.nb_objects ~= 0
 			for iObject = 1:obj.htm.RIR.nb_objects
 				iSource = getObject(obj, iObject, 'source');
+				bool = true;
+				if ~getObject(obj, iObject, 'presence')
+					bool = false;
+				end
 				label1 = obj.htm.gtruth{iSource}{obj.iStep-1, 1};
 				uscore_pos = strfind(label1, '_');
 				str = [label1(1:uscore_pos-1), ' ', label1(uscore_pos+1:end)];
@@ -311,7 +315,14 @@ function writeClassification (obj, k)
 					col = [255, 51, 51]/255;
 				end
 				uscore_pos = strfind(label2, '_');
-				str = [label2(1:uscore_pos-1), ' ', label2(uscore_pos+1:end)];
+				if bool
+					str1 = label2(1:uscore_pos-1);
+					str2 = label2(uscore_pos+1:end);
+				else
+					str1 = '-----';
+					str2 = str1;
+				end
+				str = [str1, ' ', str2];
 				set(obj.tc_handle(2, iSource),...
 					'String', str,...
 					'Color', col);
@@ -323,7 +334,14 @@ function writeClassification (obj, k)
 					col = [255, 51, 51]/255;
 				end
 				uscore_pos = strfind(label3, '_');
-				str = [label3(1:uscore_pos-1), ' ', label3(uscore_pos+1:end)];
+				if bool
+					str1 = label3(1:uscore_pos-1);
+					str2 = label3(uscore_pos+1:end);
+				else
+					str1 = '-----';
+					str2 = str1;
+				end
+				str = [str1, ' ', str2];
 				set(obj.tc_handle(3, iSource),...
 					'String', str,...
 					'Color', col);
@@ -539,8 +557,8 @@ function drawMeanClassificationResults (obj, k)
     	set(obj.statistics_handle(2),'XData', 1:obj.iStep-1, 'YData', obj.htm.statistics.max_mean(1:obj.iStep-1, end));
     	set(obj.hl(2), 'XData', [1, obj.iStep-1], 'YData', [data2, data2]);
 
-		set(obj.statistics_handle(3),'XData', 1:obj.iStep-1, 'YData', obj.htm.statistics.max_mean_shm(1:obj.iStep-1, end));
-    	set(obj.hl(3), 'XData', [1, obj.iStep-1], 'YData', [data3, data3]);
+		% set(obj.statistics_handle(3),'XData', 1:obj.iStep-1, 'YData', obj.htm.statistics.max_mean_shm(1:obj.iStep-1, end));
+  %   	set(obj.hl(3), 'XData', [1, obj.iStep-1], 'YData', [data3, data3]);
 
 
     	str = num2str(data1);

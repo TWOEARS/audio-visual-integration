@@ -19,7 +19,7 @@ disp('HTM: initialization of parameters');
 pause(0.25);
 disp('..................................................');
 
-global information info_fnames;
+global information info_fnames CONFIG_FILE;
 
 information = struct('audio_labels'           , []   ,...
                      'AVPairs'                , 0    ,...
@@ -54,7 +54,7 @@ info_fnames = fieldnames(information);
 
 path_to_folder = '../../examples/attention_simulation';
 
-config_file = xmlread([path_to_folder, filesep, 'Config.xml']);
+config_file = xmlread([path_to_folder, filesep, 'Config', num2str(CONFIG_FILE), '.xml']);
 
 parameters = config_file.getElementsByTagName('pair');
 
@@ -95,7 +95,12 @@ information = rmfield(information, 'avpairs');
 %                                         information.nb_angles);
 
 % --- Determining the sources position in a 2D environment
-tmp_sources_angular_pos = linspace(20,...
+if information.nb_sources == 1
+    beg = 45;
+else
+    beg = 20;
+end
+tmp_sources_angular_pos = linspace(beg,...
                                    340,...
                                    information.nb_sources+1);
 tmp_sources_angular_pos = round(tmp_sources_angular_pos);
