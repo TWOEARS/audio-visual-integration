@@ -74,11 +74,20 @@ end
 function computeAposterioriProbabilities (obj)
 	obj.reinitializeClasses();
 	av_cats = getObject(obj, 'all', 'audiovisual_category');
+    if ~isempty(obj.htm.RIR.environments{end}.previous_objects)
+        for iObj = 1:numel(obj.htm.RIR.environments{end}.previous_objects)
+            av_cats(end+1) = obj.htm.RIR.environments{end}.previous_objects{iObj}.audiovisual_category;
+        end
+        av_cats = av_cats';
+    end
 	classes = unique(av_cats);
-	for iCat = classes'
+    if size(classes, 1) > size(classes, 2)
+        classes = classes';
+    end
+	for iCat = classes
 		if iCat ~= 0 && isPerformant(obj, iCat)
 			obj.observed_categories{iCat}.cpt = sum(av_cats == iCat);
-			obj.observed_categories{iCat}.proba = obj.observed_categories{iCat}.cpt/obj.htm.RIR.nb_objects;
+			obj.observed_categories{iCat}.proba = obj.observed_categories{iCat}.cpt/obj.htm.RIR.observed_nb_objects;
 		end
 	end
 	obj.nb_classes = numel(classes);
@@ -109,7 +118,7 @@ function reinitializeClasses (obj)
 end
 
 function computeCongruence (obj)
-	for iCat = obj.classes'
+	for iCat = obj.classes
 		if iCat ~= 0 && isPerformant(obj, iCat)
 			if obj.observed_categories{iCat}.proba < 1/obj.nb_classes
 				obj.observed_categories{iCat}.congruence = -1;

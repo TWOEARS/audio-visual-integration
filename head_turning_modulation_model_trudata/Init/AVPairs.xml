@@ -1,7 +1,7 @@
 
 <categoryStructure>    
         <!-- <pair A="alarm" B="alarm"> </pair> -->
-        <pair A="baby" B="baby"> </pair>
+        <!-- <pair A="baby" B="baby"> </pair> -->
         <!-- <pair A="car" B="crash"> </pair> -->
         <pair A="dog" B="dog"> </pair>
         <!-- <pair A="motor" B="engine"> </pair> -->
