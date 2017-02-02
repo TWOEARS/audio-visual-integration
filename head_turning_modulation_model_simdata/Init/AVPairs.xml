@@ -8,7 +8,7 @@
         <pair A="male" B="violin"> </pair>
         <pair A="male" B="laughing"> </pair>
 
-        <pair A="female" B="coughing"> </pair>
+        <pair A="female" B="speech"> </pair>
         <pair A="female" B="crying"> </pair>
         <pair A="female" B="eating"> </pair>
         <pair A="female" B="singing"> </pair>
@@ -30,7 +30,7 @@
         <pair A="cat" B="meowing"> </pair> 
         <pair A="cat" B="scratching"> </pair> 
 
-        <pair A="door" B="knock"> </pair>
+       <!--  <pair A="door" B="knock"> </pair>
         <pair A="door" B="closing"> </pair>
 
         <pair A="siren" B="beeping"> </pair>
@@ -51,7 +51,7 @@
 
         <pair A="wind" B="blowing"> </pair>
 
-        <pair A="rain" B="falling"> </pair>
+        <pair A="rain" B="falling"> </pair> -->
 
-        <pair A="switch" B="switched"> </pair>
+        <!-- <pair A="switch" B="switched"> </pair> -->
 </categoryStructure>

@@ -60,13 +60,13 @@ end
 % ===================== %
 methods
 % === Constructor [BEG] === %
-function obj = PerceivedObject (data, theta, theta_v)
+function obj = PerceivedObject (data, theta, theta_v, d)
 	obj.theta(end+1) = theta;
 	if isempty(theta_v)
 		theta_v = -1;
 	end
 	obj.theta_v(end+1) = theta_v;
-	% obj.d = d;
+	obj.d = d;
 	obj.tsteps = 1;
 	obj.presence = true;
 	obj.cpt = obj.cpt + 1;
@@ -125,7 +125,7 @@ end
 % 	obj.cat_hist(end-t:end) = ones(1, t+1)*value;
 % end
 
-function updateData (obj, data, theta, theta_v)
+function updateData (obj, data, theta, theta_v, d)
 	% obj.addData(data);
 	obj.isDataMissing(data);
 	obj.theta(end+1) = theta;
@@ -133,6 +133,7 @@ function updateData (obj, data, theta, theta_v)
 		theta_v = -1;
 	end
 	obj.theta_v(end+1) = theta_v;
+	obj.d(end+1) = d;
 
 	unique_values = unique(obj.theta);
     tmp = histc(theta, unique_values);

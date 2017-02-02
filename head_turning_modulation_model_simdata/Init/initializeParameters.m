@@ -98,7 +98,7 @@ information = rmfield(information, 'avpairs');
 if information.nb_sources == 1
     beg = 45;
 else
-    beg = 20;
+    beg = 45;
 end
 tmp_sources_angular_pos = linspace(beg,...
                                    340,...

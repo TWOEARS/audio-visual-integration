@@ -133,8 +133,8 @@ function obj = HeadTurningModulationKS (varargin)
     obj.VCKS = VisualClassificationExpertsKS(obj);
 
     obj.ODKS = ObjectDetectionKS(obj);
-
-    % k = waitforbuttonpress();
+    disp(getInfo('repartition'));
+    k = waitforbuttonpress();
 
     obj.run();
 end

@@ -46,11 +46,12 @@ function addObject (obj)
 	theta_a = getLocalisationOutput(obj.htm);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
+	d = theta_v('d');
 	if numel(theta_v) > 1
 		[~, m] = min(theta_a - theta_v);
 		theta_v = theta_v(m);
+		d = d(m);
 	end
-	% data = getClassifiersOutput(obj.htm);
 	data = getClassifiersOutput(obj.htm);
 
 	if all(data(getInfo('nb_audio_labels')+1:end) == 0)
@@ -85,8 +86,14 @@ function updateObjectData (obj)
 	theta_a = getLocalisationOutput(obj.htm);
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
+	d = theta_v('d');
+	if numel(theta_v) > 1
+		[~, m] = min(theta_a - theta_v);
+		theta_v = theta_v(m);
+		d = d(m);
+	end
 
-	if abs(theta_v - obj.objects{iObj}.theta_v(end)) > 15
+	if abs(theta_v - obj.objects{iObj}.theta_v(end)) > 10
 		theta_v = obj.objects{iObj}.theta_v(end);
 	end
 	obj.objects{iObj}.updateData(data,...
