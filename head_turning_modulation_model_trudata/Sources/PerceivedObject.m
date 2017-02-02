@@ -66,7 +66,11 @@ function obj = PerceivedObject (data, theta, theta_v, d)
 		theta_v = -1;
 	end
 	obj.theta_v(end+1) = theta_v;
+<<<<<<< HEAD
 	obj.d = d;
+=======
+	obj.d(end+1) = d;
+>>>>>>> tmp
 	obj.tsteps = 1;
 	obj.presence = true;
 	obj.cpt = obj.cpt + 1;
@@ -132,8 +136,19 @@ function updateData (obj, data, theta, theta_v, d)
 	if isempty(theta_v)
 		theta_v = -1;
 	end
+<<<<<<< HEAD
 	obj.theta_v(end+1) = theta_v;
 	obj.d(end+1) = d;
+=======
+	
+    if numel(theta_v) > 1
+        [~, m] = min(theta_a-theta_v);
+        theta_v = theta_v(m);
+        d(m);
+    end
+    obj.theta_v(end+1) = theta_v;
+    obj.d(end+1) = d(1);
+>>>>>>> tmp
 
 	unique_values = unique(obj.theta);
     tmp = histc(theta, unique_values);

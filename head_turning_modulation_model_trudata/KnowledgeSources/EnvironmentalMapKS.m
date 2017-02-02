@@ -20,7 +20,6 @@ properties (SetAccess = public, GetAccess = public)
 	fov_handle;
 	% fov_handle_naive;
 	objects_handle;
-	emitting_handle;
 	robot_handle;
 	shm_handle;
 	% naive_handle;
@@ -32,7 +31,6 @@ properties (SetAccess = public, GetAccess = public)
 	% hl;
 	% tl_handle;
 	tc_handle;
-	text_handle;
 
     % ft_handle;
     % ft_colors;
@@ -62,6 +60,11 @@ properties (SetAccess = public, GetAccess = public)
 	shms;
     
     nb_objects = 0;
+<<<<<<< HEAD
+=======
+    starting_angle;
+    audio_labels = {};
+>>>>>>> tmp
 
 end
 
@@ -88,6 +91,11 @@ function obj = EnvironmentalMapKS (bbs, htm)
 	obj.depth_of_view = 3;
 	obj.field_of_view = 30;
     obj.nb_sources = 0;
+<<<<<<< HEAD
+=======
+    obj.starting_angle = -90;
+    
+>>>>>>> tmp
     % obj.timeline = getInfo('timeline');
 	% obj.angles = getInfo('sources_position');
 	% obj.angles_rad = deg2rad(obj.angles);
@@ -105,12 +113,15 @@ function obj = EnvironmentalMapKS (bbs, htm)
 	% --- Maximum 5 sources
 	% --- thet_a, theta_v, d
 	obj.sources = zeros(5, 1);
+<<<<<<< HEAD
 
 	obj.objects_handle = zeros(5, 2);
 
 	obj.emitting_handle = zeros(2, obj.nb_sources);
+=======
+>>>>>>> tmp
 
-	obj.text_handle = zeros(1, obj.nb_sources);
+	obj.objects_handle = zeros(5, 2);
 
 	% obj.tl_handle = zeros(1, 3);
 
@@ -128,7 +139,11 @@ function execute (obj)
 	    obj.findSources();
 	    obj.drawSources();
 % 		obj.drawLocalizationResults();
+<<<<<<< HEAD
 		obj.drawEmittingSource();
+=======
+		%obj.drawEmittingSource();
+>>>>>>> tmp
 		% obj.drawSeenSources();
 		obj.drawFieldOfView('update');
 		obj.writeClassification();
@@ -136,6 +151,7 @@ function execute (obj)
 	pause(0.01);
 end
 
+<<<<<<< HEAD
 
 % === Execute functionality
 function [b, wait] = canExecute (obj)
@@ -166,33 +182,82 @@ function findSources (obj)
 		% obj.angles = getObject(obj, 'all', 'theta');
 		% obj.angles_rad = deg2rad(obj.angles);
 		% obj.angles_cpt = [zeros(1, numel(obj.angles_rad)) ; zeros(1, numel(obj.angles_rad))];
+=======
+
+% === Execute functionality
+function [b, wait] = canExecute (obj)
+    b = true;
+    wait = false;
+end
+
+function finished = isFinished(obj)
+    finished = obj.finished;
+end
+
+function findSources (obj)
+	obj.nb_objects = obj.RIR.nb_objects;
+
+	for iObject = 1:obj.nb_objects
+		theta_a = getObject(obj, iObject, 'theta');
+		obj.sources(iObject, 1) = deg2rad(theta_a(end)+obj.starting_angle);
+		% theta_a = theta_a(end);
+
+		theta_v = getObject(obj, iObject, 'theta_v');
+		obj.sources(iObject, 2) = deg2rad(theta_v(end)+obj.starting_angle);
+		% theta_v = theta_v(end);
+
+		d = getObject(obj, iObject, 'd');
+		obj.sources(iObject, 3) = d(end)+0,5;
+>>>>>>> tmp
 	end
 end
 
 function writeClassification (obj, k)
 	% if strcmp(k, 'init')
 		% for iSource = 1:obj.nb_sources
+<<<<<<< HEAD
 		for iSource = 1:obj.objects
+=======
+		for iSource = 1:obj.nb_objects
+>>>>>>> tmp
 			pos = get(obj.objects_handle(iSource), 'Position');
-			if obj.angles(iSource) <= 90
-				pos1 = [pos(1) + 2, pos(2) + 2];
-				pos2 = [pos1(1), pos1(2)+0.5];
-				pos3 = [pos1(1), pos1(2)+1];
-			elseif obj.angles(iSource) <= 180
-				pos1 = [pos(1) - 3, pos(2) + 2];
-				pos2 = [pos1(1), pos1(2)+0.5];
-				pos3 = [pos1(1), pos1(2)+1];
-			elseif obj.angles(iSource) <= 270
-				pos1 = [pos(1)-3, pos(2)-1.5];
-				pos2 = [pos1(1), pos1(2)+0.5];
-				pos3 = [pos1(1), pos1(2)+1];
+			%if obj.angles(iSource) <= 90
+            theta = rad2deg(obj.sources(iSource, 2))-obj.starting_angle;
+            if theta <= 90
+				pos1 = [pos(1)+0.5, pos(2)+0.5];
+% 				pos2 = [pos1(1)   , pos1(2)+0.2];
+% 				pos3 = [pos1(1)   , pos1(2)+0.7];
+			%elseif obj.angles(iSource) <= 180
+            elseif theta <= 180
+				pos1 = [pos(1)-0.5, pos(2)+0.5];
+% 				pos2 = [pos1(1)   , pos1(2)+0.2];
+% 				pos3 = [pos1(1)   , pos1(2)+0,7];
+			%elseif obj.angles(iSource) <= 270
+            elseif theta <= 270
+				pos1 = [pos(1)-0.5, pos(2)-0.5];
+% 				pos2 = [pos1(1)   , pos1(2)+0.2];
+% 				pos3 = [pos1(1)   , pos1(2)+0,7];
 			else
+<<<<<<< HEAD
 				pos1 = [pos(1)+1.5, pos(2)-1.5];
 				pos2 = [pos1(1), pos1(2)+0.5];
 				pos3 = [pos1(1), pos1(2)+1];
 			end
 			alabel = getObject(obj.htm, iObject, 'audio_label');
 			vlabel = getObject(obj.htm, iObject, 'visual_label');
+=======
+				pos1 = [pos(1)+0.5, pos(2)-0.5];
+% 				pos2 = [pos1(1)   , pos1(2)+0.2];
+% 				pos3 = [pos1(1)   , pos1(2)+0,7];
+			end
+			alabel = getObject(obj.htm, iSource, 'audio_label');
+            if strcmp(alabel, 'femaleSpeech')
+                alabel = 'speech';
+            elseif strcmp(alabel, 'dog')
+                alabel = 'barking';
+            end
+			vlabel = getObject(obj.htm, iSource, 'visual_label');
+>>>>>>> tmp
 			str = [vlabel, ' ', alabel];
 			% obj.tc_handle(1, iSource) = text(pos1(1), pos1(2), '',...
 			% 							  'FontSize', 12,...
@@ -204,11 +269,23 @@ function writeClassification (obj, k)
 			% 							  'FontWeight', 'bold',...
 			% 							  'Color', 'black',...
 			% 							  'Parent', obj.h(1));
+<<<<<<< HEAD
 			obj.tc_handle(iSource) = text(pos3(1), pos3(2), str,...
 										  'FontSize', 12,...
 										  'FontWeight', 'bold',...
 										  'Color', 'black',...
 										  'Parent', obj.h(1));
+=======
+            if obj.tc_handle(iSource) == 0
+                obj.tc_handle(iSource) = text(pos1(1), pos1(2), str,...
+                                              'FontSize', 12,...
+                                              'FontWeight', 'bold',...
+                                              'Color', 'black',...
+                                              'Parent', obj.h(1));
+            else
+                set(obj.tc_handle(iSource), 'String', str, 'Position', [pos1(1), pos1(2)]);
+            end
+>>>>>>> tmp
 		end
 	% elseif strcmp(k, 'update')
 	% 	% for iSource = 1:obj.nb_sources
@@ -226,6 +303,7 @@ function writeClassification (obj, k)
 	% 	end
 	% end
 end
+<<<<<<< HEAD
 
 % function drawLocalizationResults (obj)
 % 	for iObject = 1:obj.htm.RIR.nb_objects
@@ -251,14 +329,15 @@ end
 % 		end
 % 	end
 % end
-
+=======
+>>>>>>> tmp
 
 function drawFieldOfView (obj, k)
 	if strcmp(k, 'init') || strcmp(k, 'end')
 		x0 = obj.RIR.position(1);
 		y0 = obj.RIR.position(2);
-		theta1 = -(obj.field_of_view/2);
-		theta2 = +(obj.field_of_view/2);
+		theta1 = -(obj.field_of_view/2)+obj.starting_angle;
+		theta2 = +(obj.field_of_view/2)+obj.starting_angle;
 		[x1, y1] = pol2cart(deg2rad(theta1), obj.depth_of_view);
 		[x2, y2] = pol2cart(deg2rad(theta2), obj.depth_of_view);
 
@@ -278,13 +357,17 @@ function drawFieldOfView (obj, k)
 		x0 = obj.RIR.position(1);
 		y0 = obj.RIR.position(2);
 
+<<<<<<< HEAD
+=======
+        head_position = obj.robot.getCurrentHeadOrientation()+obj.starting_angle;
+>>>>>>> tmp
 	    % === HTM robot
 		if ~isempty(obj.MOKS.head_position(end-1))
-			theta1 = obj.MOKS.head_position(end) - (obj.field_of_view/2);
-			theta2 = obj.MOKS.head_position(end) + (obj.field_of_view/2);
+			head_position1 = head_position - (obj.field_of_view/2);
+			head_position2 = head_position + (obj.field_of_view/2);
 
-			[x1, y1] = pol2cart(deg2rad(theta1), obj.depth_of_view);
-			[x2, y2] = pol2cart(deg2rad(theta2), obj.depth_of_view);
+			[x1, y1] = pol2cart(deg2rad(head_position1), obj.depth_of_view);
+			[x2, y2] = pol2cart(deg2rad(head_position2), obj.depth_of_view);
 			
 			set(obj.fov_handle(1), 'XData', [x0, x1], 'YData', [y0, y1]);
 			set(obj.fov_handle(2), 'XData', [x1, x2], 'YData', [y1, y2]);
@@ -293,6 +376,7 @@ function drawFieldOfView (obj, k)
 	end
 end
 
+<<<<<<< HEAD
 function drawEmittingSource (obj, varargin)
 
 	theta = getLocalisationOutput(obj);
@@ -312,28 +396,71 @@ function drawSources (obj)
 
 		[xv, yv] = pol2cart(obj.sources(iSource, 2), obj.sources(iSource, 3));
 		posv = [xv-0.5, yv-0.5, 1, 1];
+=======
+function drawSources (obj)
+    head_position = obj.robot.getCurrentHeadOrientation()+obj.starting_angle;
+	for iSource = 1:obj.RIR.nb_objects
+		[xa, ya] = pol2cart(obj.sources(iSource, 1), obj.sources(iSource, 3));
+		posa = [xa-0.5, ya-0.5, 1, 1];
+
+		[xv, yv] = pol2cart(obj.sources(iSource, 2), obj.sources(iSource, 3));
+		posv = [xv-0.5, yv-0.5, 1, 1];
+        if abs(head_position-rad2deg(obj.sources(iSource, 2))) <= obj.field_of_view
+            line_style = '-';
+        else
+            line_style= '--';
+        end
+        if isPerformant(obj, iSource, 'Object')
+            cat_obj = getCategory(obj, iSource, 'Object');
+            if cat_obj.congruence == 1
+                col = 'blue';
+            else
+                col = 'red';
+            end
+        else
+            col = 'none';
+        end
+>>>>>>> tmp
 		if obj.objects_handle(iSource, 1) == 0
 			obj.objects_handle(iSource, 1) = rectangle('Position' , posa,...
 				  		   			 			    'Curvature', 0.4 ,...
 				  		   			 			    'LineWidth', 1   ,...
+<<<<<<< HEAD
 	          									    'LineStyle', '--',...
 	          									    'FaceColor', [201, 230, 204]/255,...
+=======
+	          									    'LineStyle', line_style,...
+	          									    'FaceColor', col,...
+>>>>>>> tmp
 				  		   			 			    'Parent'   , obj.h(1));
 			obj.objects_handle(iSource, 2) = rectangle('Position' , posv,...
 				  		   			 			    'Curvature', 0.4 ,...
 				  		   			 			    'LineWidth', 1   ,...
+<<<<<<< HEAD
 	          									    'LineStyle', '--',...
 	          									    'FaceColor', [201, 230, 204]/255,...
 				  		   			 			    'Parent'   , obj.h(1));
 		else
 			set(obj.objects_handle(iSource, 1), 'Position', posa);
 			set(obj.objects_handle(iSource, 2), 'Position', posv);
+=======
+	          									    'LineStyle', line_style,...
+	          									    'FaceColor', col,...
+				  		   			 			    'Parent'   , obj.h(1));
+		else
+			set(obj.objects_handle(iSource, 1), 'Position', posa, 'FaceColor', col);
+			set(obj.objects_handle(iSource, 2), 'Position', posv, 'FaceColor', col);
+>>>>>>> tmp
 		end
 	end
 end
 
 function drawRobot (obj)
+<<<<<<< HEAD
 	circle_size = 0.3;
+=======
+	circle_size = 0.15;
+>>>>>>> tmp
 	% --- Centering the center around [0, 0]
 	% --- 'pos' is: [x, y, width, height]
 	pos = [obj.RIR.position(1)-circle_size/2, obj.RIR.position(2)-circle_size/2,...
@@ -345,7 +472,11 @@ function drawRobot (obj)
 			  		   			 'FaceColor', 'black',...
 			  		   			 'Parent'   , obj.h(1));
 			  		   			 % 'Parent'   , obj.figure_handle);
+<<<<<<< HEAD
 	circle_size = 2;
+=======
+	circle_size = 0.5;
+>>>>>>> tmp
 	% --- Centering the center around [0, 0]
 	% --- 'pos' is: [x, y, width, height]
 	% x0 = obj.RIR.position(1);
@@ -373,30 +504,27 @@ function createFigure (obj)
 	% obj.h(1) = subplot(5, 6, [1:3, 7:9, 13:15], 'Parent', p);
 	% obj.h(1) = subplot(3, 7, [1, 2, 3, 4, 8, 9, 10, 11, 15, 16, 17, 18], 'Parent', p);
 	obj.h(1) = subplot(1, 1, 1, 'Parent', p);
+<<<<<<< HEAD
 	set(obj.h(1), 'XLim', [-11, 11],...
 				'YLim', [-11, 11])%,...
+=======
+	set(obj.h(1), 'XLim', [-3.5, 3.5],...
+				'YLim', [-3.5, 3.5])%,...
+>>>>>>> tmp
 	axis square;
                 % 'Position', [0.05, 0.4, 0.45, 0.45])
 	axis off;
 end
 
-function removeEmittingSources (obj, iSource)
-	% for iSource = 1:obj.nb_sources
-		% if ~isempty(obj.emitting_handle)
-		if obj.emitting_handle(1, iSource) ~= 0
-			set(obj.emitting_handle(1, iSource), 'Visible', 'off');
-			set(obj.emitting_handle(2, iSource), 'Visible', 'off');
-		end
-	% end
-end
-
-function removeAllEmittingSources (obj)
-    for iSource = 1:obj.nb_sources
-        if obj.emitting_handle(1, iSource) ~= 0
-            set(obj.emitting_handle(1, iSource), 'Visible', 'off');
-            set(obj.emitting_handle(2, iSource), 'Visible', 'off');
-        end
-    end
+function changeScenario (obj)
+   obj.objects_handle = zeros(5, 2);
+   obj.tc_handle = zeros(1, 10);
+   obj.sources = zeros(5, 1);
+   obj.shm_handle = zeros(1, obj.nb_sources);
+   ch = get(obj.h(1), 'Children');
+   for iChild = 1:numel(ch)-5
+       delete(ch(iChild));
+   end
 end
 
 

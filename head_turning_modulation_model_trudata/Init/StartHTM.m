@@ -18,6 +18,8 @@ elseif strcmp(ROBOT_PLATFORM, 'ODI')
    Jido = OdiInterface();
 end
 
+Jido.rotateHead(0, 'absolute');
+
 % === Initialise and run model
 disp( 'Building blackboard system...' );
 
@@ -50,10 +52,16 @@ FCKS = bbs.createKS('FocusComputationKS', {bbs, HTMKS});
 ODKS = bbs.createKS('ObjectDetectionKS', {bbs, HTMKS});
 
 dnnLocationKS = bbs.createKS('DnnLocationKS');
+%dnnLocationKS = bbs.createKS('DnnLocationKS', {'MCT-DIFFUSE-FRONT'});
+%localisationDecisionKS = bbs.createKS('LocalisationDecisionKS', {false, 0.5});
 
 MOKS = bbs.createKS('MotorOrderKS', {bbs, bbs.robotConnect});
 
+<<<<<<< HEAD
 EMKS = bbs.createKS('EnvironmentalMapKS', {bbs, HTMKS})
+=======
+EMKS = bbs.createKS('EnvironmentalMapKS', {bbs, HTMKS});
+>>>>>>> tmp
 
 
 bbs.blackboardMonitor.bind({bbs.scheduler},...
@@ -71,6 +79,10 @@ bbs.blackboardMonitor.bind({bbs.dataConnect},...
 bbs.blackboardMonitor.bind({dnnLocationKS},...
                            {auditoryClassifiersKS{1}},...
                            'replaceOld' );
+%                            {localisationDecisionKS},...
+%                            'replaceOld');
+% bbs.blackboardMonitor.bind({localisationDecisionKS},...
+
 
 for iClassifier = 2:numel(auditoryClassifiersKS)
     bbs.blackboardMonitor.bind({auditoryClassifiersKS{iClassifier-1}},...
@@ -118,9 +130,9 @@ bbs.blackboardMonitor.bind({HTMKS},...
 bbs.blackboardMonitor.bind({FCKS},...
                            {MOKS},...
                            'replaceOld');
-
-
-setInfo('duration', 60);
+bbs.blackboardMonitor.bind({MOKS},...
+                           {EMKS},...
+                           'replaceOld');
 
 disp( 'Starting blackboard system.' );
 

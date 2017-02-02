@@ -75,9 +75,15 @@ function execute (obj)
             theta_v = -1;
         end
         if numel(theta_v) > 1
+<<<<<<< HEAD
             [~, m] = min(theta_a - theta_v);
             theta_v = theta_v(m);
             % theta_v = theta_v(1);
+=======
+            [~, m] = min(theta_a-theta_v);
+            theta_v = theta_v(m);
+%             theta_v = theta_v(1);
+>>>>>>> tmp
         end
         putative_audio_object = [];
         nb_objects = obj.RIR.nb_objects;
@@ -87,7 +93,7 @@ function execute (obj)
             theta_o = theta_o(end);
             theta_diff_a = abs(theta_o - theta_a);
             % theta_diff_v = abs(theta_v - theta_
-            if theta_diff_a <= obj.thr_theta 
+            if theta_diff_a <= obj.thr_theta %&& abs(theta_a - theta_v) <= 20
                 putative_audio_object(end+1) = iObject;
             end
         end

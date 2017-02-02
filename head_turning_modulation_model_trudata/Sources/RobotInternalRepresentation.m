@@ -21,6 +21,7 @@ classdef RobotInternalRepresentation < handle
 properties (SetAccess = public, GetAccess = public)
     environments = cell(0); % list of environments
     nb_objects = 0;
+    observed_nb_objects = 0;
     MFI;
     MSOM;
     htm;
@@ -58,6 +59,7 @@ function addObject (obj)
     env.addObject();
     % obj.getEnv().addObject();
     obj.nb_objects = obj.nb_objects + 1;
+    obj.observed_nb_objects = obj.observed_nb_objects + 1;
 end
 
 % === Update the label of the last object with a new INPUT_VECTOR

@@ -16,6 +16,7 @@ classdef PerceivedEnvironment < handle
 properties (SetAccess = public, GetAccess = public)
     present_objects = [] 	 ; % objects present in the environment
     objects = cell(0); % all detected objects
+    previous_objects = cell(0);
     htm;
     RIR;					% --- Robot Internal Representation
     MFI;					% --- Multimodal Fusion & Inference module
@@ -44,6 +45,7 @@ end
 % --- Other methods --- %
 function addObject (obj)
 	theta_a = getLocalisationOutput(obj.htm);
+<<<<<<< HEAD
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
 	d = theta_v('d');
@@ -52,6 +54,17 @@ function addObject (obj)
 		theta_v = theta_v(m);
 		d = d(m);
 	end
+=======
+	theta_v_tmp = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
+	theta_v = theta_v_tmp('theta');
+    d = theta_v_tmp('d');
+    if numel(theta_v) > 1
+        [~, m] = min(theta_a-theta_v);
+        theta_v = theta_v(m);
+        d = d(m);
+    end
+	% data = getClassifiersOutput(obj.htm);
+>>>>>>> tmp
 	data = getClassifiersOutput(obj.htm);
 
 	if all(data(getInfo('nb_audio_labels')+1:end) == 0)
@@ -61,7 +74,8 @@ function addObject (obj)
 	% --- Create a new PERCEIVEDOBJECT object
     obj.objects{end+1} = PerceivedObject(data,...
     									 theta_a,...
-    									 theta_v);
+    									 theta_v,...
+                                         d);
 	obj.objects{end}.updateTime(obj.htm.iStep);
     obj.addInput();
 end
@@ -84,6 +98,7 @@ function updateObjectData (obj)
 	data = getClassifiersOutput(obj.htm);
 
 	theta_a = getLocalisationOutput(obj.htm);
+<<<<<<< HEAD
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
 	d = theta_v('d');
@@ -92,13 +107,20 @@ function updateObjectData (obj)
 		theta_v = theta_v(m);
 		d = d(m);
 	end
+=======
+	theta_v_tmp = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
+	theta_v = theta_v_tmp('theta');
+    d = theta_v_tmp('d');
+>>>>>>> tmp
 
 	if abs(theta_v - obj.objects{iObj}.theta_v(end)) > 10
 		theta_v = obj.objects{iObj}.theta_v(end);
-	end
+    end
+    
 	obj.objects{iObj}.updateData(data,...
 								 theta_a,...
-								 theta_v);
+								 theta_v,...
+                                 d);
 	obj.objects{iObj}.updateTime(obj.htm.iStep);
 	% obj.objects{iObj}.presence = true;
 

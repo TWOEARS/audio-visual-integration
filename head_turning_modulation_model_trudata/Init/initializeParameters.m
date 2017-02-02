@@ -2,6 +2,15 @@ function initializeParameters (htm)
 
 global ROBOT_PLATFORM;
 
+figs = get(0, 'Children');
+if ~isempty(figs)
+    for iFig = 1:numel(figs)
+        if strcmp(get(figs(iFig), 'Tag'), 'EMKS')
+            delete(figs(iFig));
+        end
+    end
+end
+
 disp('HTM: initialization of parameters');
 pause(0.25);
 disp('..................................................');
