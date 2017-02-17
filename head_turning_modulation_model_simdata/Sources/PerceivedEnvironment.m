@@ -112,7 +112,7 @@ function checkInference (obj)
 			else % --- If infered AV is NOT the same as observed AV
                 obj.objects{iObj}.requests.label = AVClass;
 				% --- Make the network learn with n more iterations
-				obj.highTrainingPhase();
+				% obj.highTrainingPhase();
 				% obj.objects{iObj}.requests.verification = true;
 			end
 		elseif ~missing % All data available

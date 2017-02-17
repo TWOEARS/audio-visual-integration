@@ -56,7 +56,7 @@ methods
 % === CONSTRUCTOR [BEG] === %
 function obj = MultimodalSelfOrganizingMap (varargin)
 	p = inputParser ;
-	  p.addOptional('Iterations', 1);
+	  p.addOptional('Iterations', 10);
 	  p.addOptional('Leading', 1);
 	p.parse(varargin{:});
 	p = p.Results;
@@ -107,7 +107,7 @@ function setParameters (obj, nb_iterations)
 		obj.sig(iStep) = obj.sigmas.initial + tfrac * (obj.sigmas.final - obj.sigmas.initial);
 	end
 	
-	obj.aleph = cell(obj.nb_nodes, nb_iterations);
+ 	obj.aleph = cell(obj.nb_nodes, nb_iterations);
 
 	for iNode = 1:obj.nb_nodes
 		for iStep = 1:nb_iterations
