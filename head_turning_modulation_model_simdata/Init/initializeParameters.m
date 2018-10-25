@@ -1,4 +1,4 @@
-function initializeParameters (htm)
+function initializeParameters (htm, new)
 % initializeParameters function
 % This function creates the INFO variable which will be used all along the simulations.
 % It cares all the needed information for the system to work, depending also on the user inputs.
@@ -6,11 +6,13 @@ function initializeParameters (htm)
 % These audiovisual pairs are listed in the 'AVPairs.xml' file and the indexes refer to the lines of this file.
 
 % --- Clear previous figure from a previous simulation
-figs = get(0, 'Children');
-if ~isempty(figs)
-    for iFig = 1:numel(figs)
-        if strcmp(get(figs(iFig), 'Tag'), 'EMKS')
-            delete(figs(iFig));
+if nargin == 1
+    figs = get(0, 'Children');
+    if ~isempty(figs)
+        for iFig = 1:numel(figs)
+            if strcmp(get(figs(iFig), 'Tag'), 'EMKS')
+                delete(figs(iFig));
+            end
         end
     end
 end
@@ -31,6 +33,8 @@ information = struct('audio_labels'           , []   ,...
                      'fov'                    , 0    ,...
                      'lambda'                 , 0    ,...
                      'load'                   , false,...
+                     'load_timeline'          , false,...
+                     'modules'                , 0    ,...
                      'nb_audio_labels'        , 0    ,...
                      'nb_AVPairs'             , 0    ,...
                      'nb_labels'              , 0    ,...
@@ -40,6 +44,7 @@ information = struct('audio_labels'           , []   ,...
                      'nb_visual_labels'       , 0    ,...
                      'notification'           , []   ,...
                      'obs_struct'             , []   ,...
+                     'persistance'            , 0    ,...
                      'q'                      , 0    ,...
                      'repartition'            , []   ,...
                      'smoothing'              , 0    ,...
@@ -50,8 +55,6 @@ information = struct('audio_labels'           , []   ,...
                      'timeline'               , []   ,...
                      'visual_labels'          , []);
 					 
-info_fnames = fieldnames(information);
-
 path_to_folder = '../../examples/attention_simulation';
 
 config_file = xmlread([path_to_folder, filesep, 'Config', num2str(CONFIG_FILE), '.xml']);
@@ -77,6 +80,19 @@ end
 
 information = rmfield(information, 'avpairs');
 
+if isappdata(0, 'param_simu')
+    param = getappdata(0, 'param_simu');
+    information.epsilon = param.epsilon;
+    information.nb_sources = param.nb_sources;
+    information.nb_simultaneous_sources = param.nb_simultaneous_sources;
+    information.scene = param.scene;
+    information.nb_iterations = param.nb_iterations;
+end
+
+if isappdata(0, 'tline')
+    information.load_timeline = true;
+end
+
 % =========================================================================== %
 % =========================================================================== %
 % =========================================================================== %
@@ -100,11 +116,19 @@ if information.nb_sources == 1
 else
     beg = 45;
 end
-tmp_sources_angular_pos = linspace(beg,...
-                                   340,...
-                                   information.nb_sources+1);
-tmp_sources_angular_pos = round(tmp_sources_angular_pos);
-information.sources_position = tmp_sources_angular_pos(1:end-1);
+
+if information.modules == 1
+    tmp = [290:5:345, 15:5:70];
+    idx = linspace(1, numel(tmp), information.nb_sources);
+    idx = round(idx);
+    information.sources_position = tmp(idx);
+else
+    tmp_sources_angular_pos = linspace(beg,...
+                                       340,...
+                                       information.nb_sources+1);
+    tmp_sources_angular_pos = round(tmp_sources_angular_pos);
+    information.sources_position = tmp_sources_angular_pos(1:end-1);
+end
 
 information.distances = rand(1, information.nb_sources) + randi([4, 7], 1, information.nb_sources);
 % d(d <= 3) = d(d <= 3) + 3;
@@ -140,10 +164,12 @@ information.obs_struct = struct('label'     , 'none_none',...
                             
 information.statistics = struct('max'         , []        ,...
                                 'max_mean'    , []        ,...
+                                'max_mean2'    , []        ,...
                                 'max_shm'     , []        ,...
                                 'max_mean_shm', []        ,...
                                 'mfi'         , []        ,...
                                 'mfi_mean'    , []        ,...
+                                'mfi_mean2'    , []        ,...
                                 'alpha_a'     , 0         ,...
                                 'alpha_v'     , 0         ,...
                                 'beta_a'      , 0         ,...
@@ -172,7 +198,11 @@ information.scenario = struct('idx'       , 1        ,...
                               'unique_idx', {scene}   ...
                              );
 
-information.repartition = assignSource(scene, information.nb_sources);
+if ~htm.load
+    information.repartition = assignSource(scene, information.nb_sources);
+else
+    information.repartition = getappdata(0, 'repartition');
+end
 
 % [information.nb_events, information.nb_steps] = adjustLength(nb_steps);
 
@@ -196,6 +226,8 @@ setappdata(0, 'information', information);
 if ~htm.load
     initializeScenario(htm);
 end
+
+info_fnames = fieldnames(information);
 
 pause(0.1);
 disp('PARAMETERS OF CURRENT SIMULATION:');

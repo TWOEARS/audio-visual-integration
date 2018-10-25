@@ -21,7 +21,7 @@
         <pair A="baby" B="laughing"> </pair>
         <pair A="baby" B="screaming"> </pair>
 
-        <pair A="bird" B="whistling"> </pair> 
+        <pair A="bird" B="whistling"> </pair>
         <pair A="bird" B="flying"> </pair>
 
         <pair A="dog" B="barking"> </pair>
@@ -30,7 +30,7 @@
         <pair A="cat" B="meowing"> </pair> 
         <pair A="cat" B="scratching"> </pair> 
 
-       <!--  <pair A="door" B="knock"> </pair>
+        <pair A="door" B="knock"> </pair>
         <pair A="door" B="closing"> </pair>
 
         <pair A="siren" B="beeping"> </pair>
@@ -51,7 +51,22 @@
 
         <pair A="wind" B="blowing"> </pair>
 
-        <pair A="rain" B="falling"> </pair> -->
+        <pair A="rain" B="falling"> </pair>
 
-        <!-- <pair A="switch" B="switched"> </pair> -->
+        <pair A="switch" B="switched"> </pair>
+
+        <pair A="loudspeaker" B="music"> </pair>
+        <pair A="loudspeaker" B="radio"> </pair>
+
+        <pair A="television" B="movie"> </pair>
+        <pair A="television" B="news"> </pair>
+        <pair A="television" B="videogame"> </pair>
+
+        <pair A="telephone" B="ringing"> </pair>
+        <pair A="telephone" B="voice"> </pair>
+        <pair A="telephone" B="music"> </pair>
+        <pair A="telephone" B="falling"> </pair>
+
+        <pair A="thunder" B="striking"> </pair>
+
 </categoryStructure>
