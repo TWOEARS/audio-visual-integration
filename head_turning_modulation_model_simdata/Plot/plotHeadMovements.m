@@ -1,34 +1,25 @@
-function plotHeadMovements (htm)
+function plotHeadMovements (obj)
 
-    %t = htm.RIR.getAllObj('theta_hist');
-    t = getObject(htm, 'all', 'theta_hist');
-    %t = arrayfun(@(x) t{x}(1), 1:numel(t));
-    % tmp = find(arrayfun(@(x) isempty(t{x}), 1:htm.robot.nb_objects)) ;
-    % if ~isempty(tmp)
-    %     t{tmp} = htm.robot.getObj(tmp, 'theta') ;
-    % end
-    % t = cell2mat(arrayfun(@(x) t{x}(1), 1:numel(t), 'UniformOutput', false)) ;
-    
-    %d = cell2mat(htm.RIR.getAllObj('d')) ;
-    d = getObject(htm, 'all', 'dist_hist');
+nb_sources = obj.nb_sources;
 
-    t2 = unique(htm.RIR.theta_hist, 'stable') ;
-    
-    t2 = t2(2:end) ;
+figure('Color', 'white');
+h = axes('FontSize', 16);
 
-    d2 = [] ;
-    cpt =  1 ;
-    for iAngle = 1:numel(t)
-        if cpt <= numel(t2) 
-            if t(iAngle) == t2(cpt)
-                d2 = [d2, d(iAngle)];
-                cpt = cpt + 1;
-            end
-        end
-    end
-    
-    figure ;
-    polar(t, d, '*') ;
-    hold on ;
-    polar(t2, d2) ;
+[x, y] = pol2cart(obj.angles_rad, obj.angles_cpt(1, :));
+shm_handle = compass([x, x], [y, y], 'Parent', h);
+
+[x2, y2] = pol2cart(obj.angles_rad, obj.angles_cpt(2, :));
+shm_handle = compass([x2, x], [y2, y], 'Parent', h);
+
+set(shm_handle(nb_sources+1:end), 'LineWidth', 4);
+set(shm_handle(1:nb_sources), 'Color', 'red', 'LineWidth', 2);
+
+hold(h, 'on');
+
+x_lim = get(h, 'XLim');
+x_lim = x_lim(2)+1;
+
+for iAngle = 1:numel(obj.angles_rad)
+    [x, y] = pol2cart(obj.angles_rad(iAngle), x_lim);
+    text(x, y, num2str(iAngle), 'FontSize', 26, 'Parent', h);
 end

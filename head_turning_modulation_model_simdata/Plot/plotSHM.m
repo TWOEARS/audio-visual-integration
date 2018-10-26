@@ -1,6 +1,6 @@
 function plotSHM (htm)
 
-    nb_sources = size(htm.EMKS.sources, 2);
+    nb_sources = getInfo('nb_sources');
     angles_cpt = zeros(2, nb_sources);
     angles = getInfo('sources_position');
     angles_rad = deg2rad(angles);

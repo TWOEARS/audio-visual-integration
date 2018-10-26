@@ -15,10 +15,10 @@ function plotFocus (htm)
 	nb_tsteps = getInfo('nb_steps');
 
 	xvec = linspace(0, 60.004, nb_tsteps) ;
-	naive = zeros(1, numel(htm.RIR.focus_hist)) ;
+	naive = zeros(1, numel(htm.FCKS.focus)) ;
 
 	colors = {'black', 'red', 'green'} ;
-	audio_labels = htm.MFI.audio_labels ;
+	audio_labels = getInfo('audio_labels');
 
 	tstop = 0 ;
 	for iObj = 1:size(AVdata.t_idx, 1)
