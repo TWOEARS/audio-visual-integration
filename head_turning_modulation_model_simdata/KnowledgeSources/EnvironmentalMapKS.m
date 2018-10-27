@@ -60,6 +60,8 @@ properties (SetAccess = public, GetAccess = public)
 
 	font_size = 20;
 
+	information = [];
+
 end
 
 % ===================== %
@@ -74,7 +76,12 @@ function obj = EnvironmentalMapKS (htm)
 	obj.MOKS = htm.MOKS;
 
 	obj.depth_of_view = 9;
-	obj.field_of_view = 30;
+	if getInfo('modules') == 1
+		obj.field_of_view = 2;
+		obj.field_of_view = 10;
+	else
+		obj.field_of_view = getInfo('fov');
+	end
     obj.nb_sources = getInfo('nb_sources');
     obj.timeline = getInfo('timeline');
 	obj.angles = getInfo('sources_position');
@@ -86,7 +93,7 @@ function obj = EnvironmentalMapKS (htm)
 
 	obj.drawSources();
 
-    obj.drawHistograms('init');
+    %obj.drawHistograms('init');
 
 	obj.drawRobot();
 
@@ -140,7 +147,7 @@ function updateMap (obj)
 		obj.drawSeenSources();
 		obj.drawClassificationResults();
 		obj.drawMeanClassificationResults('update');
-		obj.drawHistograms('update');
+		%obj.drawHistograms('update');
         obj.drawFieldOfView('update');
 		obj.writeClassification('update');
 		obj.drawFocusOrigin('update');
@@ -434,10 +441,10 @@ function drawFieldOfView (obj, k)
 
 		if strcmp(k, 'init')
 			% % === Naive robot
-			% l1 = line([x0, x1], [y0, y1], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
-			% l2 = line([x1, x2], [y1, y2], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
-			% l3 = line([x2, x0], [y2, y0], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
-			% obj.fov_handle_naive = [l1, l2, l3];
+			l1 = line([x0, x1], [y0, y1], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
+			l2 = line([x1, x2], [y1, y2], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
+			l3 = line([x2, x0], [y2, y0], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 1, 'Parent', obj.h(1));
+			obj.fov_handle_naive = [l1, l2, l3];
 
 			% === HTM robot
 			l1 = line([x0, x1], [y0, y1], 'Color', 'k', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h(1));
@@ -450,9 +457,9 @@ function drawFieldOfView (obj, k)
 			set(obj.fov_handle(2), 'XData', [x1, x2], 'YData', [y1, y2]);
 			set(obj.fov_handle(3), 'XData', [x2, x0], 'YData', [y2, y0]);
 
-			% set(obj.fov_handle_naive(1), 'XData', [x0, x1], 'YData', [y0, y1]);
-			% set(obj.fov_handle_naive(2), 'XData', [x1, x2], 'YData', [y1, y2]);
-			% set(obj.fov_handle_naive(3), 'XData', [x2, x0], 'YData', [y2, y0]);
+			set(obj.fov_handle_naive(1), 'XData', [x0, x1], 'YData', [y0, y1]);
+			set(obj.fov_handle_naive(2), 'XData', [x1, x2], 'YData', [y1, y2]);
+			set(obj.fov_handle_naive(3), 'XData', [x2, x0], 'YData', [y2, y0]);
 		end
     elseif strcmp(k, 'update')
 		% hold(obj.h(1), 'on');
@@ -460,30 +467,30 @@ function drawFieldOfView (obj, k)
 		y0 = obj.RIR.position(2);
 
 		% === Naive robot
-		% if ~isempty(obj.htm.naive_shm)
-		% 	naive_shm = obj.htm.naive_shm{end-1};
-	 %        if ~isempty(naive_shm)
-	 %        	if numel(naive_shm) > 1
-	 %        		naive_shm = naive_shm(1);
-	 %        	end
-	 %            sources = getObject(obj, naive_shm, 'source');
-	 %            % obj.angles_cpt(2, sources) = obj.angles_cpt(2, sources) + 1;
+		if ~isempty(obj.htm.naive_shm)
+			naive_shm = obj.htm.naive_shm{end-1};
+	        if ~isempty(naive_shm)
+	        	if numel(naive_shm) > 1
+	        		naive_shm = naive_shm(1);
+	        	end
+	            sources = getObject(obj, naive_shm, 'source');
+	            % obj.angles_cpt(2, sources) = obj.angles_cpt(2, sources) + 1;
 
-	 %            theta  = obj.angles(sources);
-	 %            % [x2, y2] = pol2cart(obj.angles_rad, obj.angles_cpt(2, :));
+	            theta  = obj.angles(sources);
+	            % [x2, y2] = pol2cart(obj.angles_rad, obj.angles_cpt(2, :));
 
-		% 		theta1 = theta - (obj.field_of_view/2);
-		% 		theta2 = theta + (obj.field_of_view/2);
+				theta1 = theta - (obj.field_of_view/2);
+				theta2 = theta + (obj.field_of_view/2);
 
-		% 		[x1, y1] = pol2cart(deg2rad(theta1), obj.depth_of_view);
-		% 		[x2, y2] = pol2cart(deg2rad(theta2), obj.depth_of_view);
+				[x1, y1] = pol2cart(deg2rad(theta1), obj.depth_of_view);
+				[x2, y2] = pol2cart(deg2rad(theta2), obj.depth_of_view);
 
-		% 		set(obj.fov_handle_naive(1), 'XData', [x0, x1], 'YData', [y0, y1]);
-		% 		set(obj.fov_handle_naive(2), 'XData', [x1, x2], 'YData', [y1, y2]);
-		% 		set(obj.fov_handle_naive(3), 'XData', [x2, x0], 'YData', [y2, y0]);
+				set(obj.fov_handle_naive(1), 'XData', [x0, x1], 'YData', [y0, y1]);
+				set(obj.fov_handle_naive(2), 'XData', [x1, x2], 'YData', [y1, y2]);
+				set(obj.fov_handle_naive(3), 'XData', [x2, x0], 'YData', [y2, y0]);
 
-	 %        end
-	 %    end
+	        end
+	    end
 
 	    % === HTM robot
 		if ~isempty(obj.MOKS.head_position(end-1))
@@ -499,6 +506,20 @@ function drawFieldOfView (obj, k)
 		end
 		% hold(obj.h(1), 'off');
 	end
+
+	% if getInfo('modules') == 1
+
+	% 	x0 = obj.RIR.position(1);
+	% 	y0 = obj.RIR.position(2);
+	% 	theta1 = -(100/2);
+	% 	theta2 = +(100/2);
+	% 	[x1, y1] = pol2cart(deg2rad(theta1), obj.depth_of_view);
+	% 	[x2, y2] = pol2cart(deg2rad(theta2), obj.depth_of_view);
+	% 	line([x0, x1], [y0, y1], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h(1));
+	% 	line([x1, x2], [y1, y2], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h(1));
+	% 	line([x2, x0], [y2, y0], 'Color', 'g', 'LineStyle', '--', 'LineWidth', 2, 'Parent', obj.h(1));
+	% end
+
 	%pause(0.01);
 end
 
@@ -1028,6 +1049,7 @@ function endSimulation (obj)
 	obj.drawFieldOfView('end');
 	obj.drawLocalizationResults();
 	obj.removeAllEmittingSources();
+	obj.information = getInfo('all');
 end
 
 % ===================== %

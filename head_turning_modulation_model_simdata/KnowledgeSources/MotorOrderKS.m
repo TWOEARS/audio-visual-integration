@@ -42,10 +42,8 @@ function execute (obj)
     if focus ~= 0
         theta = getObject(obj, focus, 'theta');
         theta = theta(end);
-    elseif focus == 0 %&& numel(obj.head_position) > 0 % --- go back to resting position (O°)
+    elseif focus == 0
         theta = -obj.head_position(end);
-    % else
-    %     theta = 0;
     end
 
     % if ~obj.isFocusedObjectPresent(focus)
@@ -83,6 +81,7 @@ function computeSHM (obj)
         end
     end
 end
+
 
 % ===================== %
 % === METHODS [END] === %
