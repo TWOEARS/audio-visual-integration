@@ -16,12 +16,15 @@ classdef PerceivedEnvironment < handle
 properties (SetAccess = public, GetAccess = public)
     present_objects = [] 	 ; % objects present in the environment
     objects = cell(0); % all detected objects
-    previous_objects = cell(0);
     htm;
     RIR;					% --- Robot Internal Representation
     MFI;					% --- Multimodal Fusion & Inference module
     MSOM;					% --- Multimodal Self Organizing Map
     DW;						% --- Dynamic Weighting module
+    behavior = 0;
+    classes = [];
+    behavior_hist = [];
+    nb_objects = 0;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -38,34 +41,20 @@ function obj = PerceivedEnvironment (RIR)
 	obj.htm  = RIR.htm;    % --- Head Turning Modulation
 	obj.MFI  = RIR.MFI;    % --- Multimodal Fusion & Inference module
 	obj.MSOM = RIR.MSOM;   % --- Multimodal SelfOrganizing Map
-	obj.DW   = obj.htm.DW; % --- Dynamic Weighting module
+	obj.DW   = DynamicWeighting(RIR.htm); % --- Dynamic Weighting module
 end
 % === Constructor [END] === %
 
 % --- Other methods --- %
-function addObject (obj)
+function addObject (obj, iSource)
+	iStep = obj.htm.iStep;
 	theta_a = getLocalisationOutput(obj.htm);
-<<<<<<< HEAD
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
-	d = theta_v('d');
-	if numel(theta_v) > 1
-		[~, m] = min(theta_a - theta_v);
-		theta_v = theta_v(m);
-		d = d(m);
-	end
-=======
-	theta_v_tmp = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
-	theta_v = theta_v_tmp('theta');
-    d = theta_v_tmp('d');
-    if numel(theta_v) > 1
-        [~, m] = min(theta_a-theta_v);
-        theta_v = theta_v(m);
-        d = d(m);
-    end
 	% data = getClassifiersOutput(obj.htm);
->>>>>>> tmp
 	data = getClassifiersOutput(obj.htm);
+
+    obj.nb_objects = obj.nb_objects + 1;
 
 	if all(data(getInfo('nb_audio_labels')+1:end) == 0)
 		theta_v = -1;
@@ -75,56 +64,74 @@ function addObject (obj)
     obj.objects{end+1} = PerceivedObject(data,...
     									 theta_a,...
     									 theta_v,...
-                                         d);
-	obj.objects{end}.updateTime(obj.htm.iStep);
-    obj.addInput();
+    									 iSource);
+	obj.objects{end}.updateTime(iStep);
+    obj.parseEnvironments();
+    obj.addInput(iSource);
 end
 
-function addInput (obj)
+function parseEnvironments (obj)
+	similar_env = 0;
+	for iEnv = 1:numel(obj.RIR.environments)-1
+		env = obj.RIR.environments{iEnv};
+		classes_idx = env.DW.classes;
+		labels = cell(numel(classes_idx), 1);
+		for iClass = 1:numel(classes_idx)
+			labels{iClass} = env.DW.observed_categories{classes_idx(iClass)}.label;
+		end
+		tmp = zeros(1, numel(obj.objects));
+		for iObject = 1:numel(obj.objects)
+			tt = find(strcmp(labels, obj.objects{iObject}.label));
+			if ~isempty(tt)
+				tmp(iObject) = tt;
+			end
+		end
+		if all(tmp)
+			similar_env = iEnv;
+		end
+	end
+	if similar_env == 0
+		obj.behavior = numel(obj.RIR.environments);
+		obj.classes = obj.DW.classes;
+	else
+		obj.behavior = similar_env;
+		obj.classes = obj.RIR.environments{obj.behavior}.DW.classes;
+	end
+	obj.behavior_hist(end+1) = obj.behavior;
+end
+
+function addInput (obj, iSource)
 	hyp = obj.htm.blackboard.getLastData('objectDetectionHypotheses').data;
 	iObj = hyp.id_object;
+	requests = getObject(obj, iObj, 'requests');
 	% --- No data missing
-	if ~obj.objects{iObj}.requests.missing
+	if requests.missing == 0
 		% --- Train nets
         data = retrieveObservedData(obj, iObj, 'best');
-		obj.MFI.newInput(data);
+		obj.MFI.newInput(data, iObj);
 	end
 end
 
-function updateObjectData (obj)
+function updateObjectData (obj, iSource)
 	hyp = obj.htm.blackboard.getLastData('objectDetectionHypotheses').data;
 	iObj = hyp.id_object;
 
 	data = getClassifiersOutput(obj.htm);
 
 	theta_a = getLocalisationOutput(obj.htm);
-<<<<<<< HEAD
 	theta_v = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
 	theta_v = theta_v('theta');
-	d = theta_v('d');
-	if numel(theta_v) > 1
-		[~, m] = min(theta_a - theta_v);
-		theta_v = theta_v(m);
-		d = d(m);
-	end
-=======
-	theta_v_tmp = obj.htm.blackboard.getLastData('visualLocationHypotheses').data;
-	theta_v = theta_v_tmp('theta');
-    d = theta_v_tmp('d');
->>>>>>> tmp
-
-	if abs(theta_v - obj.objects{iObj}.theta_v(end)) > 10
-		theta_v = obj.objects{iObj}.theta_v(end);
-    end
     
+
 	obj.objects{iObj}.updateData(data,...
 								 theta_a,...
-								 theta_v,...
-                                 d);
+								 theta_v);
 	obj.objects{iObj}.updateTime(obj.htm.iStep);
 	% obj.objects{iObj}.presence = true;
 
-	obj.addInput();
+	obj.parseEnvironments();
+	
+	obj.addInput(iSource);
 end
 
 function checkInference (obj)
@@ -133,6 +140,10 @@ function checkInference (obj)
 		if inference && missing % --- If an inference has been requested & data is missing
 			if check % --- If a CHECK has been requested (-> motor order)
 				% --- Continue to turn the head to the object
+                [AVClass, search] = obj.simulateAVInference(iObj);
+                if isPerformant(obj, search) % --- If the category has been correctly inferred in the past: CHECK not needed
+					obj.preventVerification(iObj, search, AVClass);
+                end
 			else % --- If a CHECK has not been yet requested: trigger a motor order?
 				[AVClass, search] = obj.simulateAVInference(iObj);
 				% if ~strcmp(AVClass, 'none_none')
@@ -140,7 +151,7 @@ function checkInference (obj)
 						obj.preventVerification(iObj, search, AVClass);
 					else % --- If the cat. hasn't been well infered in the past -> CHECK needed
 						obj.requestVerification(iObj, AVClass);
-						obj.DW.updateInferenceCpt(AVClass, search);
+						obj.MFI.updateInferenceCpt(AVClass, search);
 					end
 				% end
 			end
@@ -150,22 +161,20 @@ function checkInference (obj)
 			[AVClass, search] = obj.simulateAVInference(iObj);
 			if strcmp(AVClass, label) && ~strcmp(AVClass, 'none_none') % --- If inferred AV is the same as observed AV
 				obj.preventVerification(iObj, search, AVClass);
-				obj.DW.updateGoodInferenceCpt(AVClass, search);
+				obj.MFI.updateGoodInferenceCpt(AVClass, search);
 				obj.objects{iObj}.requests.checked = true;
 			else % --- If infered AV is NOT the same as observed AV
                 obj.objects{iObj}.requests.label = AVClass;
 				% --- Make the network learn with n more iterations
-				obj.highTrainingPhase();
+				% obj.highTrainingPhase();
 				% obj.objects{iObj}.requests.verification = true;
 			end
 		elseif ~missing % All data available
 			[AVClass, search] = obj.simulateAVInference(iObj);
-			obj.DW.updateInferenceCpt(AVClass, search);
-			if strcmp(AVClass, getObject(obj, iObj, 'label'))
-				obj.DW.updateGoodInferenceCpt(AVClass, search);
-			end
 			obj.objects{iObj}.setLabel(AVClass, search);
 			obj.objects{iObj}.requests.check = false;
+			% obj.MFI.observed_categories{search}.perf = getInfo('q')+0.05;
+			% disp(getCategory(obj, search))
 		end
 	end
 end
@@ -182,6 +191,7 @@ function preventVerification (obj, iObj, search, AVClass)
 		obj.objects{iObj}.requests.check = false;
 		obj.objects{iObj}.requests.verification = false;
 		obj.objects{iObj}.requests.inference = false;
+		% obj.objects{iObj}.requests.checked = false;
 		obj.objects{iObj}.setLabel(AVClass, search);
 	end
 end
@@ -189,7 +199,11 @@ end
 function [AVClass, search] = simulateAVInference (obj, iObj)
     data = retrieveObservedData(obj, iObj, 'best');
 	AVClass = obj.MFI.inferCategory(data);
-	search = find(strcmp(AVClass, obj.DW.labels));
+	search = find(strcmp(AVClass, obj.MFI.labels));
+	if isempty(search)
+		obj.MFI.createNewCategory(AVClass);
+		search = find(strcmp(AVClass, obj.MFI.labels));
+	end
 end
 
 function [inference, missing, check, verification, label] = getObjectRequests(obj, iObj)
@@ -203,17 +217,29 @@ end
 
 function highTrainingPhase (obj)
 	% --- Change the number of iterations of the MSOM
-	obj.MFI.MSOM.setParameters(10);
-	% --- Train again the MSOM with last data
-	obj.MFI.trainMSOM();
-	obj.MFI.MSOM.setParameters(1);
+	% obj.MFI.MSOM.setParameters(20);
+	% % --- Train again the MSOM with last data
+	% obj.MFI.trainMSOM();
+	% obj.MFI.MSOM.setParameters(10);
 end
 
 function computePresence (obj)
-	obj.present_objects = find(getObject(obj, 'all', 'presence'));
-	if isempty(obj.present_objects)
+	present_objects = find(getObject(obj, 'all', 'presence'));
+	if isempty(present_objects)
 		obj.present_objects = [];
+	else
+		for iObj = 1:numel(present_objects)
+			tmIdx = getObject(obj, present_objects(iObj), 'tmIdx');
+			if numel(tmIdx) < 2
+				present_objects(iObj) = 0;
+			end
+		end
+		present_objects(present_objects == 0) = [];
+		if isempty(present_objects)
+			present_objects = [];
+		end
 	end
+	obj.present_objects = present_objects;
 end
 
 function request = getCategories (obj, varargin)
@@ -244,11 +270,14 @@ function updateEnvironment (obj, tmIdx)
 	
 	obj.computePresence();
 	
-	obj.DW.setClasses();
+	obj.MFI.setClasses();
 
 	obj.checkInference();
 
 	obj.DW.execute();
+
+	dw = getEnvironment(obj.htm, obj.behavior, 'DW');
+	dw.computeWeights();
 
 	arrayfun(@(x) obj.objects{x}.updateObj(), obj.present_objects);
 		

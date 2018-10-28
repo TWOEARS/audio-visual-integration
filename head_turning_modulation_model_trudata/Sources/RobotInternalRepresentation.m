@@ -21,7 +21,6 @@ classdef RobotInternalRepresentation < handle
 properties (SetAccess = public, GetAccess = public)
     environments = cell(0); % list of environments
     nb_objects = 0;
-    observed_nb_objects = 0;
     MFI;
     MSOM;
     htm;
@@ -30,6 +29,7 @@ properties (SetAccess = public, GetAccess = public)
     % data = [];
     head_position = 0;
     position = [0, 0];
+    nb_environments = 0;
 end
 % ======================== %
 % === PROPERTIES [END] === %
@@ -51,21 +51,21 @@ end
 % === Other methods
 function addEnvironment (obj)
     obj.environments{end+1} = PerceivedEnvironment(obj);
+    obj.nb_environments = obj.nb_environments+1;
 end
 
 % === Add a new object to the environment
-function addObject (obj)
+function addObject (obj, iSource)
     env = getEnvironment(obj, 0);
-    env.addObject();
+    env.addObject(iSource);
     % obj.getEnv().addObject();
     obj.nb_objects = obj.nb_objects + 1;
-    obj.observed_nb_objects = obj.observed_nb_objects + 1;
 end
 
 % === Update the label of the last object with a new INPUT_VECTOR
-function updateObject (obj)
+function updateObject (obj, iSource)
     env = getEnvironment(obj, 0);
-    env.updateObjectData();
+    env.updateObjectData(iSource);
 end
 
 % function updateData (obj)
