@@ -16,7 +16,10 @@ function value = getInfo (varargin)
 			else
 				BOOL = true;
 			end
-		end
+        end
+    elseif strcmp(varargin{1}, 'show')
+        disp(information);
+        return;
 	end
 
 	if nargin == 1 && strcmp(varargin{1}, 'all')

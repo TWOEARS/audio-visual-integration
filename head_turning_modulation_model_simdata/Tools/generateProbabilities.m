@@ -20,7 +20,8 @@ function data = generateProbabilities (audio_idx, visual_idx, number)
         idx_vec = 1:nb_audio ;
         idx_vec(idx_vec == audio_idx) = [] ;
         
-        audio_vec(idx_vec) = (1-0.5)*rand(nb_audio-1, 1) ;
+        
+        audio_vec(idx_vec) = (1-0.5)*rand(nb_audio-1, 1);
         % for iComp = idx_vec
         %     audio_vec(iComp) = 1-((1-sum(audio_vec))*rand + sum(audio_vec)) ;
         % end
