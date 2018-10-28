@@ -1,5 +1,10 @@
 function repartition = assignSource (scene, nb_sources)
 
+	if isappdata(0, 'repartition')
+		repartition = getappdata(0, 'repartition');
+		return
+	end
+
 	repartition = cell(1, numel(scene));
 	pairs = randperm(numel(scene));
 	sources = randperm(nb_sources);
