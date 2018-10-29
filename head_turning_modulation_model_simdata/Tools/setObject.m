@@ -17,6 +17,8 @@ function setObject (obj, idx, parameter, value)
 
     if strcmp(parameter, 'requests') && strcmp(value, 'init')
         objects{idx}.initializeRequests();
+    elseif strcmp(parameter, 'presence')
+        objects{idx}.setPresence(value);
     else
     	for iObject = idx
             objects{iObject}.(parameter) = value;
