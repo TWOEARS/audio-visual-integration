@@ -8,16 +8,30 @@ function bool = isPerformant (obj, idx, varargin)
 	if isempty(idx)
 		bool = false;
 		return;
-	end
-    if nargin == 3 && strcmp(varargin{1}, 'Object')
-         idx = getObject(obj, idx, 'audiovisual_category');
-     end
-	
-    perf = getCategory(obj, idx, 'perf');
-    
-    if perf >= getInfo('q') && perf < 1 && getCategory(obj, idx, 'nb_inf') >= 5
+    elseif getInfo('modules') == 1
         bool = true;
-    elseif perf == 1 && getCategory(obj, idx, 'nb_inf') >= 5
+        return;
+	end
+
+    env = getEnvironment(obj, 0);
+    % dw = getEnvironment(obj, env.behavior, 'DW');
+
+
+    if nargin == 3 && strcmp(varargin{1}, 'Object')
+        % obj_label = getObject(obj, idx, 'label');
+        % idx = find(strcmp(obj_label, dw.labels));
+        idx = getObject(obj, idx, 'audiovisual_category');
+    end
+	
+    % perf = getCategory(obj, idx, 'perf');
+    % perf = dw.observed_categories{idx}.perf;
+    perf = obj.MFI.observed_categories{idx}.perf;
+    % nb_inf = dw.observed_categories{idx}.nb_inf;
+    nb_inf = obj.MFI.observed_categories{idx}.nb_inf;
+    
+    if perf >= getInfo('q') && perf < 1 %&& nb_inf >= 5 % && perf < 1 && getCategory(obj, idx, 'nb_inf') >= 5
+        bool = true;
+    elseif perf == 1 && nb_inf > 2
     	bool = true;
     else
         bool = false;

@@ -22,19 +22,32 @@ function data = retrieveObservedData (obj, idx, str)
 		str = 'all';
     end
     
-    iSource = objects{idx}.source;
-
-	tmIdx = objects{idx}.tmIdx;
-	data = htm.data{iSource}(:, tmIdx);
-	
-	tmIdx = tmIdx - (tmIdx(1)-1);
-
 	p = getInfo('smoothing'      ,...
 			    'nb_audio_labels',...
 			    'nb_visual_labels'...
 			   );
 
+    iSource = getObject(htm, idx, 'source');
+
+	tmIdx = objects{idx}.tmIdx;
+	% data = htm.data{iSource}(:, tmIdx);
+	
+	% === CHANGES [beg] === %
+	idx = min([10, numel(tmIdx)]);
+	t = tmIdx(end-(idx-1)):tmIdx(end);
+	
+	good_visual_data = getGoodVisualData();
+	data = mean(htm.data{iSource}(1:p.nb_audio_labels, t), 2);
+	data = [data ; mean(good_visual_data, 2)];
+	return;
+	% === CHANGES [end] === %
+	
+	tmIdx = tmIdx - (tmIdx(1)-1);
+
+
 	s = tmIdx(end) - tmIdx(1) + 1;
+
+	
 	if strcmp(str, 'best')
 		if s < p.smoothing
 			data = data(:, tmIdx(end));
@@ -52,12 +65,14 @@ function data = retrieveObservedData (obj, idx, str)
 
 	function request = getGoodVisualData ()
 		
-		cpt = find(sum(data(p.nb_audio_labels+1:end, :)) > 0.1);
+		% cpt = find(sum(data(p.nb_audio_labels+1:end, :)) > 0.1);
+		cpt = find(sum(htm.data{iSource}(p.nb_audio_labels+1:end, t)) > 0.1);
 
 		if isempty(cpt)
 			request = zeros(p.nb_visual_labels, 1);
 		else
-			request = data(p.nb_audio_labels+1:end, cpt);
+			% request = data(p.nb_audio_labels+1:end, cpt);
+			request = htm.data{iSource}(p.nb_audio_labels+1:end, t);
 		end
 	end
 
