@@ -15,6 +15,7 @@ properties (SetAccess = public, GetAccess = public)
     htm;
     MSOM; % --- Multimodal Self-Organizing Map
     nb_categories = 0;
+    observed_categories;
     labels = {};
 end
 % ======================== %
@@ -31,14 +32,72 @@ function obj = MultimodalFusionAndInference (htm)
 	% --- Initialize MSOM
 	obj.htm = htm;
 	obj.MSOM = htm.MSOM;
+	obj.observed_categories{1} = getInfo('obs_struct');
+	obj.labels{1} = 'none_none';
 end
 % === CONSTRUCTOR [END] === %
 
 % --- 
-function newInput (obj, input_vector)
+function newInput (obj, input_vector, iObj)
 	obj.inputs(:, end+1) = input_vector;
-	obj.trainMSOM();
+	obj.trainMSOM(iObj);
 	obj.setCategories();
+	obj.setClasses();
+	% obj.computePerformance();
+end
+
+function computePerformance (obj)
+	av_cats = getObject(obj.htm, 'all', 'audiovisual_category');
+	classes = unique(av_cats);
+	for iCat = classes'
+		% if isPerformant(obj, iCat)
+			obj.observed_categories{iCat}.perf = obj.observed_categories{iCat}.nb_goodInf/obj.observed_categories{iCat}.nb_inf;
+			if isnan(obj.observed_categories{iCat}.perf) || isinf(obj.observed_categories{iCat}.perf)
+				obj.observed_categories{iCat}.perf = 0;
+			end
+			if obj.observed_categories{iCat}.perf > 1
+				obj.observed_categories{iCat}.perf = 1;
+				obj.observed_categories{iCat}.nb_inf = obj.observed_categories{iCat}.nb_goodInf;
+			end
+		% end
+	end
+end
+
+
+% function computePerformance (obj)
+% 	av_cats = getObject(obj.htm, 'all', 'audiovisual_category');
+% 	classes = unique(av_cats);
+% 	for iCat = classes'
+% 		% if isPerformant(obj, iCat)
+% 			obj.observed_categories{iCat}.perf = obj.observed_categories{iCat}.nb_goodInf/obj.observed_categories{iCat}.nb_inf;
+% 			if isnan(obj.observed_categories{iCat}.perf) || isinf(obj.observed_categories{iCat}.perf)
+% 				obj.observed_categories{iCat}.perf = 0;
+% 			end
+% 			if obj.observed_categories{iCat}.perf > 1
+% 				obj.observed_categories{iCat}.perf = 1;
+% 				obj.observed_categories{iCat}.nb_inf = obj.observed_categories{iCat}.nb_goodInf;
+% 			end
+% 		% end
+% 	end
+% end
+
+function setClasses (obj)
+	if isempty(obj.categories)
+		obj.setCategories();
+	end
+	categories = obj.categories;
+	for iClass = 1:numel(obj.categories)
+		search = find(strcmp(categories{iClass}, obj.labels));
+		if isempty(search)
+			obj.createNewCategory(categories{iClass});
+		end
+	end
+end
+
+function createNewCategory (obj, label)
+	obj.observed_categories{end+1} = getInfo('obs_struct');
+	obj.observed_categories{end}.label = label;
+	obj.labels = [obj.labels, label];
 end
 
 function setCategories (obj)
@@ -48,10 +107,21 @@ function setCategories (obj)
 							  1:size(MSOM_categories, 1),...
 							  'UniformOutput', false);
 	obj.nb_categories = numel(obj.categories);
+	% obj.observed_categories = getInfo('obs_struct');
+	% for ii = 1:numel(obj.categories)
+	% 	obj.observed_categories.label = obj.nb
 end
 
-function trainMSOM (obj)
-	obj.MSOM.feed(obj.inputs(:, end));
+function trainMSOM (obj, iObj)
+	% nb_env = numel(obj.htm.RIR.environments);
+	% nb_objects = arrayfun(@(x) numel(getEnvironment(htm, x, 'objects')), nb_env);
+	% for iEnv = 1:nb_env
+	% 	env = getEnvironment(obj, iEnv);
+	% 	for iObj = 1:nb_objects
+			
+			idx_data = getObject(obj, iObj, 'idx_data');
+			obj.MSOM.feed(obj.inputs(:, end), idx_data);
+	% end
 end
 
 function AVCategory = inferCategory (obj, input_vector)
@@ -108,6 +178,26 @@ function [data, value] = checkMissingModality (obj, input_vector)
 		data = input_vector;
 	end
 end
+
+
+function updateGoodInferenceCpt (obj, AVClass, search)
+    if isempty(search)
+        obj.createNewCategory(AVClass);
+        search = find(strcmp(obj.labels, AVClass));
+    else
+		obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf + 1;
+	end
+end
+
+function updateInferenceCpt (obj, AVClass, search)
+    if isempty(search)
+        obj.createNewCategory(AVClass);
+        search = find(strcmp(obj.labels, AVClass));
+    end
+	obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
+end
+
+
 
 function request = getCategories (obj)
 	request = obj.categories ;

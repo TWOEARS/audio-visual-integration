@@ -21,6 +21,7 @@ classdef RobotInternalRepresentation < handle
 properties (SetAccess = public, GetAccess = public)
     environments = cell(0); % list of environments
     nb_objects = 0;
+    nb_environments = 0;
     MFI;
     MSOM;
     htm;
@@ -50,6 +51,7 @@ end
 % === Other methods
 function addEnvironment (obj)
     obj.environments{end+1} = PerceivedEnvironment(obj);
+    obj.nb_environments = obj.nb_environments+1;
 end
 
 % === Add a new object to the environment
