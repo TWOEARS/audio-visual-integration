@@ -33,97 +33,109 @@ methods
 function obj = DynamicWeighting (htm)
 	obj.htm = htm;
 	obj.MFI = htm.MFI;
-	obj.observed_categories{1} = getInfo('obs_struct');
-	obj.labels{1} = 'none_none';
+	obj.observed_categories = obj.MFI.observed_categories;
 end
 % === CONSTRUCTOR [END] === %
 
 % === 'execute' function
 function execute (obj)
 
-	% obj.setClasses();
-
 	obj.computeAposterioriProbabilities();
 
-	obj.computePerformance();
+	obj.MFI.computePerformance();
 
+    obj.setClasses();
+    
 	obj.computeCongruence();
 
-	obj.computeWeights();
 end
 
 function setClasses (obj)
-	if isempty(obj.MFI.categories)
-		obj.MFI.setCategories();
-	end
-	categories = obj.MFI.getCategories();
-	for iClass = 1:numel(categories)
-		search = find(strcmp(categories{iClass}, obj.labels));
-		if isempty(search)
-			obj.createNewCategory(categories{iClass});
-		end			
-	end
+	obj.observed_categories = obj.MFI.observed_categories;
 end
 
-function createNewCategory (obj, label)
-	obj.observed_categories{end+1} = getInfo('obs_struct');
-	obj.observed_categories{end}.label = label;
-	obj.labels = [obj.labels, label];
-end
+% function setClasses (obj)
+% 	if isempty(obj.MFI.categories)
+% 		obj.MFI.setCategories();
+% 	end
+% 	categories = obj.MFI.getCategories();
+% 	for iClass = 1:numel(categories)
+% 		search = find(strcmp(categories{iClass}, obj.labels));
+% 		if isempty(search)
+% 			obj.createNewCategory(categories{iClass});
+% 		end			
+% 	end
+% end
+
+% function createNewCategory (obj, label)
+% 	obj.observed_categories{end+1} = getInfo('obs_struct');
+% 	obj.observed_categories{end}.label = label;
+% 	obj.labels = [obj.labels, label];
+% end
 
 function computeAposterioriProbabilities (obj)
 	obj.reinitializeClasses();
-	av_cats = getObject(obj, 'all', 'audiovisual_category');
-    if ~isempty(obj.htm.RIR.environments{end}.previous_objects)
-        for iObj = 1:numel(obj.htm.RIR.environments{end}.previous_objects)
-            av_cats(end+1) = obj.htm.RIR.environments{end}.previous_objects{iObj}.audiovisual_category;
+    if numel(obj.observed_categories) > 1
+        av_cats = getObject(obj, 'all', 'audiovisual_category');
+        classes = unique(av_cats);
+        [~, nb_objects] = obj.computeNbObjects();
+        for iCat = classes'
+            if iCat ~= 1 && ~isempty(iCat) && isPerformant(obj, iCat)
+                % obj.observed_categories{iCat}.cpt = sum(av_cats == iCat);
+                obj.MFI.observed_categories{iCat}.cpt = sum(av_cats == iCat);
+                % obj.observed_categories{iCat}.proba = obj.observed_categories{iCat}.cpt/obj.htm.RIR.nb_objects;
+                obj.MFI.observed_categories{iCat}.proba = obj.MFI.observed_categories{iCat}.cpt/nb_objects;
+            end
         end
-        av_cats = av_cats';
+        obj.nb_classes = numel(classes(classes > 1));
+        obj.classes = classes;
     end
-	classes = unique(av_cats);
-    if size(classes, 1) > size(classes, 2)
-        classes = classes';
-    end
-	for iCat = classes
-		if iCat ~= 0 && isPerformant(obj, iCat)
-			obj.observed_categories{iCat}.cpt = sum(av_cats == iCat);
-			obj.observed_categories{iCat}.proba = obj.observed_categories{iCat}.cpt/obj.htm.RIR.observed_nb_objects;
+end
+
+function [objects, nb_objects] = computeNbObjects (obj)
+	nb_objects = 0;
+	objects = [];
+	for iObject = 1:getEnvironment(obj, 0, 'nb_objects')
+		if getObject(obj, iObject, 'audiovisual_category') ~= 1
+			nb_objects = nb_objects + 1;
+			objects(end+1) = iObject;
 		end
 	end
-	obj.nb_classes = numel(classes);
-	obj.classes = classes;
 end
 
-function computePerformance (obj)
-	av_cats = getObject(obj.htm, 'all', 'audiovisual_category');
-	classes = unique(av_cats);
-	for iCat = classes'
-		% if isPerformant(obj, iCat)
-			obj.observed_categories{iCat}.perf = obj.observed_categories{iCat}.nb_goodInf/obj.observed_categories{iCat}.nb_inf;
-			if isnan(obj.observed_categories{iCat}.perf) || isinf(obj.observed_categories{iCat}.perf)
-				obj.observed_categories{iCat}.perf = 0;
-			end
-			if obj.observed_categories{iCat}.perf > 1
-				obj.observed_categories{iCat}.perf = 1;
-				obj.observed_categories{iCat}.nb_inf = obj.observed_categories{iCat}.nb_goodInf;
-			end
-		% end
-	end
-end
+
+% function computePerformance (obj)
+% 	av_cats = getObject(obj.htm, 'all', 'audiovisual_category');
+% 	classes = unique(av_cats);
+% 	for iCat = classes'
+% 		% if isPerformant(obj, iCat)
+% 			obj.observed_categories{iCat}.perf = obj.observed_categories{iCat}.nb_goodInf/obj.observed_categories{iCat}.nb_inf;
+% 			if isnan(obj.observed_categories{iCat}.perf) || isinf(obj.observed_categories{iCat}.perf)
+% 				obj.observed_categories{iCat}.perf = 0;
+% 			end
+% 		% end
+% 	end
+% end
 
 function reinitializeClasses (obj)
+    if numel(obj.observed_categories) == 1
+        obj.setClasses();
+    end
 	for iClass = 1:numel(obj.observed_categories)
 		obj.observed_categories{iClass}.cpt = 0;
 	end
 end
 
 function computeCongruence (obj)
-	for iCat = obj.classes
-		if iCat ~= 0 && isPerformant(obj, iCat)
-			if obj.observed_categories{iCat}.proba < 1/obj.nb_classes
-				obj.observed_categories{iCat}.congruence = -1;
-			else
-				obj.observed_categories{iCat}.congruence = 1;
+	obj.setClasses();
+	for iCat = obj.classes'
+		if iCat ~= 1
+			if isPerformant(obj, iCat)
+				if obj.observed_categories{iCat}.proba <= 1/obj.nb_classes
+					obj.MFI.observed_categories{iCat}.congruence = -1;
+				else
+					obj.MFI.observed_categories{iCat}.congruence = 1;
+				end
 			end
 		end
 	end
@@ -131,19 +143,31 @@ end
 
 function computeWeights (obj)
 	env = getEnvironment(obj.htm, 0);
-	for iObj = env.present_objects'
-		obj_cat = getObject(obj.htm, iObj, 'audiovisual_category');
+	% for iObj = 1:numel(env.present_objects)
+		% iObj = env.present_objects(iObj);
+	[objects, ~] = obj.computeNbObjects();
+	for iObj = objects
+		% obj_label = getObject(obj.htm, iObj, 'label');
+		% obj_cat = find(strcmp(obj_label, obj.labels));
+		obj_cat = getObject(obj, iObj, 'audiovisual_category');
+		if obj_cat > numel(obj.observed_categories)
+			obj.setClasses();
+		end
 		if obj_cat ~= 0
-			if ~isPerformant(obj.htm, obj_cat)
+			% === TEMPORAIRE [beg] === %
+			% if ~isPerformant(obj.htm, obj_cat)
+			if obj_cat == 0
+			% === TEMPORAIRE [end] === %
 				% obj.observed_categories{obj_cat}.congruence = 0;
 			else
 			% --- Compute weights thanks to weighting functions
 				% --- Incongruent
 				% if obj.observed_categories{obj_cat}.proba <= 1/obj.nb_classes
+				% obj.observed_categories{obj_cat}
 				if obj.observed_categories{obj_cat}.congruence == -1
 					increaseObjectWeight(obj.htm, iObj);
 				% --- Congruent
-				else
+				elseif obj.observed_categories{obj_cat}.congruence == 1
 					decreaseObjectWeight(obj.htm, iObj);
 				end
 				% obj.observed_categories{obj_cat}.congruence = obj.objects{iObj}.weight;
@@ -152,22 +176,35 @@ function computeWeights (obj)
 	end
 end
 
-function updateGoodInferenceCpt (obj, AVClass, search)
-    if isempty(search)
-        obj.createNewCategory(AVClass);
-        search = find(strcmp(obj.labels, AVClass));
-    else
-		obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf + 1;
-	end
-end
 
-function updateInferenceCpt (obj, AVClass, search)
-    if isempty(search)
-        obj.createNewCategory(AVClass);
-        search = find(strcmp(obj.labels, AVClass));
-    end
-	obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
-end
+% function computeCategoryPerformance (obj)
+% 	env = getEnvironment(obj.htm, 0);
+% 	nb_objects = numel(env.objects);
+% 	for iClass = 1:numel(obj.observed_categories)
+% 		obj.observed_categories{iClass}.perf = obj.observed_categories{iClass}.nb_goodInf/...
+% 											   obj.observed_categories{iClass}.nb_inf;
+
+% 		if isnan(obj.observed_categories{iClass}.perf) || isinf(obj.observed_categories{iClass}.perf)
+% 			obj.observed_categories{iClass}.perf = 0;
+% 		end
+
+% 		if isPerformant(obj.htm, iClass)
+% 			obj.observed_categories{iClass}.proba = obj.observed_categories{iClass}.cpt/nb_objects;
+
+% 			if isnan(obj.observed_categories{iClass}.proba) || isinf(obj.observed_categories{iClass}.proba)
+% 				obj.observed_categories{iClass}.proba = 0;
+% 			end
+% 		end
+% 	end
+% end
+
+% function updateGoodInferenceCpt (obj, search)
+% 	obj.observed_categories{search}.nb_goodInf = obj.observed_categories{search}.nb_goodInf + 1;
+% end
+
+% function updateInferenceCpt (obj, search)
+% 	obj.observed_categories{search}.nb_inf = obj.observed_categories{search}.nb_inf + 1;
+% end
 
 % function checkConnectivity (obj, input_vector, inferred_label)
 % 	[data, value] = obj.MFI.checkMissingModality(input_vector);
