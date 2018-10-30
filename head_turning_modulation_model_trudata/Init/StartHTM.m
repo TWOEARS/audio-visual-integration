@@ -3,22 +3,20 @@ clear all;
 pause(1);
 clear all;
 
-disp( 'Initializing Two!Ears, setting up binaural simulator...' );
+disp( 'Initializing Jido...' );
 
 setupPaths();
 
 global ROBOT_PLATFORM;
-ROBOT_PLATFORM = 'JIDO';
+ROBOT_PLATFORM = 'ODI';
 
 if strcmp(ROBOT_PLATFORM, 'JIDO')
-   % pathToGenomix = getGenomixPath();
-   pathToGenomix = '/home/tforgue/openrobots/lib/matlab';
+   pathToGenomix = getGenomixPath();
    Jido = JidoInterface(pathToGenomix);
 elseif strcmp(ROBOT_PLATFORM, 'ODI')
    Jido = OdiInterface();
 end
 
-Jido.rotateHead(0, 'absolute');
 
 % === Initialise and run model
 disp( 'Building blackboard system...' );
@@ -52,16 +50,8 @@ FCKS = bbs.createKS('FocusComputationKS', {bbs, HTMKS});
 ODKS = bbs.createKS('ObjectDetectionKS', {bbs, HTMKS});
 
 dnnLocationKS = bbs.createKS('DnnLocationKS');
-%dnnLocationKS = bbs.createKS('DnnLocationKS', {'MCT-DIFFUSE-FRONT'});
-%localisationDecisionKS = bbs.createKS('LocalisationDecisionKS', {false, 0.5});
 
 MOKS = bbs.createKS('MotorOrderKS', {bbs, bbs.robotConnect});
-
-<<<<<<< HEAD
-EMKS = bbs.createKS('EnvironmentalMapKS', {bbs, HTMKS})
-=======
-EMKS = bbs.createKS('EnvironmentalMapKS', {bbs, HTMKS});
->>>>>>> tmp
 
 
 bbs.blackboardMonitor.bind({bbs.scheduler},...
@@ -72,17 +62,13 @@ bbs.blackboardMonitor.bind({bbs.dataConnect},...
                            {dnnLocationKS},...
                            'replaceOld');
 
-% bbs.blackboardMonitor.bind({bbs.dataConnect},...
-%                            {signalLevelKS},...
-%                            'replaceOld' );
+bbs.blackboardMonitor.bind({bbs.dataConnect},...
+                            {signalLevelKS},...
+                            'replaceOld' );
 
 bbs.blackboardMonitor.bind({dnnLocationKS},...
                            {auditoryClassifiersKS{1}},...
                            'replaceOld' );
-%                            {localisationDecisionKS},...
-%                            'replaceOld');
-% bbs.blackboardMonitor.bind({localisationDecisionKS},...
-
 
 for iClassifier = 2:numel(auditoryClassifiersKS)
     bbs.blackboardMonitor.bind({auditoryClassifiersKS{iClassifier-1}},...
@@ -104,13 +90,14 @@ end
 %                               'replaceOld' );
 % end
 
-% bbs.blackboardMonitor.bind({VLKS},...
-%                            {AVFKS},...
-%                            'replaceOld');
 bbs.blackboardMonitor.bind({VLKS},...
                            {VIKS},...
                            'replaceOld');
-
+                       
+% bbs.blackboardMonitor.bind({VLKS},...
+%                            {AVFKS},...
+%                            'replaceOld');
+% 
 % bbs.blackboardMonitor.bind({AVFKS},...
 %                            {VIKS},...
 %                            'replaceOld');
@@ -130,13 +117,12 @@ bbs.blackboardMonitor.bind({HTMKS},...
 bbs.blackboardMonitor.bind({FCKS},...
                            {MOKS},...
                            'replaceOld');
-bbs.blackboardMonitor.bind({MOKS},...
-                           {EMKS},...
-                           'replaceOld');
+
+
+setInfo('duration', 60);
 
 disp( 'Starting blackboard system.' );
 
-global CHANGE_SCENARIO;
-CHANGE_SCENARIO = true;
+Jido.rotateHead(0, 'absolute');
 
 bbs.run();
