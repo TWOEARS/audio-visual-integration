@@ -1,4 +1,4 @@
-classdef OdiInterface < handle
+classdef OdiInterfaceQR < handle
     %JIDOINTERFACE Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -25,7 +25,7 @@ classdef OdiInterface < handle
     end
     
     methods (Access = public)
-        function obj = OdiInterface()
+        function obj = OdiInterfaceQR()
             pathToGenomix = '~/openrobots/lib/matlab';
             addpath(genpath(pathToGenomix));
             
