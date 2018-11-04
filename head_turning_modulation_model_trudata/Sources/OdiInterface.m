@@ -22,7 +22,7 @@ classdef OdiInterface < simulator.RobotInterface
         bass                    % Interface to the audio stream server.
         qr_vision
     end
-    properties (Access = private)
+    properties (Access = public)
         headOrientation
         sampleIndex
 	end
@@ -65,7 +65,9 @@ classdef OdiInterface < simulator.RobotInterface
                
             hardware        = 'hw:2,0';
             obj.SampleRate  = 44100;
+            %obj.SampleRate  = 16000;
             nFramesPerChunk = 2205;
+            %nFramesPerChunk = 800;
             nChunksOnPort   = 20*0.5;
             obj.bass.Acquire('-a', hardware, obj.SampleRate, nFramesPerChunk, nChunksOnPort);
             
@@ -171,7 +173,7 @@ classdef OdiInterface < simulator.RobotInterface
             
             output = obj.qr_vision.dataOut();
             output = output.dataOut().message;
-            
+            %output = [];
         end
 
         %% Rotate the head with mode = {'absolute', 'relative'}

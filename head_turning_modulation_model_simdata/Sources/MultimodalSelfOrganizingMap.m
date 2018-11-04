@@ -34,12 +34,17 @@ properties (SetAccess = public, GetAccess = public)
     idx_data;
 end
 
-properties (SetAccess = private, GetAccess = public)
- 	lrates = struct('initial', 0.5,...
-    			    'final'  , 0.1);
+properties (SetAccess = public, GetAccess = public)
+    vec;
+    sub_vec;
 
-    sigmas = struct('initial', 1.5e0,...
-    				'final'  , 1.0e-1);
+ 	lrates = struct('initial', 0.9,...
+    			    'final'  , 0.02);
+
+    sigmas = struct('initial', 3e0,...
+    				'final'  , 1);
+    % sigmas = struct('initial', 3.0,...
+    % 				'final'  , 1.0);
     aleph = [];
     mu = [];
     sig = [];
@@ -54,25 +59,25 @@ end
 methods
 
 % === CONSTRUCTOR [BEG] === %
-function obj = MultimodalSelfOrganizingMap (varargin)
-	p = inputParser ;
-	  p.addOptional('Iterations', 10);
-	  p.addOptional('Leading', 1);
-	p.parse(varargin{:});
-	p = p.Results;
+function obj = MultimodalSelfOrganizingMap ()
+	% p = inputParser ;
+	%   p.addOptional('Iterations', 10);
+	%   p.addOptional('Leading', 1);
+	% p.parse(varargin{:});
+	% p = p.Results;
 
-	obj.nb_iterations = p.Iterations;
+	obj.nb_iterations = getInfo('nb_iterations');
 
 	obj.nb_modalities = 2;
 
 	na = getInfo('nb_audio_labels');
 	nv = getInfo('nb_visual_labels');
 	
-	tmp = na * nv;
+	tmp = (na * nv)/1;
 	
 	obj.som_dimension = [ceil(sqrt(tmp)), ceil(sqrt(tmp))];
 
-	obj.leading = p.Leading;
+	obj.leading = 2;
 
 	obj.modalities = [na, nv];
 
@@ -83,14 +88,37 @@ function obj = MultimodalSelfOrganizingMap (varargin)
 	obj.connections = zeros(obj.nb_nodes, 2);
 	[obj.connections(:, 1), obj.connections(:, 2)] = ind2sub(obj.som_dimension, 1:obj.nb_nodes);
 	
+	init_msom = 1;	
 	if getInfo('load')
 		obj.weights_vectors = getappdata(0, 'weights_vectors');
 	else
 		for iMod = 1:obj.nb_modalities
-			obj.weights_vectors{iMod} = rand(obj.nb_nodes, obj.modalities(iMod));
+			if init_msom == 1
+				obj.weights_vectors{iMod} = rand(obj.nb_nodes, obj.modalities(iMod));
+			elseif init_msom == 2
+				obj.weights_vectors{iMod} = zeros(obj.nb_nodes, obj.modalities(iMod))+0.5;
+				if iMod == 1 
+					for iNode = 1:obj.nb_nodes
+						tmp = rand(1, obj.modalities(iMod));
+						tmp(tmp > 0.4) = 0.4;
+						obj.weights_vectors{iMod}(iNode, :) = tmp;
+						idx_mod = randi(obj.modalities(iMod));
+						obj.weights_vectors{iMod}(iNode, idx_mod) = 1;
+					end
+				else
+					% obj.weights_vectors{iMod} = rand(obj.nb_nodes, obj.modalities(iMod));
+					obj.weights_vectors{iMod} = zeros(obj.nb_nodes, obj.modalities(iMod))+0.5;
+				end
+			elseif init_msom == 3
+				obj.weights_vectors{iMod} = 0.4*rand(obj.nb_nodes, obj.modalities(iMod))+0.6;
+			end
 		end
 		setappdata(0, 'weights_vectors', obj.weights_vectors);
 	end
+
+	vec = fliplr(reshape(prod(obj.som_dimension):-1:1, obj.som_dimension(1), obj.som_dimension(2))');
+	obj.vec = repmat(vec, 3, 3);
+	obj.sub_vec = obj.vec(obj.som_dimension(1)+1:2*obj.som_dimension(1), obj.som_dimension(1)+1:2*obj.som_dimension(1));
 
 	obj.setParameters(obj.nb_iterations);
 end
@@ -109,25 +137,29 @@ function setParameters (obj, nb_iterations)
 	
  	obj.aleph = cell(obj.nb_nodes, nb_iterations);
 
+ 	gaussian_coeff = 1;
+
 	for iNode = 1:obj.nb_nodes
 		for iStep = 1:nb_iterations
-			obj.aleph{iNode, iStep} = exp(-sum((bsxfun(@minus, obj.connections(iNode, :), obj.connections).^2), 2) / (2*obj.sig(iStep).^2));
+			obj.aleph{iNode, iStep} = exp(-sum((bsxfun(@minus, obj.connections(iNode, :), obj.connections).^2), 2) / (gaussian_coeff*obj.sig(iStep).^2));
 		end
 	end
 end
 
-function feed (obj, data)
+function feed (obj, data, idx_data)
 	% obj.cpt = obj.cpt + 1;
 
 	% for ISTEP = 1:obj.nb_iterations
 	% disp('feeding')
-	ISTEP = (obj.nb_iterations - obj.idx_data) + 1;
+	ISTEP = (obj.nb_iterations - idx_data) + 1;
 	ISTEP = max([ISTEP, 1]);
 	% ISTEP = min([obj.idx_data, obj.nb_iterations]);
 	idx = randperm(size(data, 2), size(data, 2));
 
 	for iStep = 1:size(data, 2)
-		bmu = obj.getCombinedBMU(data(:, idx(iStep)));
+		% bmu = obj.getCombinedBMU(data(:, idx(iStep)));
+		% bmu = obj.getBMU(data(1:getInfo('nb_audio_labels'), idx(iStep)), 1);
+		bmu = obj.getBMU(data(getInfo('nb_audio_labels')+1:end, idx(iStep)), 2);
 		obj.update_weights(data(:, idx(iStep)), bmu, ISTEP);
 	end
 	% end
@@ -198,6 +230,119 @@ function assignNodesToCategories (obj)
 		f = intersect(f1, f2);
 		obj.cat{iCat} = f';
 	end
+end
+
+function plotND(obj)
+	if isappdata(0, 'wvectors')
+		wvectors = getappdata(0, 'wvectors');
+	else
+		wvectors = {obj.weights_vectors};
+	end
+
+	for iVectors = 1:numel(wvectors)
+		weights_vector = wvectors{iVectors};
+
+		d = zeros(obj.nb_nodes, 1);
+		dv = zeros(obj.nb_nodes, 1);
+		som_d = obj.som_dimension(1);
+		for iNode = 1:obj.nb_nodes
+			% idx = [iNode-1, iNode-22, iNode+1, iNode+22];
+			idx = [iNode-1, iNode-(som_d-1), iNode-som_d, iNode-(som_d+1), iNode+1, iNode+(som_d-1), iNode+som_d, iNode+(som_d+1)];
+			idx(idx <= 0) = [];
+			idx(idx > obj.nb_nodes) = [];
+			if mod(iNode, som_d) == 1 || mod(iNode, som_d) == 0
+				idx_mod = mod(idx, som_d)+mod(iNode, som_d);
+				idx(idx_mod == 1) = [];
+			end
+			v1 = weights_vector{1}(iNode, :);
+			v2 = weights_vector{2}(iNode, :);
+
+			d(iNode) = mean(sqrt(sum(bsxfun(@minus, v1, weights_vector{1}(idx, :)).^2, 2)));
+			dv(iNode) = mean(sqrt(sum(bsxfun(@minus, v2, weights_vector{2}(idx, :)).^2, 2)));
+		end
+
+		% d = d+0.5;
+		% dv = dv+0.5;
+		d = reshape(d, som_d, som_d);
+		dv = reshape(dv, som_d, som_d);
+	    
+	    d2 = 1-(d./(max(max(d))));
+		d2v = 1-(dv./(max(max(dv))));
+
+		d_all = d2.*d2v;
+		d_all = d_all./(max(max(d_all)));
+
+		seuil = 0.2;
+		d2(d2 < seuil) = seuil;
+		d2v(d2v < seuil) = seuil;
+		d_all(d_all < seuil) = seuil;
+
+		[X, Y] = meshgrid(1:som_d);
+
+		figure('Color', 'White');
+
+		hs = surf(X, Y, d2);%, gradient(dist1));
+		% c = colorbar;
+		set(gca, 'XLim', [0, som_d]+1,...
+				 'YLim', [0, som_d]+1,...
+				 'ZGrid', 'off',...
+				 'ZColor', [1, 1, 1],...
+				 'View', [-131.5000 66]);
+
+		figure('Color', 'White');
+		hs = surf(X, Y, d2v);%, gradient(dist1));
+		% c = colorbar;
+		set(gca, 'XLim', [0, som_d]+1,...
+				 'YLim', [0, som_d]+1,...
+				 'ZGrid', 'off',...
+				 'ZColor', [1, 1, 1],...
+				 'View', [-131.5000 66]);
+
+		figure('Color', 'White');
+		hs = surf(X, Y, d_all);%, gradient(dist1));
+		% c = colorbar;
+		set(gca, 'XLim', [0, som_d]+1,...
+				 'YLim', [0, som_d]+1,...
+				 'ZGrid', 'off',...
+				 'ZColor', [1, 1, 1],...
+				 'View', [-131.5000 66]);
+	end
+
+	% subplot(1, 2, 1);
+	% axis;
+	% set(gca, 'XLim' , [1, obj.som_dimension(1)+1],...
+	%          'YLim' , [1, obj.som_dimension(1)+1],...
+	%          'XTick', [1:obj.som_dimension(1)],...
+	%          'YTick', [1:obj.som_dimension(1)]);
+	% grid on;
+	% hold on;
+
+
+	% [I, J] = ind2sub(som_d, 1:obj.nb_nodes);
+
+	% for iNode = 1:obj.nb_nodes
+	%     x = I(iNode);
+	%     y = J(iNode);
+
+	%     % patch([x, x+1, x+1, x], [y, y, y+1, y+1], 'blue', 'FaceAlpha', d2(x, y));
+	%     patch([x, x+1, x+1, x], [y, y, y+1, y+1], [1, 1, 1]-d2(x, y));
+	% end
+
+	% subplot(1, 2, 2);
+	% axis;
+	% set(gca, 'XLim' , [1, som_d+1],...
+	%          'YLim' , [1, som_d+1],...
+	%          'XTick', [1:som_d],...
+	%          'YTick', [1:som_d]);
+	% grid on;
+	% hold on;
+	% for iNode = 1:obj.nb_nodes
+	%     x = I(iNode);
+	%     y = J(iNode);
+
+	%     % patch([x, x+1, x+1, x], [y, y, y+1, y+1], 'blue', 'FaceAlpha', d2v(x, y));
+	%     patch([x, x+1, x+1, x], [y, y, y+1, y+1], [1, 1, 1]-d2v(x, y));
+	% end
 end
 
 function request = getDistances (obj, data)
